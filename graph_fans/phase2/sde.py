@@ -1,4 +1,4 @@
-"""Variance-Preserving SDE for node feature diffusion."""
+"""SDE implementations for node feature diffusion."""
 
 from __future__ import annotations
 
@@ -39,14 +39,7 @@ class VPSDE:
         return self.beta_min * t + 0.5 * (self.beta_max - self.beta_min) * t**2
 
     def marginal_params(self, t: float) -> tuple[float, float]:
-        """Return (mean_coeff, std) for q(x_t | x_0).
-
-        Args:
-            t: Timestep in [0, T].
-
-        Returns:
-            (mean_coeff, std) such that x_t = mean_coeff * x_0 + std * noise.
-        """
+        """Return (mean_coeff, std) for q(x_t | x_0)."""
         log_mean_coeff = -0.5 * self._integral_beta(t)
         mean_coeff = np.exp(log_mean_coeff)
         std = np.sqrt(max(1.0 - mean_coeff**2, 0.0))
@@ -58,19 +51,9 @@ class VPSDE:
         t: float,
         noise: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Forward diffusion: sample x_t given x_0.
-
-        Args:
-            x_0: Clean data [n_nodes, n_features].
-            t: Timestep.
-            noise: Optional pre-generated noise (for spectral shaping).
-
-        Returns:
-            (x_t, noise_used).
-        """
+        """Forward diffusion: sample x_t given x_0."""
         if noise is None:
             noise = torch.randn_like(x_0)
-
         mean_coeff, std = self.marginal_params(t)
         x_t = mean_coeff * x_0 + std * noise
         return x_t, noise
@@ -82,25 +65,79 @@ class VPSDE:
         t: float,
         dt: float,
     ) -> torch.Tensor:
-        """One reverse SDE step using predicted score.
-
-        Euler-Maruyama discretization of the reverse SDE:
-        dx = [-0.5 * beta(t) * x - beta(t) * score] * dt + sqrt(beta(t)) * dw_reverse
-
-        Args:
-            x_t: Current state [n_nodes, n_features].
-            score: Predicted score [n_nodes, n_features].
-            t: Current timestep.
-            dt: Step size (negative for reverse).
-
-        Returns:
-            x_{t+dt} (one step back in time).
-        """
+        """One reverse SDE step (Euler-Maruyama)."""
         beta_t = self.beta(t)
         drift = -0.5 * beta_t * x_t - beta_t * score
         diffusion = np.sqrt(beta_t)
-
         noise = torch.randn_like(x_t)
-        # dt is negative (going backward), so we use abs(dt) for the noise term
+        x_prev = x_t + drift * dt + diffusion * np.sqrt(abs(dt)) * noise
+        return x_prev
+
+
+class CosineScheduleSDE:
+    """Diffusion SDE with cosine noise schedule (Nichol & Dhariwal, 2021).
+
+    Uses alpha_bar(t) = cos^2(pi/2 * (t + s) / (1 + s)) with offset s=0.008.
+    This gives a much gentler noise increase than linear beta, which is critical
+    for stability on small graph signals.
+
+    The marginal is:
+        x_t = sqrt(alpha_bar(t)) * x_0 + sqrt(1 - alpha_bar(t)) * noise
+    """
+
+    def __init__(self, T: float = 1.0, s: float = 0.008, n_timesteps: int = 1000):
+        self.T = T
+        self.s = s
+        self.n_timesteps = n_timesteps
+
+    def _alpha_bar(self, t: float) -> float:
+        """Cosine schedule: alpha_bar(t) = cos^2(...)."""
+        return np.cos(np.pi / 2 * (t / self.T + self.s) / (1 + self.s)) ** 2
+
+    def _alpha_bar_clipped(self, t: float) -> float:
+        """Clipped to prevent numerical issues near t=T."""
+        return max(self._alpha_bar(t), 1e-5)
+
+    def beta(self, t: float) -> float:
+        """Instantaneous beta derived from alpha_bar schedule."""
+        dt = 1e-4
+        ab_t = self._alpha_bar_clipped(t)
+        ab_t_dt = self._alpha_bar_clipped(t + dt)
+        # beta(t) = -d/dt log(alpha_bar(t))
+        beta = -(np.log(ab_t_dt) - np.log(ab_t)) / dt
+        return max(float(beta), 0.0)
+
+    def marginal_params(self, t: float) -> tuple[float, float]:
+        """Return (mean_coeff, std) for q(x_t | x_0)."""
+        ab = self._alpha_bar_clipped(t)
+        mean_coeff = np.sqrt(ab)
+        std = np.sqrt(1.0 - ab)
+        return float(mean_coeff), float(std)
+
+    def perturb(
+        self,
+        x_0: torch.Tensor,
+        t: float,
+        noise: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Forward diffusion: sample x_t given x_0."""
+        if noise is None:
+            noise = torch.randn_like(x_0)
+        mean_coeff, std = self.marginal_params(t)
+        x_t = mean_coeff * x_0 + std * noise
+        return x_t, noise
+
+    def reverse_step(
+        self,
+        x_t: torch.Tensor,
+        score: torch.Tensor,
+        t: float,
+        dt: float,
+    ) -> torch.Tensor:
+        """One reverse SDE step (Euler-Maruyama)."""
+        beta_t = self.beta(t)
+        drift = -0.5 * beta_t * x_t - beta_t * score
+        diffusion = np.sqrt(max(beta_t, 1e-8))
+        noise = torch.randn_like(x_t)
         x_prev = x_t + drift * dt + diffusion * np.sqrt(abs(dt)) * noise
         return x_prev

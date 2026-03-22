@@ -38,6 +38,9 @@ def run_phase2(
     h1a_families: list[str] | None = None,
     h2_families: list[str] | None = None,
     device: str = "cpu",
+    sde_type: str = "vpsde",
+    use_ema: bool = False,
+    use_lr_scheduler: bool = False,
 ) -> dict:
     """Run full Phase 2 experiment pipeline."""
     if t_knee_values is None:
@@ -50,7 +53,12 @@ def run_phase2(
         n_epochs=n_epochs,
         device=device,
         B=B,
+        sde_type=sde_type,
+        use_ema=use_ema,
+        use_lr_scheduler=use_lr_scheduler,
     )
+
+    logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}")
 
     # --- H1-A Experiment ---
     logger.info("\n=== H1-A: Uniform vs Spectral Noise ===")
@@ -115,6 +123,10 @@ def main():
     parser.add_argument("--epochs", type=int, default=500)
     parser.add_argument("--t-knee-values", type=str, default="0.05,0.10,0.15,0.20,0.30")
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--sde", choices=["vpsde", "cosine"], default="vpsde",
+                        help="SDE type: vpsde (linear beta) or cosine (Nichol & Dhariwal)")
+    parser.add_argument("--ema", action="store_true", help="Use EMA of model weights")
+    parser.add_argument("--lr-scheduler", action="store_true", help="Use cosine LR annealing")
     args = parser.parse_args()
 
     t_knee = [float(x) for x in args.t_knee_values.split(",")]
@@ -128,6 +140,9 @@ def main():
         n_epochs=args.epochs,
         t_knee_values=t_knee,
         device=args.device,
+        sde_type=args.sde,
+        use_ema=args.ema,
+        use_lr_scheduler=args.lr_scheduler,
     )
 
 
