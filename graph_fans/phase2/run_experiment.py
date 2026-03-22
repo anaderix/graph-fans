@@ -41,6 +41,8 @@ def run_phase2(
     sde_type: str = "vpsde",
     use_ema: bool = False,
     use_lr_scheduler: bool = False,
+    use_spectral_loss: bool = False,
+    spectral_loss_weight: float = 0.1,
 ) -> dict:
     """Run full Phase 2 experiment pipeline."""
     if t_knee_values is None:
@@ -56,9 +58,12 @@ def run_phase2(
         sde_type=sde_type,
         use_ema=use_ema,
         use_lr_scheduler=use_lr_scheduler,
+        use_spectral_loss=use_spectral_loss,
+        spectral_loss_weight=spectral_loss_weight,
     )
 
-    logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}")
+    logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}, "
+                f"spectral_loss={use_spectral_loss} (weight={spectral_loss_weight})")
 
     # --- H1-A Experiment ---
     logger.info("\n=== H1-A: Uniform vs Spectral Noise ===")
@@ -127,6 +132,10 @@ def main():
                         help="SDE type: vpsde (linear beta) or cosine (Nichol & Dhariwal)")
     parser.add_argument("--ema", action="store_true", help="Use EMA of model weights")
     parser.add_argument("--lr-scheduler", action="store_true", help="Use cosine LR annealing")
+    parser.add_argument("--spectral-loss", action="store_true",
+                        help="Alt-4: add spectral fidelity loss term")
+    parser.add_argument("--spectral-loss-weight", type=float, default=0.1,
+                        help="Weight for spectral loss term (default: 0.1)")
     args = parser.parse_args()
 
     t_knee = [float(x) for x in args.t_knee_values.split(",")]
@@ -143,6 +152,8 @@ def main():
         sde_type=args.sde,
         use_ema=args.ema,
         use_lr_scheduler=args.lr_scheduler,
+        use_spectral_loss=getattr(args, 'spectral_loss', False),
+        spectral_loss_weight=getattr(args, 'spectral_loss_weight', 0.1),
     )
 
 

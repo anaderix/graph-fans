@@ -16,6 +16,7 @@ from graph_fans.phase0.spectral_profiler import compute_laplacian_spectrum, part
 from .noise_shaper import ImportanceWeights, shape_noise, shape_noise_with_temporal_ramp
 from .score_network import SimpleScoreNetwork
 from .sde import VPSDE, CosineScheduleSDE
+from .spectral_loss import spectral_fidelity_loss, tweedie_denoise
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,9 @@ class TrainConfig:
     use_ema: bool = False
     ema_decay: float = 0.999
     use_lr_scheduler: bool = False
+    # Alt-4: spectral loss
+    use_spectral_loss: bool = False
+    spectral_loss_weight: float = 0.1  # lambda for L_spectral
 
 
 class EMA:
@@ -186,6 +190,17 @@ class Trainer:
                 score_pred = self.model(x_t, t_tensor, self.edge_index)
 
                 loss = nn.functional.mse_loss(score_pred, target)
+
+                # Alt-4: spectral fidelity loss
+                if self.config.use_spectral_loss and std > 1e-4:
+                    mean_coeff, _ = self.sde.marginal_params(t)
+                    x_hat_0 = tweedie_denoise(x_t, score_pred, mean_coeff, std)
+                    spec_loss = spectral_fidelity_loss(
+                        x_hat_0, self.features,
+                        self.eigenvectors, self.band_indices,
+                        self.importance_weights,
+                    )
+                    loss = loss + self.config.spectral_loss_weight * spec_loss
 
                 self.optimizer.zero_grad()
                 loss.backward()
