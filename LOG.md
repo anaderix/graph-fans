@@ -82,3 +82,27 @@ Spearman ρ=0.22, p=0.72, 95% CI=[−1.0, 1.0]. No correlation between optimal t
 5. **Direct spectral generation** — generate in eigenbasis, per-band diffusion (1-2 weeks)
 
 Results: `results/phase2/`
+
+## 2026-03-23 — Phase 2b: Alt-2 (Cosine Schedule + EMA + LR Annealing) — G2: NO-GO
+
+Implemented and tested Alternative 2: cosine noise schedule (Nichol & Dhariwal), EMA (decay=0.999), cosine LR annealing, 1000 epochs. Run on NVIDIA L40S.
+
+### Results
+
+| Family | Uniform QBE | Spectral QBE | Change |
+|--------|------------|-------------|--------|
+| SBM(q=0.05) | 0.064 | 0.065 | -2.3% |
+| BA(m=5) | 0.125 | 0.118 | +5.3% |
+| Cora | 0.071 | 0.072 | -1.8% |
+
+H2: Spearman ρ=−0.21, p=0.74. No correlation.
+
+**G2 gate: NO-GO** (0/3 families pass Bonferroni-corrected significance test)
+
+### Key insight
+Alt-2 **fixed the training stability** (SBM spectral QBE improved from 0.109→0.065, no longer degraded), but spectral noise shaping is now a **no-op** — uniform and spectral are statistically indistinguishable. The model trains stably with shaped noise but doesn't benefit from it.
+
+### Conclusion
+The problem is not training instability. The 3-layer GCN score network simply cannot exploit spectral noise structure. Next step: try Alternative 4 (spectral loss term) which directly supervises spectral fidelity rather than relying on the model to learn it implicitly from shaped noise.
+
+Results: `results/phase2b/`
