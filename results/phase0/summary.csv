@@ -1,0 +1,10 @@
+Graph Family,Energy Ratio (max/min),Decay Model,Decay R²,Decay Params,G0 Pass
+SBM(q=0.01),3.76,power_law,0.123,"{'a': np.float64(225.13672161703536), 'alpha': np.float64(-0.4421118904300276)}",YES
+SBM(q=0.05),6.87,power_law,0.350,"{'a': np.float64(128.43759084306728), 'alpha': np.float64(-0.8189079849860251)}",YES
+SBM(q=0.1),10.74,power_law,0.436,"{'a': np.float64(79.44816069326997), 'alpha': np.float64(-1.1162951665976484)}",YES
+SBM(q=0.2),8.28,power_law,0.514,"{'a': np.float64(28.27280335189054), 'alpha': np.float64(-1.718320456980776)}",YES
+BA(m=2),16.99,exponential,0.392,"{'a': np.float64(744.1553903370544), 'beta': np.float64(0.1851448851351331)}",YES
+BA(m=5),8.08,power_law,0.046,"{'a': np.float64(315.7494503026004), 'alpha': np.float64(-0.20732411029831194)}",YES
+BA(m=10),6.71,power_law,0.297,"{'a': np.float64(153.09508016128132), 'alpha': np.float64(-0.7060153055694428)}",YES
+Cora,3.98,power_law,0.491,"{'a': np.float64(110.13096874081434), 'alpha': np.float64(0.4085606029886575)}",YES
+CiteSeer,5.01,power_law,0.387,"{'a': np.float64(70.17004596721085), 'alpha': np.float64(0.5027742040374888)}",YES

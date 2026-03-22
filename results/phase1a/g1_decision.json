@@ -1,0 +1,57 @@
+{
+  "decision": "GO",
+  "criterion": "At least 1 spectral metric shows \u226510% relative difference from aggregate MMD",
+  "any_metric_exceeds_10pct": true,
+  "max_gaps": {
+    "SBM(q=0.01) vs ER (matched density)": {
+      "max_gap": 0.9077735993968108,
+      "metric": "Spectral JSD"
+    },
+    "SBM(q=0.01) vs Config (matched degree)": {
+      "max_gap": 0.8987469754745128,
+      "metric": "Spectral JSD"
+    },
+    "SBM(q=0.01) vs SBM (approx params)": {
+      "max_gap": 0.8471778745039336,
+      "metric": "HKS Distance"
+    },
+    "SBM(q=0.1) vs ER (matched density)": {
+      "max_gap": 18.474934600702788,
+      "metric": "QBE Distance"
+    },
+    "SBM(q=0.1) vs Config (matched degree)": {
+      "max_gap": 4.877790099484271,
+      "metric": "QBE Distance"
+    },
+    "SBM(q=0.1) vs SBM (approx params)": {
+      "max_gap": 0.9668689387713147,
+      "metric": "HKS Distance"
+    },
+    "BA(m=3) vs ER (matched density)": {
+      "max_gap": 4.097253798507512,
+      "metric": "QBE Distance"
+    },
+    "BA(m=3) vs Config (matched degree)": {
+      "max_gap": 62.802180855216,
+      "metric": "QBE Distance"
+    },
+    "BA(m=3) vs SBM (approx params)": {
+      "max_gap": 0.9366086949617582,
+      "metric": "Spectral JSD"
+    },
+    "BA(m=8) vs ER (matched density)": {
+      "max_gap": 2.248635527571746,
+      "metric": "QBE Distance"
+    },
+    "BA(m=8) vs Config (matched degree)": {
+      "max_gap": 15.907378389800416,
+      "metric": "QBE Distance"
+    },
+    "BA(m=8) vs SBM (approx params)": {
+      "max_gap": 0.9235672659324998,
+      "metric": "HKS Distance"
+    }
+  },
+  "rank_correlation": 0.6433566433566434,
+  "rank_p_value": 0.024003191200713647
+}

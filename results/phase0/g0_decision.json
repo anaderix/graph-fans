@@ -1,0 +1,62 @@
+{
+  "decision": "GO",
+  "passing_families": 9,
+  "total_families": 9,
+  "threshold": "\u22652\u00d7 energy ratio in \u22652 families",
+  "families": {
+    "SBM(q=0.01)": {
+      "energy_ratio": 3.7582261854909844,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.12258706697628807,
+      "pass": true
+    },
+    "SBM(q=0.05)": {
+      "energy_ratio": 6.874063952789421,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.3504269046972798,
+      "pass": true
+    },
+    "SBM(q=0.1)": {
+      "energy_ratio": 10.739180679351056,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.4358074675773215,
+      "pass": true
+    },
+    "SBM(q=0.2)": {
+      "energy_ratio": 8.284125198731466,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.5137980386897996,
+      "pass": true
+    },
+    "BA(m=2)": {
+      "energy_ratio": 16.98891606619284,
+      "decay_model": "exponential",
+      "decay_r_squared": 0.39207642714960345,
+      "pass": true
+    },
+    "BA(m=5)": {
+      "energy_ratio": 8.078846799101342,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.045899898581520326,
+      "pass": true
+    },
+    "BA(m=10)": {
+      "energy_ratio": 6.707825192742912,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.29695403543103593,
+      "pass": true
+    },
+    "Cora": {
+      "energy_ratio": 3.979257251352315,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.4908721233421288,
+      "pass": true
+    },
+    "CiteSeer": {
+      "energy_ratio": 5.013117068163671,
+      "decay_model": "power_law",
+      "decay_r_squared": 0.3866288018114258,
+      "pass": true
+    }
+  }
+}
