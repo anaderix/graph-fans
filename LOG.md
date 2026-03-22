@@ -44,3 +44,41 @@ Results: `results/phase1a/`
 
 ### Tests
 - 28/28 tests passing (`tests/test_phase0.py`, `tests/test_phase1a.py`)
+
+## 2026-03-23 — Phase 2: Regime A Core — G2: NO-GO
+
+### Implementation
+- 8 modules: noise_shaper, score_network (3-layer GCN), sde (VP-SDE), trainer, evaluate, visualize, run_experiment, tests
+- Code reviewed by tester agent: 1 CRITICAL fixed (G2 gate ignoring Bonferroni), 2 MAJOR fixed (H2 direction check, misleading same-graph metrics)
+- 18/18 tests passing
+- Ran on NVIDIA L40S GPU (~90 min)
+
+### Phase 2: H1-A (Spectral Band Decomposition) — FAIL
+
+| Family | Uniform QBE | Spectral QBE | Change |
+|--------|------------|-------------|--------|
+| SBM(q=0.05) | 0.049 | 0.109 | -120% (worse) |
+| BA(m=5) | 0.136 | 0.136 | +0.2% |
+| Cora | 0.087 | 0.088 | -0.4% |
+
+0/3 families pass Bonferroni-corrected significance test. Spectral noise shaping actively hurt SBM and had no effect on BA/Cora.
+
+### Phase 2: H2 (Temporal Ramp) — FAIL
+
+Spearman ρ=0.22, p=0.72, 95% CI=[−1.0, 1.0]. No correlation between optimal t_knee and spectral gap ratio. QBE curves are flat across all t_knee values.
+
+**G2 gate: NO-GO** — Spectral noise shaping does not improve feature generation with this simplified score model.
+
+### Diagnosis
+- 3-layer GCN likely lacks capacity to exploit spectral noise structure
+- VP-SDE training is unstable (loss spikes) even with gradient clipping
+- Temporal ramp has no effect because the model can't use spectral structure at all
+
+### Recommended alternatives (ranked by effort)
+1. **Noise schedule recalibration** — sub-VP SDE, cosine schedule, EMA (1 day)
+2. **Spectral loss term** — directly penalize per-band energy mismatch (2-3 days)
+3. **Larger score network** — Graph Transformer / deeper GCN (1-2 days)
+4. **Per-instance importance weights** — adaptive instead of family-averaged (2-3 days)
+5. **Direct spectral generation** — generate in eigenbasis, per-band diffusion (1-2 weeks)
+
+Results: `results/phase2/`
