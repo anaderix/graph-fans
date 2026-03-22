@@ -27,6 +27,7 @@ class TrainConfig:
     lr: float = 1e-3
     batch_timesteps: int = 16
     weight_decay: float = 1e-4
+    grad_clip: float = 1.0  # gradient clipping norm
     seed: int = 42
     device: str = "cpu"
     use_spectral_noise: bool = False
@@ -38,7 +39,7 @@ class TrainConfig:
     n_layers: int = 3
     # SDE params
     beta_min: float = 0.1
-    beta_max: float = 20.0
+    beta_max: float = 10.0  # reduced from 20.0 for stability on small graphs
     n_gen_steps: int = 200
 
 
@@ -143,6 +144,7 @@ class Trainer:
 
                 self.optimizer.zero_grad()
                 loss.backward()
+                nn.utils.clip_grad_norm_(self.model.parameters(), self.config.grad_clip)
                 self.optimizer.step()
 
                 epoch_loss += loss.item()
