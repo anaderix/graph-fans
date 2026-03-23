@@ -10,7 +10,14 @@ import networkx as nx
 import numpy as np
 from scipy.linalg import expm
 
+from .multiscale_features import generate_multiscale_features, generate_community_boundary_features
+
 logger = logging.getLogger(__name__)
+
+# Feature generation modes
+FEATURE_SMOOTH = "smooth"           # Original: exp(-tL) @ noise (unimodal, for Phase 0/1a compat)
+FEATURE_MULTISCALE = "multiscale"   # Heat-kernel multi-scale (structure-dependent mixing)
+FEATURE_COMMUNITY = "community"     # Community centroids + boundary + hub signatures
 
 
 @dataclass
@@ -45,6 +52,23 @@ def _smooth_features(
     return features
 
 
+def _make_features(
+    graph: nx.Graph,
+    n_features: int,
+    seed: int,
+    feature_mode: str = FEATURE_MULTISCALE,
+) -> np.ndarray:
+    """Generate features using the specified mode."""
+    if feature_mode == FEATURE_SMOOTH:
+        return _smooth_features(graph, n_features=n_features, seed=seed)
+    elif feature_mode == FEATURE_MULTISCALE:
+        return generate_multiscale_features(graph, n_features=n_features, seed=seed)
+    elif feature_mode == FEATURE_COMMUNITY:
+        return generate_community_boundary_features(graph, n_features=n_features, seed=seed)
+    else:
+        raise ValueError(f"Unknown feature_mode: {feature_mode}")
+
+
 def generate_sbm(
     n_nodes: int = 200,
     n_communities: int = 4,
@@ -52,6 +76,7 @@ def generate_sbm(
     p_inter: float = 0.01,
     n_features: int = 16,
     seed: int = 42,
+    feature_mode: str = FEATURE_MULTISCALE,
 ) -> GraphData:
     """Generate a Stochastic Block Model graph with smooth node features.
 
@@ -75,7 +100,7 @@ def generate_sbm(
         if "block" in graph.nodes[node]:
             del graph.nodes[node]["block"]
 
-    features = _smooth_features(graph, n_features=n_features, seed=seed)
+    features = _make_features(graph, n_features, seed, feature_mode)
 
     return GraphData(
         graph=graph,
@@ -86,6 +111,7 @@ def generate_sbm(
             "n_communities": n_communities,
             "p_intra": p_intra,
             "p_inter": p_inter,
+            "feature_mode": feature_mode,
         },
     )
 
@@ -95,10 +121,11 @@ def generate_ba(
     m: int = 5,
     n_features: int = 16,
     seed: int = 42,
+    feature_mode: str = FEATURE_MULTISCALE,
 ) -> GraphData:
-    """Generate a Barabási-Albert preferential attachment graph with smooth node features."""
+    """Generate a Barabási-Albert preferential attachment graph with structure-aware features."""
     graph = nx.barabasi_albert_graph(n_nodes, m, seed=seed)
-    features = _smooth_features(graph, n_features=n_features, seed=seed)
+    features = _make_features(graph, n_features, seed, feature_mode)
 
     return GraphData(
         graph=graph,
