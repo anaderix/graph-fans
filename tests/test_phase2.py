@@ -15,20 +15,25 @@ from graph_fans.phase2.score_network import SimpleScoreNetwork
 from graph_fans.phase2.sde import VPSDE
 from graph_fans.phase2.trainer import Trainer, TrainConfig
 from graph_fans.utils.graph_generators import generate_sbm
+from graph_fans.utils.multiscale_features import generate_feature_dataset
 
 
 @pytest.fixture
 def small_graph():
-    """Small SBM graph for testing."""
+    """Small SBM graph with feature dataset for testing."""
     gd = generate_sbm(n_nodes=30, n_communities=3, p_intra=0.5, p_inter=0.05,
-                       n_features=4, seed=42)
-    return gd.graph, gd.features
+                       n_features=4, seed=42, feature_mode="smooth")
+    # Generate a small dataset of feature realizations
+    dataset = generate_feature_dataset(gd.graph, n_samples=10, n_features=4,
+                                        base_seed=42, mode="smooth")
+    return gd.graph, dataset
 
 
 @pytest.fixture
 def band_setup(small_graph):
     """Eigendecomposition and band setup for a small graph."""
-    graph, features = small_graph
+    graph, dataset = small_graph
+    features = dataset[0]  # Use first sample for noise shaping tests
     eigenvalues, eigenvectors = compute_laplacian_spectrum(graph)
     _, band_indices = partition_into_bands(eigenvalues, B=4)
     return eigenvalues, eigenvectors, band_indices, features
@@ -198,28 +203,28 @@ class TestVPSDE:
 class TestTrainer:
     def test_loss_decreases(self, small_graph):
         """After a few epochs, loss should decrease."""
-        graph, features = small_graph
+        graph, dataset = small_graph
         config = TrainConfig(
             n_epochs=50, lr=1e-3, batch_timesteps=4,
             seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_train_samples=10,
         )
-        trainer = Trainer(config, graph, features)
+        trainer = Trainer(config, graph, dataset)
         history = trainer.train()
-        # Loss at end should be less than at start (with some tolerance)
         assert history["loss"][-1] < history["loss"][0] * 1.5
 
     def test_generation_shape(self, small_graph):
         """Generated features should have correct shape."""
-        graph, features = small_graph
+        graph, dataset = small_graph
         config = TrainConfig(
             n_epochs=10, batch_timesteps=2,
             seed=42, device="cpu", hidden_dim=32, n_layers=2,
-            n_gen_steps=10,
+            n_gen_steps=10, n_train_samples=10,
         )
-        trainer = Trainer(config, graph, features)
+        trainer = Trainer(config, graph, dataset)
         trainer.train()
-        gen = trainer.generate(n_steps=10)
-        assert gen.shape == features.shape
+        gen = trainer.generate(n_steps=10, n_samples=3)
+        assert gen.shape == (3, dataset.shape[1], dataset.shape[2])
 
 
 class TestIntegration:
@@ -232,17 +237,18 @@ class TestIntegration:
         config = TrainConfig(
             n_epochs=20, batch_timesteps=2, seed=0, device="cpu",
             hidden_dim=32, n_layers=2, B=4, n_gen_steps=10,
+            n_train_samples=20,
         )
 
         r_uniform = run_single_experiment(
             "SBM(q=0.05)", "uniform", seed=0,
             n_nodes=30, n_features=4, config=config,
-            importance_weights=None, B=4,
+            importance_weights=None, B=4, feature_mode="smooth",
         )
         r_spectral = run_single_experiment(
             "SBM(q=0.05)", "spectral", seed=0,
             n_nodes=30, n_features=4, config=config,
-            importance_weights=weights, B=4,
+            importance_weights=weights, B=4, feature_mode="smooth",
         )
 
         assert r_uniform.qbe_total >= 0
@@ -259,13 +265,14 @@ class TestIntegration:
         config = TrainConfig(
             n_epochs=10, batch_timesteps=2, seed=0, device="cpu",
             hidden_dim=32, n_layers=2, B=4, n_gen_steps=10,
+            n_train_samples=20,
         )
 
         for t_knee in [0.1, 0.3]:
             r = run_single_experiment(
                 "SBM(q=0.05)", f"spectral_ramp_tknee={t_knee}", seed=0,
                 n_nodes=30, n_features=4, config=config,
-                importance_weights=weights, B=4,
+                importance_weights=weights, B=4, feature_mode="smooth",
             )
             assert r.qbe_total >= 0
             assert f"tknee={t_knee}" in r.method

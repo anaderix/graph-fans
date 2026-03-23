@@ -42,15 +42,17 @@ class TrainConfig:
     # SDE params
     beta_min: float = 0.1
     beta_max: float = 10.0
-    sde_type: str = "vpsde"  # "vpsde" or "cosine"
+    sde_type: str = "cosine"  # default to cosine (proven stable)
     n_gen_steps: int = 200
-    # Alt-2 additions
-    use_ema: bool = False
+    # Stability
+    use_ema: bool = True  # default on (proven helpful)
     ema_decay: float = 0.999
-    use_lr_scheduler: bool = False
-    # Alt-4: spectral loss
+    use_lr_scheduler: bool = True  # default on
+    # Spectral loss
     use_spectral_loss: bool = False
-    spectral_loss_weight: float = 0.1  # lambda for L_spectral
+    spectral_loss_weight: float = 0.1
+    # Dataset size
+    n_train_samples: int = 500  # number of feature realizations per graph
 
 
 class EMA:
@@ -65,7 +67,6 @@ class EMA:
             self.shadow[name].mul_(self.decay).add_(p.data, alpha=1 - self.decay)
 
     def apply(self, model: nn.Module) -> dict[str, torch.Tensor]:
-        """Apply EMA weights, return original weights for restoration."""
         original = {}
         for name, p in model.named_parameters():
             original[name] = p.data.clone()
@@ -73,24 +74,23 @@ class EMA:
         return original
 
     def restore(self, model: nn.Module, original: dict[str, torch.Tensor]) -> None:
-        """Restore original weights after EMA evaluation."""
         for name, p in model.named_parameters():
             p.data.copy_(original[name])
 
 
 class Trainer:
-    """Train a score network with denoising score matching.
+    """Train a score network with denoising score matching on a feature dataset.
 
-    Loss = E_t E_{x_0} E_{noise} [ ||score_net(x_t, t) - (-noise / std(t))||^2 ]
-
-    When use_spectral_noise=True, noise is shaped via the FANS mechanism.
+    Key fix: trains on a DATASET of N feature realizations per graph,
+    not a single feature matrix. Each training step samples a random
+    feature realization and a random timestep.
     """
 
     def __init__(
         self,
         config: TrainConfig,
         graph: nx.Graph,
-        features: np.ndarray,
+        feature_dataset: np.ndarray,  # [N, n_nodes, n_features]
         importance_weights: ImportanceWeights | None = None,
     ):
         self.config = config
@@ -103,9 +103,10 @@ class Trainer:
         src, dst = zip(*edge_list) if edge_list else ([], [])
         self.edge_index = torch.tensor([list(src), list(dst)], dtype=torch.long, device=self.device)
 
-        # Features
-        self.features = torch.tensor(features, dtype=torch.float32, device=self.device)
-        self.n_nodes, self.n_features = features.shape
+        # Feature dataset: [N, n_nodes, n_features]
+        self.dataset = torch.tensor(feature_dataset, dtype=torch.float32, device=self.device)
+        self.n_samples, self.n_nodes, self.n_features = self.dataset.shape
+        logger.info(f"  Dataset: {self.n_samples} samples, {self.n_nodes} nodes, {self.n_features} features")
 
         # Spectral decomposition
         eigenvalues, eigenvectors = compute_laplacian_spectrum(graph)
@@ -133,14 +134,12 @@ class Trainer:
             self.model.parameters(), lr=config.lr, weight_decay=config.weight_decay
         )
 
-        # LR scheduler: cosine annealing
         self.scheduler = None
         if config.use_lr_scheduler:
             self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                 self.optimizer, T_max=config.n_epochs, eta_min=config.lr * 0.01
             )
 
-        # EMA
         self.ema = None
         if config.use_ema:
             self.ema = EMA(self.model, decay=config.ema_decay)
@@ -164,7 +163,7 @@ class Trainer:
             )
 
     def train(self) -> dict[str, list[float]]:
-        """Run training. Returns dict with 'loss' key containing per-epoch losses."""
+        """Run training, sampling random features + random timesteps each step."""
         torch.manual_seed(self.config.seed)
         np.random.seed(self.config.seed)
 
@@ -173,12 +172,17 @@ class Trainer:
 
         for epoch in range(self.config.n_epochs):
             epoch_loss = 0.0
+            n_steps = 0
 
+            # Each epoch: sample batch_timesteps steps, each with a random sample + random t
             ts = np.random.uniform(1e-5, self.sde.T, size=self.config.batch_timesteps)
+            sample_indices = np.random.randint(0, self.n_samples, size=self.config.batch_timesteps)
 
-            for t in ts:
+            for t, idx in zip(ts, sample_indices):
+                x_0 = self.dataset[idx]  # [n_nodes, n_features] — random sample from dataset
+
                 noise = self._get_noise(t)
-                x_t, _ = self.sde.perturb(self.features, t, noise=noise)
+                x_t, _ = self.sde.perturb(x_0, t, noise=noise)
 
                 _, std = self.sde.marginal_params(t)
                 if std > 1e-8:
@@ -191,12 +195,12 @@ class Trainer:
 
                 loss = nn.functional.mse_loss(score_pred, target)
 
-                # Alt-4: spectral fidelity loss
+                # Spectral loss
                 if self.config.use_spectral_loss and std > 1e-4:
                     mean_coeff, _ = self.sde.marginal_params(t)
                     x_hat_0 = tweedie_denoise(x_t, score_pred, mean_coeff, std)
                     spec_loss = spectral_fidelity_loss(
-                        x_hat_0, self.features,
+                        x_hat_0, x_0,
                         self.eigenvectors, self.band_indices,
                         self.importance_weights,
                     )
@@ -207,16 +211,16 @@ class Trainer:
                 nn.utils.clip_grad_norm_(self.model.parameters(), self.config.grad_clip)
                 self.optimizer.step()
 
-                # EMA update
                 if self.ema is not None:
                     self.ema.update(self.model)
 
                 epoch_loss += loss.item()
+                n_steps += 1
 
             if self.scheduler is not None:
                 self.scheduler.step()
 
-            avg_loss = epoch_loss / self.config.batch_timesteps
+            avg_loss = epoch_loss / max(n_steps, 1)
             history["loss"].append(avg_loss)
 
             if (epoch + 1) % 100 == 0 or epoch == 0:
@@ -225,34 +229,39 @@ class Trainer:
         return history
 
     @torch.no_grad()
-    def generate(self, n_steps: int | None = None) -> np.ndarray:
-        """Generate features via reverse SDE sampling.
+    def generate(self, n_steps: int | None = None, n_samples: int = 1) -> np.ndarray:
+        """Generate feature samples via reverse SDE.
 
-        Uses EMA weights if available.
+        Args:
+            n_steps: Reverse SDE steps.
+            n_samples: Number of independent samples to generate.
+
+        Returns:
+            Generated features [n_samples, n_nodes, n_features].
         """
         if n_steps is None:
             n_steps = self.config.n_gen_steps
 
         self.model.eval()
-
-        # Apply EMA weights for generation if available
         original_weights = None
         if self.ema is not None:
             original_weights = self.ema.apply(self.model)
 
-        x = torch.randn(self.n_nodes, self.n_features, device=self.device)
+        all_samples = []
+        for _ in range(n_samples):
+            x = torch.randn(self.n_nodes, self.n_features, device=self.device)
+            dt = -self.sde.T / n_steps
+            ts = np.linspace(self.sde.T, 1e-5, n_steps)
 
-        dt = -self.sde.T / n_steps
-        ts = np.linspace(self.sde.T, 1e-5, n_steps)
+            for t in ts:
+                t_tensor = torch.tensor([t], dtype=torch.float32, device=self.device)
+                score = self.model(x, t_tensor, self.edge_index)
+                x = self.sde.reverse_step(x, score, t, dt)
 
-        for t in ts:
-            t_tensor = torch.tensor([t], dtype=torch.float32, device=self.device)
-            score = self.model(x, t_tensor, self.edge_index)
-            x = self.sde.reverse_step(x, score, t, dt)
+            all_samples.append(x.cpu().numpy())
 
-        # Restore original weights
         if self.ema is not None and original_weights is not None:
             self.ema.restore(self.model, original_weights)
 
         self.model.train()
-        return x.cpu().numpy()
+        return np.stack(all_samples)  # [n_samples, n_nodes, n_features]

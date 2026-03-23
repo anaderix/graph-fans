@@ -68,6 +68,50 @@ def compute_structural_roles(graph: nx.Graph) -> dict[str, np.ndarray]:
     }
 
 
+def generate_feature_dataset(
+    graph: nx.Graph,
+    n_samples: int = 500,
+    n_features: int = 16,
+    base_seed: int = 42,
+    mode: str = "community",
+) -> np.ndarray:
+    """Generate a dataset of N independent feature realizations for one graph.
+
+    Each sample is drawn from the same generative process but with a different
+    random seed, creating a proper training distribution for the score network.
+
+    Args:
+        graph: Fixed graph topology.
+        n_samples: Number of feature realizations to generate.
+        n_features: Feature dimensionality.
+        base_seed: Base seed; each sample uses base_seed + i.
+        mode: Feature generation mode ('community', 'multiscale', 'smooth').
+
+    Returns:
+        dataset: [n_samples, n_nodes, n_features] array.
+    """
+    from graph_fans.utils.graph_generators import _smooth_features
+
+    samples = []
+    for i in range(n_samples):
+        seed = base_seed + i
+        if mode == "community":
+            feat = generate_community_boundary_features(
+                graph, n_features=n_features, seed=seed
+            )
+        elif mode == "multiscale":
+            feat = generate_multiscale_features(
+                graph, n_features=n_features, seed=seed
+            )
+        elif mode == "smooth":
+            feat = _smooth_features(graph, n_features=n_features, seed=seed)
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
+        samples.append(feat)
+
+    return np.stack(samples)  # [n_samples, n_nodes, n_features]
+
+
 def generate_multiscale_features(
     graph: nx.Graph,
     n_features: int = 16,

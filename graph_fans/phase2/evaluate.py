@@ -1,11 +1,15 @@
-"""Evaluation pipeline for Phase 2: H1-A and H2 experiments."""
+"""Evaluation pipeline for Phase 2: H1-A and H2 experiments.
+
+Fixed: trains on a DATASET of feature realizations (not a single sample),
+evaluates generated distribution against held-out distribution.
+"""
 
 from __future__ import annotations
 
 import json
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import networkx as nx
@@ -18,18 +22,14 @@ from graph_fans.phase0.spectral_profiler import (
     partition_into_bands,
     compute_band_energy,
 )
-from graph_fans.phase1a.spectral_metrics import (
-    spectral_density_jsd,
-    hks_distance,
-    degree_mmd,
-    clustering_mmd,
-    triangle_count_mmd,
-)
 from graph_fans.utils.graph_generators import generate_sbm, generate_ba, load_citation_network
+from graph_fans.utils.multiscale_features import generate_feature_dataset
 from .noise_shaper import compute_importance_weights, ImportanceWeights
 from .trainer import Trainer, TrainConfig
 
 logger = logging.getLogger(__name__)
+
+N_GEN_SAMPLES = 50  # number of samples to generate for evaluation
 
 
 @dataclass
@@ -37,26 +37,19 @@ class Phase2Results:
     """Results for a single experiment run."""
 
     graph_family: str
-    method: str  # "uniform" or "spectral" or "spectral_ramp_tknee=X"
+    method: str
     seed: int
-    per_band_qbe_ref: np.ndarray  # [B] reference band energies (normalized)
-    per_band_qbe_gen: np.ndarray  # [B] generated band energies (normalized)
-    per_band_qbe_diff: np.ndarray  # [B] |ref - gen| per band
-    qbe_high_bands: float  # mean QBE diff in high bands (B/2 to B)
-    qbe_total: float  # total QBE distance
-    spectral_jsd: float
-    hks_dist: float
-    degree_mmd_val: float
-    clustering_mmd_val: float
-    triangle_mmd_val: float
+    per_band_qbe_diff: np.ndarray  # [B] per-band mean energy diff (gen vs ref distribution)
+    qbe_high_bands: float
+    qbe_total: float
     final_loss: float
     train_time_seconds: float
 
 
-def evaluate_single(
+def evaluate_distribution(
     graph: nx.Graph,
-    features_ref: np.ndarray,
-    features_gen: np.ndarray,
+    features_ref: np.ndarray,       # [N_ref, n_nodes, n_features]
+    features_gen: np.ndarray,       # [N_gen, n_nodes, n_features]
     graph_family: str,
     method: str,
     seed: int,
@@ -64,48 +57,38 @@ def evaluate_single(
     final_loss: float = 0.0,
     train_time: float = 0.0,
 ) -> Phase2Results:
-    """Evaluate generated features against reference."""
+    """Evaluate generated feature DISTRIBUTION against reference distribution.
+
+    Computes mean spectral energy profile across samples, then measures
+    per-band distance between the two distributions' profiles.
+    """
     eigenvalues, eigenvectors = compute_laplacian_spectrum(graph)
     _, band_indices = partition_into_bands(eigenvalues, B)
 
-    # Per-band energy
-    energy_ref = compute_band_energy(features_ref, eigenvectors, band_indices)
-    energy_gen = compute_band_energy(features_gen, eigenvectors, band_indices)
+    def mean_band_profile(dataset: np.ndarray) -> np.ndarray:
+        """Compute mean normalized band energy across samples."""
+        profiles = []
+        for features in dataset:
+            energy = compute_band_energy(features, eigenvectors, band_indices)
+            total = energy.sum()
+            profiles.append(energy / total if total > 0 else energy)
+        return np.stack(profiles).mean(axis=0)
 
-    total_ref = energy_ref.sum()
-    total_gen = energy_gen.sum()
-    norm_ref = energy_ref / total_ref if total_ref > 0 else energy_ref
-    norm_gen = energy_gen / total_gen if total_gen > 0 else energy_gen
+    profile_ref = mean_band_profile(features_ref)
+    profile_gen = mean_band_profile(features_gen)
 
-    per_band_diff = np.abs(norm_ref - norm_gen)
+    per_band_diff = np.abs(profile_ref - profile_gen)
     half = B // 2
     qbe_high = float(per_band_diff[half:].mean())
-    qbe_total = float(np.linalg.norm(norm_ref - norm_gen))
-
-    # Note: graph topology is fixed (same graph for ref and gen), so eigenvalue-based
-    # and structure-based metrics are always ~0. We set them to 0 explicitly rather
-    # than computing misleading near-zero values. The per-band QBE on features is
-    # the meaningful metric for fixed-topology feature generation.
-    jsd = 0.0
-    hks = 0.0
-    d_mmd = 0.0
-    c_mmd = 0.0
-    t_mmd = 0.0
+    qbe_total = float(np.linalg.norm(profile_ref - profile_gen))
 
     return Phase2Results(
         graph_family=graph_family,
         method=method,
         seed=seed,
-        per_band_qbe_ref=norm_ref,
-        per_band_qbe_gen=norm_gen,
         per_band_qbe_diff=per_band_diff,
         qbe_high_bands=qbe_high,
         qbe_total=qbe_total,
-        spectral_jsd=jsd,
-        hks_dist=hks,
-        degree_mmd_val=d_mmd,
-        clustering_mmd_val=c_mmd,
-        triangle_mmd_val=t_mmd,
         final_loss=final_loss,
         train_time_seconds=train_time,
     )
@@ -122,23 +105,19 @@ def _load_phase0_energies(phase0_dir: str = "results/phase0") -> dict[str, np.nd
     return {name: np.array(v["band_energies"]) for name, v in data.items()}
 
 
-def _get_graph_and_features(
-    family: str, n_nodes: int, n_features: int, seed: int
-) -> tuple[nx.Graph, np.ndarray]:
-    """Get graph and features for a family name."""
+def _get_graph(family: str, n_nodes: int, seed: int = 0) -> nx.Graph:
+    """Get graph topology for a family (features generated separately as dataset)."""
     if family.startswith("SBM"):
         q = float(family.split("=")[1].rstrip(")"))
-        gd = generate_sbm(n_nodes=n_nodes, p_inter=q, n_features=n_features, seed=seed)
+        gd = generate_sbm(n_nodes=n_nodes, p_inter=q, seed=seed, feature_mode="smooth")
     elif family.startswith("BA"):
         m = int(family.split("=")[1].rstrip(")"))
-        gd = generate_ba(n_nodes=n_nodes, m=m, n_features=n_features, seed=seed)
+        gd = generate_ba(n_nodes=n_nodes, m=m, seed=seed, feature_mode="smooth")
     elif family == "Cora":
-        gd = load_citation_network("Cora", n_features=n_features)
-    elif family == "CiteSeer":
-        gd = load_citation_network("CiteSeer", n_features=n_features)
+        gd = load_citation_network("Cora")
     else:
         raise ValueError(f"Unknown family: {family}")
-    return gd.graph, gd.features
+    return gd.graph
 
 
 def _get_importance_weights(
@@ -150,7 +129,6 @@ def _get_importance_weights(
     """Get importance weights for a family from Phase 0 data."""
     if family in phase0_energies:
         return compute_importance_weights(phase0_energies[family], alpha, epsilon)
-    # Try partial match
     for key in phase0_energies:
         if family.lower() in key.lower() or key.lower() in family.lower():
             return compute_importance_weights(phase0_energies[key], alpha, epsilon)
@@ -167,17 +145,31 @@ def run_single_experiment(
     config: TrainConfig | None = None,
     importance_weights: ImportanceWeights | None = None,
     B: int = 8,
+    feature_mode: str = "community",
 ) -> Phase2Results:
     """Run a single training + generation + evaluation."""
     if config is None:
         config = TrainConfig()
 
-    # Training features (seed=S)
-    graph, features_train = _get_graph_and_features(family, n_nodes, n_features, seed)
-    # Reference features for evaluation (seed=S+1000, different features same graph)
-    _, features_ref = _get_graph_and_features(family, n_nodes, n_features, seed + 1000)
+    # Fixed graph topology
+    graph = _get_graph(family, n_nodes, seed=0)
 
-    # Configure noise shaping
+    # Training dataset: N feature realizations, seeds [seed*1000 .. seed*1000+N)
+    train_base_seed = seed * 10000
+    logger.info(f"  Generating {config.n_train_samples} training samples for {family}...")
+    train_dataset = generate_feature_dataset(
+        graph, n_samples=config.n_train_samples,
+        n_features=n_features, base_seed=train_base_seed, mode=feature_mode,
+    )
+
+    # Held-out reference: separate seeds for evaluation
+    ref_base_seed = seed * 10000 + 100000  # well-separated from training
+    ref_dataset = generate_feature_dataset(
+        graph, n_samples=N_GEN_SAMPLES,
+        n_features=n_features, base_seed=ref_base_seed, mode=feature_mode,
+    )
+
+    # Configure
     cfg = TrainConfig(
         n_epochs=config.n_epochs,
         lr=config.lr,
@@ -192,25 +184,34 @@ def run_single_experiment(
         hidden_dim=config.hidden_dim,
         n_layers=config.n_layers,
         n_gen_steps=config.n_gen_steps,
+        sde_type=config.sde_type,
+        use_ema=config.use_ema,
+        ema_decay=config.ema_decay,
+        use_lr_scheduler=config.use_lr_scheduler,
+        use_spectral_loss=config.use_spectral_loss,
+        spectral_loss_weight=config.spectral_loss_weight,
+        n_train_samples=config.n_train_samples,
     )
 
-    # Parse t_knee from method string
     if "tknee=" in method:
         cfg.t_knee = float(method.split("tknee=")[1])
         cfg.use_spectral_noise = True
 
-    logger.info(f"  Training {family} / {method} / seed={seed}")
+    logger.info(f"  Training {family} / {method} / seed={seed} ({config.n_train_samples} samples)")
     start = time.time()
 
-    trainer = Trainer(cfg, graph, features_train, importance_weights)
+    trainer = Trainer(cfg, graph, train_dataset, importance_weights)
     history = trainer.train()
     train_time = time.time() - start
 
-    features_gen = trainer.generate()
+    # Generate samples
+    logger.info(f"  Generating {N_GEN_SAMPLES} samples...")
+    gen_dataset = trainer.generate(n_samples=N_GEN_SAMPLES)
+
     final_loss = history["loss"][-1]
 
-    return evaluate_single(
-        graph, features_ref, features_gen,
+    return evaluate_distribution(
+        graph, ref_dataset, gen_dataset,
         family, method, seed, B,
         final_loss, train_time,
     )
@@ -224,10 +225,11 @@ def run_h1a_experiment(
     config: TrainConfig | None = None,
     B: int = 8,
     output_dir: str = "results/phase2",
+    feature_mode: str = "community",
 ) -> pd.DataFrame:
-    """Run H1-A experiment: uniform vs spectral noise on primary families."""
+    """Run H1-A: uniform vs spectral noise on primary families."""
     if families is None:
-        families = ["SBM(q=0.05)", "BA(m=5)", "Cora"]
+        families = ["SBM(q=0.05)", "BA(m=5)"]
     if config is None:
         config = TrainConfig()
 
@@ -240,11 +242,11 @@ def run_h1a_experiment(
         for seed in range(n_seeds):
             for method in ["uniform", "spectral"]:
                 r = run_single_experiment(
-                    family, method, seed, n_nodes, n_features, config, weights, B
+                    family, method, seed, n_nodes, n_features, config,
+                    weights, B, feature_mode,
                 )
                 results.append(r)
 
-    # Build DataFrame
     rows = []
     for r in results:
         row = {
@@ -253,8 +255,6 @@ def run_h1a_experiment(
             "seed": r.seed,
             "qbe_high_bands": r.qbe_high_bands,
             "qbe_total": r.qbe_total,
-            "spectral_jsd": r.spectral_jsd,
-            "hks_distance": r.hks_dist,
             "final_loss": r.final_loss,
             "train_time_s": r.train_time_seconds,
         }
@@ -263,12 +263,10 @@ def run_h1a_experiment(
         rows.append(row)
 
     df = pd.DataFrame(rows)
-
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_path / "h1a_results.csv", index=False)
     logger.info(f"H1-A results saved to {out_path / 'h1a_results.csv'}")
-
     return df
 
 
@@ -281,8 +279,9 @@ def run_h2_experiment(
     config: TrainConfig | None = None,
     B: int = 8,
     output_dir: str = "results/phase2",
+    feature_mode: str = "community",
 ) -> pd.DataFrame:
-    """Run H2 experiment: grid search over t_knee."""
+    """Run H2: grid search over t_knee."""
     if families is None:
         families = ["SBM(q=0.01)", "SBM(q=0.05)", "SBM(q=0.1)", "BA(m=2)", "BA(m=5)"]
     if t_knee_values is None:
@@ -296,8 +295,7 @@ def run_h2_experiment(
     for family in families:
         weights = _get_importance_weights(phase0_energies, family, config.alpha, config.epsilon)
 
-        # Compute spectral gap ratio
-        graph, _ = _get_graph_and_features(family, n_nodes, n_features, seed=0)
+        graph = _get_graph(family, n_nodes, seed=0)
         eigenvalues, _ = compute_laplacian_spectrum(graph)
         lambda_2 = eigenvalues[1] if len(eigenvalues) > 1 else 0
         lambda_max = eigenvalues[-1] if eigenvalues[-1] > 0 else 1
@@ -307,7 +305,8 @@ def run_h2_experiment(
             for seed in range(n_seeds):
                 method = f"spectral_ramp_tknee={t_knee}"
                 r = run_single_experiment(
-                    family, method, seed, n_nodes, n_features, config, weights, B
+                    family, method, seed, n_nodes, n_features, config,
+                    weights, B, feature_mode,
                 )
                 results.append((r, spectral_gap_ratio, t_knee))
 
@@ -325,12 +324,10 @@ def run_h2_experiment(
         })
 
     df = pd.DataFrame(rows)
-
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_path / "h2_results.csv", index=False)
     logger.info(f"H2 results saved to {out_path / 'h2_results.csv'}")
-
     return df
 
 
@@ -340,10 +337,9 @@ def compute_g2_decision(
     B: int = 8,
     output_dir: str = "results/phase2",
 ) -> dict:
-    """Compute G2 go/no-go decision from H1-A and H2 results."""
+    """Compute G2 go/no-go decision."""
     from scipy.stats import ttest_rel
 
-    # --- H1-A: spectral fidelity improvement in high bands ---
     families = h1a_df["family"].unique()
     h1a_pass_count = 0
     h1a_details = {}
@@ -355,10 +351,8 @@ def compute_g2_decision(
         if len(uniform) == 0 or len(spectral) == 0:
             continue
 
-        # Compare QBE in high bands
         u_vals = uniform["qbe_high_bands"].values
         s_vals = spectral["qbe_high_bands"].values
-
         n = min(len(u_vals), len(s_vals))
         u_vals, s_vals = u_vals[:n], s_vals[:n]
 
@@ -368,7 +362,6 @@ def compute_g2_decision(
         else:
             t_stat, p_val = 0.0, 1.0
 
-        # Bonferroni correction
         adjusted_alpha = 0.05 / len(families)
         passes = improvement > 0 and p_val < adjusted_alpha
 
@@ -387,8 +380,7 @@ def compute_g2_decision(
 
     h1a_pass = h1a_pass_count >= 2
 
-    # --- H2: t_knee vs spectral gap correlation ---
-    # Find optimal t_knee per family
+    # H2
     optimal_tknee = {}
     spectral_gaps = {}
 
@@ -406,11 +398,9 @@ def compute_g2_decision(
 
         rho, p_val_h2 = spearmanr(sgr_vals, tknee_vals)
 
-        # Bootstrap CI
         rng = np.random.RandomState(42)
-        n_bootstrap = 10000
         rhos_boot = []
-        for _ in range(n_bootstrap):
+        for _ in range(10000):
             idx = rng.choice(len(tknee_vals), size=len(tknee_vals), replace=True)
             r, _ = spearmanr([sgr_vals[i] for i in idx], [tknee_vals[i] for i in idx])
             if not np.isnan(r):
@@ -424,7 +414,7 @@ def compute_g2_decision(
         ci_low, ci_high = float("nan"), float("nan")
         h2_pass = False
 
-    g2_pass = h1a_pass  # H1-A is the core gate; H2 is supplementary
+    g2_pass = h1a_pass
 
     decision = {
         "decision": "GO" if g2_pass else "NO-GO",

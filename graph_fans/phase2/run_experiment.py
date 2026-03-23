@@ -38,11 +38,13 @@ def run_phase2(
     h1a_families: list[str] | None = None,
     h2_families: list[str] | None = None,
     device: str = "cpu",
-    sde_type: str = "vpsde",
-    use_ema: bool = False,
-    use_lr_scheduler: bool = False,
+    sde_type: str = "cosine",
+    use_ema: bool = True,
+    use_lr_scheduler: bool = True,
     use_spectral_loss: bool = False,
     spectral_loss_weight: float = 0.1,
+    feature_mode: str = "community",
+    n_train_samples: int = 500,
 ) -> dict:
     """Run full Phase 2 experiment pipeline."""
     if t_knee_values is None:
@@ -60,10 +62,12 @@ def run_phase2(
         use_lr_scheduler=use_lr_scheduler,
         use_spectral_loss=use_spectral_loss,
         spectral_loss_weight=spectral_loss_weight,
+        n_train_samples=n_train_samples,
     )
 
     logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}, "
-                f"spectral_loss={use_spectral_loss} (weight={spectral_loss_weight})")
+                f"spectral_loss={use_spectral_loss}, features={feature_mode}, "
+                f"n_train_samples={n_train_samples}")
 
     # --- H1-A Experiment ---
     logger.info("\n=== H1-A: Uniform vs Spectral Noise ===")
@@ -75,6 +79,7 @@ def run_phase2(
         config=config,
         B=B,
         output_dir=output_dir,
+        feature_mode=feature_mode,
     )
 
     logger.info("\nH1-A Results Summary:")
@@ -92,6 +97,7 @@ def run_phase2(
         config=config,
         B=B,
         output_dir=output_dir,
+        feature_mode=feature_mode,
     )
 
     logger.info("\nH2 Results Summary:")
@@ -136,6 +142,10 @@ def main():
                         help="Alt-4: add spectral fidelity loss term")
     parser.add_argument("--spectral-loss-weight", type=float, default=0.1,
                         help="Weight for spectral loss term (default: 0.1)")
+    parser.add_argument("--feature-mode", choices=["smooth", "multiscale", "community"],
+                        default="community", help="Feature generation mode")
+    parser.add_argument("--n-train-samples", type=int, default=500,
+                        help="Number of feature realizations per graph for training")
     args = parser.parse_args()
 
     t_knee = [float(x) for x in args.t_knee_values.split(",")]
@@ -154,6 +164,8 @@ def main():
         use_lr_scheduler=args.lr_scheduler,
         use_spectral_loss=getattr(args, 'spectral_loss', False),
         spectral_loss_weight=getattr(args, 'spectral_loss_weight', 0.1),
+        feature_mode=args.feature_mode,
+        n_train_samples=args.n_train_samples,
     )
 
 
