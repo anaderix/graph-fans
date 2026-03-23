@@ -106,3 +106,38 @@ Alt-2 **fixed the training stability** (SBM spectral QBE improved from 0.109→0
 The problem is not training instability. The 3-layer GCN score network simply cannot exploit spectral noise structure. Next step: try Alternative 4 (spectral loss term) which directly supervises spectral fidelity rather than relying on the model to learn it implicitly from shaped noise.
 
 Results: `results/phase2b/`
+
+## 2026-03-23 — Phase 2c: Alt-4 (Spectral Fidelity Loss) — G2: NO-GO
+
+Added a differentiable spectral fidelity loss via Tweedie denoising: at each training step, compute the one-step denoised estimate x̂₀ = (x_t + σ²·score)/μ, then penalize per-band energy mismatch |E_b(x̂₀) - E_b(x₀)| weighted by importance weights. Combined with Alt-2 (cosine schedule + EMA + LR annealing), 1000 epochs, spectral_loss_weight=0.1.
+
+### Results
+
+| Family | Uniform QBE | Spectral+Loss QBE | Change |
+|--------|------------|-------------------|--------|
+| SBM(q=0.05) | 0.062 | 0.065 | -4.2% |
+| BA(m=5) | 0.125 | 0.118 | +5.3% |
+| Cora | 0.062 | 0.064 | -2.9% |
+
+H2: ρ=−0.21, p=0.74 (identical to 2b — spectral loss only affects the "spectral" H1-A runs).
+
+**G2 gate: NO-GO** — Results are statistically indistinguishable from Phase 2b (no spectral loss).
+
+### Key insight
+The spectral loss term had **zero additional effect** beyond what Alt-2 already provided. The Tweedie denoised estimate x̂₀ at intermediate timesteps is too noisy for the per-band energy comparison to provide a useful gradient signal. The loss term effectively adds noise to the gradient rather than useful spectral supervision.
+
+### Overall Phase 2 Conclusion
+
+Three experiments (2a, 2b, 2c) tested spectral noise shaping with increasing sophistication:
+- **2a (baseline):** Unstable training, SBM degraded. NO-GO.
+- **2b (cosine+EMA):** Stable training, shaping is a no-op. NO-GO.
+- **2c (cosine+EMA+spectral loss):** No additional benefit from explicit supervision. NO-GO.
+
+**Root cause:** The 3-layer GCN score network on 200-node graphs operates at a scale where spectral noise shaping provides no signal. The model's bottleneck is not spectral fidelity of the noise — it's the expressiveness and training dynamics of the score estimator itself. At this scale, uniform noise is sufficient because the model cannot resolve spectral structure regardless.
+
+**Remaining options:**
+1. **Scale up:** Test on larger graphs (>1000 nodes) with deeper networks (6+ layers, Graph Transformer). The FANS paper showed benefits only at sufficient model capacity.
+2. **Alternative 5 (Direct spectral generation):** Generate per-band coefficients independently, bypassing the score network's inability to differentiate bands. This is a fundamentally different architecture.
+3. **Write up negative result:** Document that the FANS→graph transfer does not work at small scale with simple score networks. This is a publishable negative result.
+
+Results: `results/phase2c/`

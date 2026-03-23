@@ -1,0 +1,60 @@
+{
+  "decision": "NO-GO",
+  "h1a": {
+    "pass": false,
+    "families_with_improvement": 0,
+    "total_families": 3,
+    "details": {
+      "SBM(q=0.05)": {
+        "improvement": -0.0026361904540088757,
+        "t_statistic": -0.17623420231702214,
+        "p_value": 0.8686726782474106,
+        "adjusted_alpha": 0.016666666666666666,
+        "passes_significance": false,
+        "uniform_mean": 0.06235062347594147,
+        "spectral_mean": 0.06498681392995034
+      },
+      "BA(m=5)": {
+        "improvement": 0.006628044687875284,
+        "t_statistic": 0.2611383395180481,
+        "p_value": 0.8068798097707223,
+        "adjusted_alpha": 0.016666666666666666,
+        "passes_significance": false,
+        "uniform_mean": 0.12494751591845195,
+        "spectral_mean": 0.11831947123057666
+      },
+      "Cora": {
+        "improvement": -0.001816170254168907,
+        "t_statistic": -0.6377593196647529,
+        "p_value": 0.5583095430757232,
+        "adjusted_alpha": 0.016666666666666666,
+        "passes_significance": false,
+        "uniform_mean": 0.06200650596305866,
+        "spectral_mean": 0.06382267621722756
+      }
+    }
+  },
+  "h2": {
+    "pass": false,
+    "spearman_rho": -0.20519567041703082,
+    "p_value": 0.7405819415910723,
+    "bootstrap_ci_95": [
+      -1.0,
+      1.0
+    ],
+    "optimal_tknee": {
+      "SBM(q=0.01)": 0.15,
+      "SBM(q=0.05)": 0.2,
+      "SBM(q=0.1)": 0.05,
+      "BA(m=2)": 0.2,
+      "BA(m=5)": 0.3
+    },
+    "spectral_gap_ratios": {
+      "SBM(q=0.01)": 0.06281307913616879,
+      "SBM(q=0.05)": 0.2910071257977564,
+      "SBM(q=0.1)": 0.4579192147867045,
+      "BA(m=2)": 0.10265307881940859,
+      "BA(m=5)": 0.2804668401924159
+    }
+  }
+}
