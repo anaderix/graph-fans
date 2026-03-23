@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graph-FANS: Frequency-Adaptive Noise Shaping</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --orange: #db6d28;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+    margin-bottom: 3rem;
+  }
+  header h1 { font-size: 2rem; font-weight: 600; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--text-dim); margin-top: 0.5rem; font-size: 1.1rem; }
+
+  /* Roadmap overview */
+  .roadmap {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    margin-bottom: 3rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+  .roadmap-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    position: relative;
+  }
+  .roadmap-node:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: calc(50% + 20px);
+    width: calc(100% - 40px);
+    height: 2px;
+    background: var(--border);
+  }
+  .roadmap-dot {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.75rem;
+    z-index: 1;
+    border: 2px solid;
+  }
+  .roadmap-dot.go { background: #1a3a1a; border-color: var(--green); color: var(--green); }
+  .roadmap-dot.nogo { background: #3a1a1a; border-color: var(--red); color: var(--red); }
+  .roadmap-dot.pending { background: #1a1a2a; border-color: var(--border); color: var(--text-dim); }
+  .roadmap-dot.blocked { background: #2a1a0a; border-color: var(--orange); color: var(--orange); }
+  .roadmap-label {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .roadmap-label strong { color: var(--text); display: block; }
+
+  /* Phase sections */
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  .phase-header {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .phase-header:hover { background: rgba(255,255,255,0.02); }
+  .phase-header h2 { font-size: 1.15rem; font-weight: 600; flex: 1; }
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2em 0.7em;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .badge-go { background: #1a3a1a; color: var(--green); border: 1px solid var(--green); }
+  .badge-nogo { background: #3a1a1a; color: var(--red); border: 1px solid var(--red); }
+  .badge-pending { background: #1a1a2a; color: var(--text-dim); border: 1px solid var(--border); }
+  .badge-blocked { background: #2a1a0a; color: var(--orange); border: 1px solid var(--orange); }
+  .chevron {
+    color: var(--text-dim);
+    transition: transform 0.2s;
+    font-size: 1.2rem;
+  }
+  .phase.open .chevron { transform: rotate(90deg); }
+  .phase-body {
+    display: none;
+    padding: 0 1.5rem 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .phase.open .phase-body { display: block; padding-top: 1.25rem; }
+
+  .phase-body h3 {
+    font-size: 0.95rem;
+    color: var(--accent);
+    margin: 1.25rem 0 0.5rem;
+    font-weight: 600;
+  }
+  .phase-body h3:first-child { margin-top: 0; }
+  .phase-body p, .phase-body li { color: var(--text-dim); font-size: 0.9rem; }
+  .phase-body ul { padding-left: 1.25rem; }
+  .phase-body li { margin-bottom: 0.25rem; }
+  .phase-body strong { color: var(--text); }
+
+  /* Results table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+  }
+  th, td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { color: var(--text); }
+  .worse { color: var(--red); }
+  .better { color: var(--green); }
+  .neutral { color: var(--text-dim); }
+
+  .insight {
+    background: rgba(88, 166, 255, 0.06);
+    border-left: 3px solid var(--accent);
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+
+  .dep-graph {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    background: var(--bg);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin: 0.75rem 0;
+  }
+
+  .hypotheses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  .hyp {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+  }
+  .hyp-id { font-weight: 700; color: var(--accent); font-size: 0.85rem; }
+  .hyp-desc { font-size: 0.85rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+  .gate-table { margin: 1rem 0; }
+  .gate-table td:first-child { font-weight: 700; white-space: nowrap; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    .container { padding: 1rem; }
+    header h1 { font-size: 1.5rem; }
+    .roadmap { gap: 0; }
+    .roadmap-node { min-width: 80px; }
+    .hypotheses { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Graph-<span>FANS</span></h1>
+  <p>Frequency-Adaptive Noise Shaping on Graph Laplacian Spectra</p>
+</header>
+
+<!-- Roadmap visual -->
+<section>
+  <h2 style="font-size:1rem; color:var(--text-dim); margin-bottom:1.25rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Roadmap</h2>
+  <div class="roadmap">
+    <div class="roadmap-node">
+      <div class="roadmap-dot go">G0</div>
+      <div class="roadmap-label"><strong>Phase 0</strong>Spectral<br>Profiling</div>
+    </div>
+    <div class="roadmap-node">
+      <div class="roadmap-dot go">G1</div>
+      <div class="roadmap-label"><strong>Phase 1a</strong>Spectral<br>Metrics</div>
+    </div>
+    <div class="roadmap-node">
+      <div class="roadmap-dot pending">&mdash;</div>
+      <div class="roadmap-label"><strong>Phase 1b</strong>Synthetic<br>Benchmarks</div>
+    </div>
+    <div class="roadmap-node">
+      <div class="roadmap-dot nogo">G2</div>
+      <div class="roadmap-label"><strong>Phase 2</strong>Regime A<br>Core</div>
+    </div>
+    <div class="roadmap-node">
+      <div class="roadmap-dot blocked">&bull;</div>
+      <div class="roadmap-label"><strong>Phase 3</strong>Persistence<br>Bands</div>
+    </div>
+    <div class="roadmap-node">
+      <div class="roadmap-dot blocked">&bull;</div>
+      <div class="roadmap-label"><strong>Phase 4</strong>Hyperbolic<br>Proxy</div>
+    </div>
+    <div class="roadmap-node">
+      <div class="roadmap-dot blocked">&bull;</div>
+      <div class="roadmap-label"><strong>Phase 5</strong>Regime B +<br>Point Clouds</div>
+    </div>
+  </div>
+</section>
+
+<!-- Hypotheses -->
+<section style="margin-bottom:2.5rem;">
+  <h2 style="font-size:1rem; color:var(--text-dim); margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Hypotheses</h2>
+  <div class="hypotheses">
+    <div class="hyp"><span class="hyp-id">H1</span><div class="hyp-desc">Spectral band decomposition improves diffusion-based graph generation (Regime A: fixed topology; Regime B: topology generation)</div></div>
+    <div class="hyp"><span class="hyp-id">H2</span><div class="hyp-desc">Hierarchical temporal ramp: optimal t_knee correlates with spectral gap ratio</div></div>
+    <div class="hyp"><span class="hyp-id">H3</span><div class="hyp-desc">Scale-dependent evaluation gap: spectral metrics reveal fidelity issues invisible to standard MMD</div></div>
+    <div class="hyp"><span class="hyp-id">H4</span><div class="hyp-desc">Persistence-informed band boundaries outperform uniform/quantile partitioning on irregular graphs</div></div>
+    <div class="hyp"><span class="hyp-id">H5</span><div class="hyp-desc">Hyperbolic embedding curvature as a scalable proxy for spectral band importance weights</div></div>
+    <div class="hyp"><span class="hyp-id">H6</span><div class="hyp-desc">Graph-FANS extends to point cloud generation via HNSW-induced graph scaffolds</div></div>
+  </div>
+</section>
+
+<!-- Dependency graph -->
+<section style="margin-bottom:2.5rem;">
+  <h2 style="font-size:1rem; color:var(--text-dim); margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Dependency Graph</h2>
+  <div class="dep-graph">Phase 0 (Spectral Profiling)
+  |
+  +---> Phase 1a (H3: Spectral Metrics)
+  |       |
+  |       v
+  +---> Phase 2 (H1-A + H2: Regime A Core)
+  |       |
+  |       v
+  |    Phase 3 (H4: Persistence-Informed Bands)
+  |       |
+  |       v
+  |    Phase 4 (H5: Hyperbolic Proxy)
+  |
+  +---> Phase 1b (Synthetic Benchmarks)
+          |
+          v
+       Phase 5 (H1-B + H6: Regime B + Point Clouds)</div>
+</section>
+
+<!-- Go/No-Go gates -->
+<section style="margin-bottom:2.5rem;">
+  <h2 style="font-size:1rem; color:var(--text-dim); margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Go / No-Go Gates</h2>
+  <table class="gate-table">
+    <tr><th>Gate</th><th>After</th><th>Condition</th><th>Status</th></tr>
+    <tr>
+      <td style="color:var(--green)">G0</td>
+      <td>Phase 0</td>
+      <td>Spectral energy shows non-uniform distribution (&ge;2&times; band variation)</td>
+      <td><span class="badge badge-go">GO</span></td>
+    </tr>
+    <tr>
+      <td style="color:var(--green)">G1</td>
+      <td>Phase 1a</td>
+      <td>At least 1/3 spectral metrics shows &ge;10% difference from aggregate MMD</td>
+      <td><span class="badge badge-go">GO</span></td>
+    </tr>
+    <tr>
+      <td style="color:var(--red)">G2</td>
+      <td>Phase 2</td>
+      <td>Regime A improves spectral fidelity on &ge;2/3 graph families</td>
+      <td><span class="badge badge-nogo">NO-GO</span></td>
+    </tr>
+    <tr>
+      <td style="color:var(--text-dim)">G3</td>
+      <td>Phase 3</td>
+      <td>Persistence bands outperform uniform by &ge;5% on irregular graphs</td>
+      <td><span class="badge badge-blocked">Blocked</span></td>
+    </tr>
+    <tr>
+      <td style="color:var(--text-dim)">G4</td>
+      <td>Phase 4</td>
+      <td>Curvature proxy achieves &ge;80% of full eigendecomposition fidelity</td>
+      <td><span class="badge badge-blocked">Blocked</span></td>
+    </tr>
+  </table>
+</section>
+
+<!-- Phase details -->
+<section>
+  <h2 style="font-size:1rem; color:var(--text-dim); margin-bottom:1.25rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Phase Details &amp; Results</h2>
+
+  <!-- Phase 0 -->
+  <div class="phase open" id="phase0">
+    <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="badge badge-go">GO</span>
+      <h2>Phase 0 &mdash; Empirical Spectral Profiling</h2>
+      <span class="chevron">&#9654;</span>
+    </div>
+    <div class="phase-body">
+      <h3>Goal</h3>
+      <p>Determine whether graph signal energy follows a non-uniform spectral profile amenable to FANS-style importance weighting.</p>
+
+      <h3>Results</h3>
+      <table>
+        <tr><th>Family</th><th>Energy Ratio</th><th>Decay Model</th><th>R&sup2;</th></tr>
+        <tr><td>SBM (q=0.01)</td><td>3.8&times;</td><td>power_law</td><td>0.12</td></tr>
+        <tr><td>SBM (q=0.05)</td><td>6.9&times;</td><td>power_law</td><td>0.35</td></tr>
+        <tr><td>SBM (q=0.1)</td><td>10.7&times;</td><td>power_law</td><td>0.44</td></tr>
+        <tr><td>SBM (q=0.2)</td><td>8.3&times;</td><td>power_law</td><td>0.51</td></tr>
+        <tr><td>BA (m=2)</td><td>17.0&times;</td><td>exponential</td><td>0.39</td></tr>
+        <tr><td>BA (m=5)</td><td>8.1&times;</td><td>power_law</td><td>0.05</td></tr>
+        <tr><td>BA (m=10)</td><td>6.7&times;</td><td>power_law</td><td>0.30</td></tr>
+        <tr><td>Cora</td><td>4.0&times;</td><td>power_law</td><td>0.49</td></tr>
+        <tr><td>CiteSeer</td><td>5.0&times;</td><td>power_law</td><td>0.39</td></tr>
+      </table>
+      <p><strong>G0 gate: GO</strong> &mdash; All 9/9 families exceed the 2&times; energy ratio threshold.</p>
+
+      <div class="insight">
+        <strong>Key finding:</strong> Graph spectral energy is non-uniform but does NOT follow a simple monotonic decay like images (1/f). Energy profiles are hump-shaped or concentrated in mid-bands. Data-driven per-family weighting is more appropriate than a blanket inverse-power scheme.
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 1a -->
+  <div class="phase" id="phase1a">
+    <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="badge badge-go">GO</span>
+      <h2>Phase 1a &mdash; Basis-Free Spectral Metrics (H3)</h2>
+      <span class="chevron">&#9654;</span>
+    </div>
+    <div class="phase-body">
+      <h3>Goal</h3>
+      <p>Implement and validate basis-free spectral evaluation metrics that reveal fidelity gaps invisible to standard metrics.</p>
+
+      <h3>Metrics Implemented</h3>
+      <ul>
+        <li><strong>Spectral density JSD</strong> &mdash; KDE on normalized eigenvalues, Jensen-Shannon divergence</li>
+        <li><strong>Quantile-band energy (QBE)</strong> &mdash; per-band energy comparison across equal-mass quantile bands</li>
+        <li><strong>Heat kernel signature (HKS) distance</strong> &mdash; Tr(exp(-tL)) curves over logarithmic time grid</li>
+      </ul>
+
+      <h3>Results</h3>
+      <p><strong>G1 gate: GO</strong> &mdash; QBE distance consistently reveals spectral fidelity gaps invisible to standard MMD, especially for configuration-model baselines (matched degree sequence but wrong spectral structure).</p>
+
+      <div class="insight">
+        <strong>Key finding:</strong> QBE is the most discriminative metric: it detects spectral degradation that degree/clustering/triangle MMD completely misses, particularly for baselines with correct degree distributions but incorrect community structure.
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 1b -->
+  <div class="phase" id="phase1b">
+    <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="badge badge-pending">Pending</span>
+      <h2>Phase 1b &mdash; Synthetic Benchmarks</h2>
+      <span class="chevron">&#9654;</span>
+    </div>
+    <div class="phase-body">
+      <h3>Goal</h3>
+      <p>Build synthetic graph benchmarks with known multiscale structure for controlled hypothesis testing.</p>
+
+      <h3>Plan</h3>
+      <ul>
+        <li>Design hierarchical SBM benchmarks (2-level community hierarchy)</li>
+        <li>Tunable inter/intra-community edge probabilities with known spectral structure</li>
+        <li>Generate training/validation/test splits for 3 difficulty levels</li>
+        <li>Verify Phase 1a metrics correctly capture known structure</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase open" id="phase2">
+    <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="badge badge-nogo">NO-GO</span>
+      <h2>Phase 2 &mdash; Regime A Core (H1-A + H2)</h2>
+      <span class="chevron">&#9654;</span>
+    </div>
+    <div class="phase-body">
+      <h3>Goal</h3>
+      <p>Implement and validate Graph-FANS noise shaping on fixed-topology graphs with temporal ramping.</p>
+
+      <h3>Implementation</h3>
+      <p>8 modules: noise_shaper, score_network (3-layer GCN), sde (VP-SDE), trainer, evaluate, visualize, run_experiment, tests. Code reviewed: 1 CRITICAL + 2 MAJOR issues fixed. 18/18 tests passing. Run on NVIDIA L40S GPU.</p>
+
+      <h3>Experiment 2a &mdash; Baseline VP-SDE</h3>
+      <table>
+        <tr><th>Family</th><th>Uniform QBE</th><th>Spectral QBE</th><th>Change</th></tr>
+        <tr><td>SBM (q=0.05)</td><td>0.049</td><td>0.109</td><td class="worse">-120% (worse)</td></tr>
+        <tr><td>BA (m=5)</td><td>0.136</td><td>0.136</td><td class="neutral">+0.2%</td></tr>
+        <tr><td>Cora</td><td>0.087</td><td>0.088</td><td class="neutral">-0.4%</td></tr>
+      </table>
+      <p>Unstable training, SBM actively degraded. 0/3 families pass Bonferroni test.</p>
+
+      <h3>Experiment 2b &mdash; Cosine Schedule + EMA</h3>
+      <table>
+        <tr><th>Family</th><th>Uniform QBE</th><th>Spectral QBE</th><th>Change</th></tr>
+        <tr><td>SBM (q=0.05)</td><td>0.064</td><td>0.065</td><td class="neutral">-2.3%</td></tr>
+        <tr><td>BA (m=5)</td><td>0.125</td><td>0.118</td><td class="better">+5.3%</td></tr>
+        <tr><td>Cora</td><td>0.071</td><td>0.072</td><td class="neutral">-1.8%</td></tr>
+      </table>
+      <p>Training stability fixed (SBM improved from 0.109 &rarr; 0.065), but spectral shaping is a no-op. 0/3 pass Bonferroni test.</p>
+
+      <h3>Experiment 2c &mdash; Spectral Fidelity Loss (Tweedie)</h3>
+      <table>
+        <tr><th>Family</th><th>Uniform QBE</th><th>Spectral+Loss QBE</th><th>Change</th></tr>
+        <tr><td>SBM (q=0.05)</td><td>0.062</td><td>0.065</td><td class="worse">-4.2%</td></tr>
+        <tr><td>BA (m=5)</td><td>0.125</td><td>0.118</td><td class="better">+5.3%</td></tr>
+        <tr><td>Cora</td><td>0.062</td><td>0.064</td><td class="worse">-2.9%</td></tr>
+      </table>
+      <p>Zero additional benefit beyond 2b. Tweedie denoised estimate at intermediate timesteps too noisy for useful spectral gradient signal.</p>
+
+      <h3>H2: Temporal Ramp</h3>
+      <p>Spearman &rho; = &minus;0.21, p = 0.74, 95% CI = [&minus;1.0, 1.0]. No correlation between optimal t_knee and spectral gap ratio. QBE curves flat across all t_knee values.</p>
+
+      <p><strong>G2 gate: NO-GO</strong> &mdash; 0/3 families pass Bonferroni-corrected significance test across all three experiments.</p>
+
+      <div class="insight">
+        <strong>Root cause:</strong> The 3-layer GCN score network on 200-node graphs cannot exploit spectral noise structure. The bottleneck is model expressiveness, not noise fidelity. At this scale, uniform noise is sufficient because the model cannot resolve spectral structure regardless.
+      </div>
+
+      <h3>Remaining Options</h3>
+      <ul>
+        <li><strong>Scale up:</strong> Test on larger graphs (&gt;1000 nodes) with deeper networks (Graph Transformer)</li>
+        <li><strong>Alt-5 (Direct spectral generation):</strong> Per-band coefficient generation, bypassing the score network</li>
+        <li><strong>Write up negative result:</strong> FANS &rarr; graph transfer does not work at small scale with simple score networks</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase" id="phase3">
+    <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="badge badge-blocked">Blocked</span>
+      <h2>Phase 3 &mdash; Persistence-Informed Bands (H4)</h2>
+      <span class="chevron">&#9654;</span>
+    </div>
+    <div class="phase-body">
+      <h3>Goal</h3>
+      <p>Test whether persistence-informed band boundaries outperform uniform/quantile partitioning on irregular graphs.</p>
+      <p><em>Blocked by G2 (Phase 2 NO-GO). Requires Regime A to work before band optimization is meaningful.</em></p>
+
+      <h3>Plan</h3>
+      <ul>
+        <li>Persistent homology on graph filtrations (Vietoris-Rips on shortest-path distances)</li>
+        <li>Extract natural scale boundaries from persistence diagram gaps</li>
+        <li>4-condition ablation: uniform, quantile, persistence-informed, random bands</li>
+        <li>Evaluate on irregular (CV &gt; 1.0) vs regular (CV &lt; 0.5) graphs</li>
+      </ul>
+
+      <h3>Success Criteria</h3>
+      <p>Persistence bands outperform uniform by &ge;5% on irregular graphs; advantage is larger on irregular vs regular.</p>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="phase" id="phase4">
+    <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="badge badge-blocked">Blocked</span>
+      <h2>Phase 4 &mdash; Hyperbolic Proxy (H5)</h2>
+      <span class="chevron">&#9654;</span>
+    </div>
+    <div class="phase-body">
+      <h3>Goal</h3>
+      <p>Validate hyperbolic embedding curvature as a cheap proxy for spectral band importance weights.</p>
+      <p><em>Blocked by G2. Requires working spectral noise shaping before proxy validation is meaningful.</em></p>
+
+      <h3>Plan</h3>
+      <ul>
+        <li>Poincar&eacute; ball embeddings, curvature-derived importance weights</li>
+        <li>Compare proxy vs full eigendecomposition on trees, hierarchical, and dense networks</li>
+        <li>Benchmark O(n log n) proxy vs O(n&sup3;) eigendecomposition</li>
+        <li>Identify crossover graph size where proxy becomes essential</li>
+      </ul>
+
+      <h3>Success Criteria</h3>
+      <p>&ge;80% of full eigendecomposition fidelity on tree-like graphs; clear computational advantage at &gt;10K nodes.</p>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="phase" id="phase5">
+    <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
+      <span class="badge badge-blocked">Blocked</span>
+      <h2>Phase 5 &mdash; Regime B + Point Clouds (H1-B + H6)</h2>
+      <span class="chevron">&#9654;</span>
+    </div>
+    <div class="phase-body">
+      <h3>Goal</h3>
+      <p>Extend Graph-FANS to topology generation (Regime B) and point cloud generation (H6).</p>
+      <p><em>Blocked by G2. Depends on Phase 1b and ideally G3/G4 results.</em></p>
+
+      <h3>Plan</h3>
+      <ul>
+        <li><strong>H1-B:</strong> Chebyshev polynomial band-pass filters, spectral density matching during generation</li>
+        <li><strong>H6:</strong> HNSW-induced graph scaffolds from noisy point clouds, fixed-initialization denoising strategy</li>
+        <li>Evaluate on community graphs, molecular graphs, ModelNet10</li>
+        <li>Characterize when fixed-initialization assumption breaks</li>
+      </ul>
+
+      <h3>Success Criteria</h3>
+      <p>Regime B: better spectral fidelity than uniform-noise baselines. H6: higher micro-scale fidelity on point clouds.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Graph-FANS &middot; <a href="https://github.com/anaderix/graph-fans">GitHub</a> &middot; Auto-deployed from <code>main</code></p>
+</footer>
+
+</div>
+</body>
+</html>
