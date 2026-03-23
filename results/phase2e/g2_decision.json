@@ -1,0 +1,51 @@
+{
+  "decision": "NO-GO",
+  "h1a": {
+    "pass": false,
+    "families_with_improvement": 0,
+    "total_families": 2,
+    "details": {
+      "SBM(q=0.05)": {
+        "improvement": 6.659568043028419e-06,
+        "t_statistic": 0.2977875899627654,
+        "p_value": 0.7939508126193822,
+        "adjusted_alpha": 0.025,
+        "passes_significance": false,
+        "uniform_mean": 0.05622083049737842,
+        "spectral_mean": 0.056214170929335394
+      },
+      "BA(m=5)": {
+        "improvement": -0.0035593105011534724,
+        "t_statistic": -0.35153392271148975,
+        "p_value": 0.7587688839529734,
+        "adjusted_alpha": 0.025,
+        "passes_significance": false,
+        "uniform_mean": 0.008674698927960927,
+        "spectral_mean": 0.012234009429114399
+      }
+    }
+  },
+  "h2": {
+    "pass": false,
+    "spearman_rho": -0.28867513459481287,
+    "p_value": 0.6376180914006019,
+    "bootstrap_ci_95": [
+      -1.0,
+      0.9682458365518541
+    ],
+    "optimal_tknee": {
+      "SBM(q=0.01)": 0.3,
+      "SBM(q=0.05)": 0.05,
+      "SBM(q=0.1)": 0.3,
+      "BA(m=2)": 0.3,
+      "BA(m=5)": 0.05
+    },
+    "spectral_gap_ratios": {
+      "SBM(q=0.01)": 0.06281307913616879,
+      "SBM(q=0.05)": 0.2910071257977564,
+      "SBM(q=0.1)": 0.4579192147867045,
+      "BA(m=2)": 0.10265307881940859,
+      "BA(m=5)": 0.2804668401924159
+    }
+  }
+}
