@@ -50,6 +50,8 @@ def run_phase2(
     n_train_samples: int = 500,
     dataset_dir: str = "results/phase2/datasets",
     pre_generate_only: bool = False,
+    t_sampling: str = "uniform",
+    min_snr_gamma: float | None = None,
 ) -> dict:
     """Run full Phase 2 experiment pipeline."""
     if t_knee_values is None:
@@ -69,6 +71,8 @@ def run_phase2(
         use_spectral_loss=use_spectral_loss,
         spectral_loss_weight=spectral_loss_weight,
         n_train_samples=n_train_samples,
+        t_sampling=t_sampling,
+        min_snr_gamma=min_snr_gamma,
     )
 
     logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}, "
@@ -182,6 +186,10 @@ def main():
                         help="Directory for cached feature datasets")
     parser.add_argument("--pre-generate-only", action="store_true",
                         help="Generate datasets and exit (for inspection before training)")
+    parser.add_argument("--t-sampling", choices=["uniform", "log_snr"], default="uniform",
+                        help="Timestep sampling strategy: uniform (default) or log_snr (NS-A)")
+    parser.add_argument("--min-snr-gamma", type=float, default=None,
+                        help="min-SNR-γ loss weighting (NS-C). None=disabled, 5.0=standard")
     args = parser.parse_args()
 
     t_knee = [float(x) for x in args.t_knee_values.split(",")]
@@ -205,6 +213,8 @@ def main():
         n_train_samples=args.n_train_samples,
         dataset_dir=args.dataset_dir,
         pre_generate_only=args.pre_generate_only,
+        t_sampling=args.t_sampling,
+        min_snr_gamma=args.min_snr_gamma,
     )
 
 

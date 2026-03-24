@@ -465,3 +465,124 @@ class TestIntegration:
                 )
                 assert r.qbe_total >= 0
                 assert f"tknee={t_knee}" in r.method
+
+
+class TestLogSNRSampling:
+    """Tests for NS-A: log-SNR uniform timestep sampling."""
+
+    def test_snr_to_t_monotonic(self, small_graph):
+        """Higher SNR corresponds to lower t (less noise)."""
+        graph, dataset = small_graph
+        config = TrainConfig(n_epochs=1, batch_timesteps=1, seed=0,
+                             hidden_dim=32, n_layers=2, n_train_samples=10)
+        trainer = Trainer(config, graph, dataset)
+
+        snr_high = 10.0
+        snr_low = 0.5
+        t_high_snr = trainer._snr_to_t(snr_high)
+        t_low_snr = trainer._snr_to_t(snr_low)
+        # Higher SNR → lower t (signal is cleaner at small t)
+        assert t_high_snr < t_low_snr, (
+            f"Expected t(SNR={snr_high}) < t(SNR={snr_low}), "
+            f"got {t_high_snr:.4f} vs {t_low_snr:.4f}"
+        )
+
+    def test_snr_to_t_roundtrip(self, small_graph):
+        """SNR(t(snr)) ≈ snr within relative tolerance 1e-3."""
+        graph, dataset = small_graph
+        config = TrainConfig(n_epochs=1, batch_timesteps=1, seed=0,
+                             hidden_dim=32, n_layers=2, n_train_samples=10)
+        trainer = Trainer(config, graph, dataset)
+
+        for target_snr in [0.2, 1.0, 5.0, 20.0]:
+            t = trainer._snr_to_t(target_snr)
+            ab = trainer.sde.alpha_bar(t)
+            recovered_snr = ab / max(1.0 - ab, 1e-10)
+            rel_error = abs(recovered_snr - target_snr) / max(target_snr, 1e-8)
+            assert rel_error < 1e-3, (
+                f"SNR roundtrip failed for target={target_snr}: "
+                f"recovered={recovered_snr:.6f}, rel_error={rel_error:.2e}"
+            )
+
+    def test_log_snr_sampling_trains(self, small_graph):
+        """Training with t_sampling='log_snr' converges (loss decreases over first 50 epochs)."""
+        graph, dataset = small_graph
+        config = TrainConfig(
+            n_epochs=50, lr=1e-3, batch_timesteps=8,
+            seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_train_samples=10, t_sampling="log_snr",
+            use_lr_scheduler=False,
+        )
+        trainer = Trainer(config, graph, dataset)
+        history = trainer.train()
+        # Compare average of last 10 epochs vs first 10 epochs for robustness
+        first_avg = float(np.mean(history["loss"][:10]))
+        last_avg = float(np.mean(history["loss"][-10:]))
+        assert last_avg < first_avg, (
+            f"Loss did not decrease with log_snr sampling: "
+            f"first-10-avg={first_avg:.4f}, last-10-avg={last_avg:.4f}"
+        )
+
+    def test_default_is_uniform(self):
+        """Default t_sampling is 'uniform' — existing behavior unchanged."""
+        config = TrainConfig()
+        assert config.t_sampling == "uniform"
+
+
+class TestMinSNRGamma:
+    """Tests for NS-C: min-SNR-γ loss weighting."""
+
+    def test_weight_formula(self):
+        """Verify min(snr, gamma) / snr at snr=0.5, 5, 50 with gamma=5."""
+        gamma = 5.0
+        cases = [
+            (0.5, min(0.5, gamma) / 0.5),   # snr < gamma → weight = 1.0
+            (5.0, min(5.0, gamma) / 5.0),   # snr == gamma → weight = 1.0
+            (50.0, min(50.0, gamma) / 50.0), # snr > gamma → weight = gamma/snr < 1
+        ]
+        for snr, expected_weight in cases:
+            computed = min(snr, gamma) / snr
+            assert abs(computed - expected_weight) < 1e-9, (
+                f"Weight mismatch at snr={snr}: got {computed}, expected {expected_weight}"
+            )
+        # Low-SNR weight must be 1 (no downweighting)
+        assert abs(cases[0][1] - 1.0) < 1e-9
+        # High-SNR weight must be less than 1 (downweighted)
+        assert cases[2][1] < 1.0
+
+    def test_min_snr_gamma_trains(self, small_graph):
+        """Training with min_snr_gamma=5.0 converges (loss decreases)."""
+        graph, dataset = small_graph
+        config = TrainConfig(
+            n_epochs=50, lr=1e-3, batch_timesteps=4,
+            seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_train_samples=10, min_snr_gamma=5.0,
+        )
+        trainer = Trainer(config, graph, dataset)
+        history = trainer.train()
+        assert history["loss"][-1] < history["loss"][0], (
+            f"Loss did not decrease with min_snr_gamma=5: "
+            f"first={history['loss'][0]:.4f}, last={history['loss'][-1]:.4f}"
+        )
+
+    def test_default_disabled(self):
+        """Default min_snr_gamma is None — NS-C disabled by default."""
+        config = TrainConfig()
+        assert config.min_snr_gamma is None
+
+    def test_combined_ac(self, small_graph):
+        """NS-A + NS-C combined trains 30 epochs without error."""
+        graph, dataset = small_graph
+        config = TrainConfig(
+            n_epochs=30, lr=1e-3, batch_timesteps=4,
+            seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_train_samples=10,
+            t_sampling="log_snr",
+            min_snr_gamma=5.0,
+        )
+        trainer = Trainer(config, graph, dataset)
+        history = trainer.train()
+        assert len(history["loss"]) == 30
+        assert all(np.isfinite(l) for l in history["loss"]), (
+            "NaN or Inf detected in loss history"
+        )

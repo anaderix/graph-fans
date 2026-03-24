@@ -53,6 +53,10 @@ class TrainConfig:
     spectral_loss_weight: float = 0.1
     # Dataset size
     n_train_samples: int = 500  # number of feature realizations per graph
+    # NS-A: log-SNR uniform timestep sampling
+    t_sampling: str = "uniform"  # "uniform" or "log_snr"
+    # NS-C: min-SNR-γ loss weighting (None = disabled, 5.0 = standard)
+    min_snr_gamma: float | None = None
 
 
 class EMA:
@@ -144,6 +148,31 @@ class Trainer:
         if config.use_ema:
             self.ema = EMA(self.model, decay=config.ema_decay)
 
+    def _snr_to_t(self, target_snr: float) -> float:
+        """Binary search to find t such that SNR(t) ≈ target_snr.
+
+        SNR(t) = alpha_bar(t) / (1 - alpha_bar(t)).
+        alpha_bar is monotonically decreasing, so higher t → lower SNR.
+
+        Args:
+            target_snr: The target signal-to-noise ratio (must be positive).
+
+        Returns:
+            Timestep t in [1e-5, T] such that SNR(t) ≈ target_snr.
+        """
+        lo, hi = 1e-5, self.sde.T
+        for _ in range(50):
+            mid = 0.5 * (lo + hi)
+            ab = self.sde.alpha_bar(mid)
+            snr = ab / max(1.0 - ab, 1e-10)
+            if snr > target_snr:
+                lo = mid  # higher t needed to reduce SNR
+            else:
+                hi = mid
+            if hi - lo < 1e-6:
+                break
+        return 0.5 * (lo + hi)
+
     def _get_noise(self, t: float) -> torch.Tensor:
         """Generate noise, optionally shaped spectrally."""
         noise = torch.randn(self.n_nodes, self.n_features, device=self.device)
@@ -175,7 +204,16 @@ class Trainer:
             n_steps = 0
 
             # Each epoch: sample batch_timesteps steps, each with a random sample + random t
-            ts = np.random.uniform(1e-5, self.sde.T, size=self.config.batch_timesteps)
+            if self.config.t_sampling == "log_snr":
+                # NS-A: uniform sampling in log-SNR space
+                ab_T = self.sde.alpha_bar(self.sde.T)
+                ab_0 = self.sde.alpha_bar(1e-5)
+                log_snr_min = np.log(ab_T / max(1.0 - ab_T, 1e-10))
+                log_snr_max = np.log(ab_0 / max(1.0 - ab_0, 1e-10))
+                log_snrs = np.random.uniform(log_snr_min, log_snr_max, size=self.config.batch_timesteps)
+                ts = np.array([self._snr_to_t(np.exp(ls)) for ls in log_snrs])
+            else:
+                ts = np.random.uniform(1e-5, self.sde.T, size=self.config.batch_timesteps)
             sample_indices = np.random.randint(0, self.n_samples, size=self.config.batch_timesteps)
 
             for t, idx in zip(ts, sample_indices):
@@ -191,6 +229,13 @@ class Trainer:
                 eps_pred = self.model(x_t, t_tensor, self.edge_index)
 
                 loss = nn.functional.mse_loss(eps_pred, target)
+
+                # NS-C: min-SNR-γ loss weighting
+                if self.config.min_snr_gamma is not None:
+                    mean_coeff, std = self.sde.marginal_params(t)
+                    snr = mean_coeff**2 / max(std**2, 1e-8)
+                    weight = min(snr, self.config.min_snr_gamma) / snr
+                    loss = weight * loss
 
                 # Spectral loss
                 if self.config.use_spectral_loss:
