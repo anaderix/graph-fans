@@ -415,3 +415,49 @@ The 3L GCN at 50 nodes actually generates reasonably — std ratio 1.54×, spect
 The 3L GCN at 50 nodes may already be good enough to test spectral shaping properly. The earlier Phase 2f small-scale H1-A showed no QBE difference, but that used mean-profile QBE. With the spectral W1 metric, a shaping effect might now be measurable on generated samples (not just the 20-38% we saw in the W1 diagnostic on pre-trained models).
 
 Results: `results/diagnostics/arch_comparison.json`
+
+## 2026-03-25 — Phase 2g: Definitive Spectral Shaping Test — FIRST SIGNIFICANT RESULT
+
+### Config
+3L GCN (128 hidden), 50 nodes, 4 features, community mode, 500 epochs, cosine SDE + EMA + LR annealing, 100 training samples. 5 seeds, paired t-test with Bonferroni correction (α=0.025). **Evaluated with spectral W1 metric** (not QBE).
+
+### Results
+
+| Family | Uniform W1 | Spectral W1 | Improvement | t-stat | p-value | Significant? |
+|--------|-----------|------------|-------------|--------|---------|-------------|
+| SBM(q=0.01) | 657 ± 176 | 689 ± 152 | −4.8% | −0.44 | 0.69 | No |
+| **SBM(q=0.05)** | **718 ± 84** | **628 ± 88** | **+12.5%** | **15.2** | **0.0001** | **YES** |
+
+**SBM(q=0.05) passes H1-A with spectral W1 metric: 12.5% W1 reduction, p=0.0001.** All 5 seeds show consistent improvement. This is the first statistically significant spectral shaping result in the entire project (7 iterations, 2a–2g).
+
+### Per-seed detail (SBM q=0.05)
+
+| Seed | Uniform W1 | Spectral W1 | Improvement |
+|------|-----------|------------|-------------|
+| 0 | 662 | 575 | 13.2% |
+| 1 | 629 | 549 | 12.8% |
+| 2 | 657 | 549 | 16.4% |
+| 3 | 807 | 710 | 12.0% |
+| 4 | 832 | 757 | 9.0% |
+
+### Why SBM(q=0.01) shows no effect
+SBM(q=0.01) has 80% energy in band 0 — near-unimodal spectral profile. There's little multi-scale structure for shaping to exploit. SBM(q=0.05) has bimodal energy (39% band 0 + 37% band 2), giving shaping more to work with.
+
+### What made this work (after 6 failed iterations)
+
+1. **Right scale (50 nodes):** The 3L GCN actually denoises at this scale (std ratio 1.4–1.8×). At 200 nodes it produced pure noise.
+2. **Right metric (W1):** QBE measures mean spectral profiles — too coarse. W1 measures full distributional distance per band, revealing the 12.5% improvement invisible to QBE.
+3. **Right architecture (3L GCN):** Counter-intuitively, the 3L GCN generates better features than 6L GCN or 6L TransformerConv despite having higher per-timestep loss. The polynomial filter's smoothness acts as implicit regularization for DDIM's iterative sampling.
+4. **Right family (SBM q=0.05):** Bimodal spectral structure gives spectral shaping something to exploit.
+5. **Training fixes (ε-prediction + DDIM):** Necessary foundation — all earlier iterations had broken training.
+
+### Significance for Graph-FANS thesis
+
+The FANS mechanism (shaping diffusion noise in the Laplacian eigenbasis) **does** improve graph feature generation — but only under specific conditions:
+- Model must be capable of actual denoising (not producing noise)
+- Evaluation must use distributional metrics (W1), not mean-profile metrics (QBE)
+- Graph must have multi-scale spectral structure (bimodal+ energy profile)
+
+This is a **conditional positive result**: the mechanism works in principle but requires the right evaluation framework and model regime to detect.
+
+Results: `results/diagnostics/shaping_w1_test.json`, `results/shaping_w1_test.log`
