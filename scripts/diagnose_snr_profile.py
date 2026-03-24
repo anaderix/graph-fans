@@ -235,6 +235,8 @@ def run_diagnostic(
     output_dir: str,
     t_sampling: str = "uniform",
     min_snr_gamma: float | None = None,
+    hidden_dim: int = 128,
+    n_layers: int = 3,
 ) -> dict:
     """Full pipeline: load data, train, evaluate, save.
 
@@ -275,8 +277,8 @@ def run_diagnostic(
         batch_timesteps=32,
         seed=seed,
         device=device,
-        hidden_dim=128,
-        n_layers=3,
+        hidden_dim=hidden_dim,
+        n_layers=n_layers,
         n_gen_steps=200,
         sde_type="cosine",
         use_ema=True,
@@ -334,7 +336,7 @@ def run_diagnostic(
 
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
-    suffix = f"_{t_sampling}"
+    suffix = f"_{t_sampling}_L{n_layers}"
     if min_snr_gamma is not None:
         suffix += f"_gamma{min_snr_gamma}"
     json_path = out_path / f"snr_profile_{safe_family}_seed{seed}{suffix}.json"
@@ -385,6 +387,14 @@ def main() -> None:
         help="Output directory for JSON results (default: results/diagnostics)",
     )
     parser.add_argument(
+        "--hidden-dim", type=int, default=128,
+        help="Score network hidden dimension (default: 128)",
+    )
+    parser.add_argument(
+        "--n-layers", type=int, default=3,
+        help="Score network GCN layers (default: 3)",
+    )
+    parser.add_argument(
         "--t-sampling",
         choices=["uniform", "log_snr"],
         default="uniform",
@@ -409,6 +419,8 @@ def main() -> None:
         output_dir=args.output_dir,
         t_sampling=args.t_sampling,
         min_snr_gamma=args.min_snr_gamma,
+        hidden_dim=args.hidden_dim,
+        n_layers=args.n_layers,
     )
 
 
