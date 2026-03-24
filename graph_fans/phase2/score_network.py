@@ -53,15 +53,18 @@ class SimpleScoreNetwork(nn.Module):
     ):
         super().__init__()
         self.n_features = n_features
+        self.n_layers = n_layers
         self.time_emb = SinusoidalTimeEmbedding(time_emb_dim)
 
         # Input projection: features + time embedding
         self.input_proj = nn.Linear(n_features + time_emb_dim, hidden_dim)
 
-        # GCN layers
+        # GCN layers with LayerNorm for stability in deeper networks
         self.convs = nn.ModuleList()
+        self.norms = nn.ModuleList()
         for _ in range(n_layers):
             self.convs.append(GCNConv(hidden_dim, hidden_dim))
+            self.norms.append(nn.LayerNorm(hidden_dim))
 
         # Skip connection projections (for residual)
         self.skip_projs = nn.ModuleList()
@@ -96,10 +99,10 @@ class SimpleScoreNetwork(nn.Module):
         h = torch.cat([x, t_emb], dim=-1)  # [n_nodes, n_features + time_emb_dim]
         h = self.act(self.input_proj(h))  # [n_nodes, hidden_dim]
 
-        # GCN layers with skip connections
-        for conv, skip in zip(self.convs, self.skip_projs):
+        # GCN layers with skip connections and LayerNorm
+        for conv, norm, skip in zip(self.convs, self.norms, self.skip_projs):
             h_skip = skip(h)
-            h = self.act(conv(h, edge_index)) + h_skip
+            h = self.act(norm(conv(h, edge_index))) + h_skip
 
         # Output projection
         return self.output_proj(h)  # [n_nodes, n_features]

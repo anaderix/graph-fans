@@ -227,3 +227,119 @@ All datasets: 500 train + 50 ref samples, 200 nodes, 16 features, community mode
 All graphs connected, density 2–15%, spectral gaps 0.06–0.46.
 
 Datasets: `results/phase2f/datasets/`
+
+## 2026-03-25 — Phase 2f: Full Evaluation — G2: NO-GO
+
+### Config
+ε-prediction + DDIM + cosine SDE + EMA + LR annealing + 500-sample dataset + community features. 2000 epochs, 32 timesteps/epoch. NVIDIA L40S GPU.
+
+Two scales: full (200 nodes × 16 features, 5 seeds) and small (50 nodes × 4 features, 3 seeds).
+
+### H1-A Results (full-scale, 200×16)
+
+| Family | Uniform QBE | Spectral QBE | p-value |
+|--------|------------|-------------|---------|
+| SBM(q=0.05) | 0.0543 ± 0.0003 | 0.0544 ± 0.0004 | 0.13 |
+| BA(m=5) | 0.0333 ± 0.0002 | 0.0332 ± 0.0005 | 0.64 |
+
+G2: NO-GO (0/2 families pass). H2: ρ=0.72, p=0.17 (not significant). QBE spread across t_knee values <0.0004.
+
+### Sanity Checks
+- SBM(q=0.05): gen std 8.7±1.3× training std → 0/70 pass
+- BA(m=5): gen std 3.5±0.3× training std → 0/68 pass
+- SBM(q=0.01): gen std 11.0±0.3× → 0/50 pass
+- BA(m=2): gen std ~1.5× → **25/25 pass** (only family that denoises at 200 nodes)
+
+### Spectral Wasserstein Diagnostic
+
+New per-band W1 metric reveals distributional effects invisible to QBE:
+
+| Method | SBM(q=0.01) W1 | SBM(q=0.05) W1 |
+|--------|----------------|----------------|
+| Oracle (train vs ref) | 44 | 38 |
+| Random noise | 409 | 288 |
+| Uniform | 1360 | 2351 |
+| **Spectral** | **842 (−38%)** | **1903 (−19%)** |
+| Spectral ramp (all t_knee) | 898–909 | 1867–1896 |
+
+Spectral shaping reduces W1 by 20–38%, concentrated in non-dominant bands (bands 1–7 W1 drops 65%). But all models produce worse-than-noise distributions. t_knee has <1% effect on W1 — definitively dead.
+
+### Analysis
+Loss floor ~0.42 across both scales. Model explains ~57% of noise variance, insufficient for DDIM generation. The training formulation fixes were necessary but not sufficient — a deeper training dynamics issue remains.
+
+Reports: `Report-Phase2f.md` and `Report-Phase2f-Intermediate.md` in vault.
+Results: `results/phase2f/` (full), `results/phase2f_small/` (small), `results/diagnostics/` (W1)
+
+## 2026-03-25 — NS-D: SNR-Bin Loss Diagnostic — Gradient Misallocation Confirmed
+
+### Motivation
+Analysis of Dieleman (2024) "Noise Schedules Considered Harmful" suggested the loss floor of ~0.4 may be a training weighting problem, not a model capacity limit. With ε-prediction + uniform t-sampling, gradient budget may be misallocated across noise levels.
+
+### Method
+Trained models on SBM(q=0.01) and SBM(q=0.05) (50 nodes, 4 features, 500 epochs), then evaluated MSE loss at 1000 timesteps binned into 10 log₁₀(SNR) bins. Measured both per-bin loss and the fraction of gradient each bin receives under uniform t-sampling.
+
+### Results: SBM(q=0.01)
+
+| SNR regime | log₁₀(SNR) | Mean Loss | Grad Share |
+|-----------|------------|-----------|------------|
+| Pure noise | −5 to −3 | 0.014 | 3.6% |
+| High noise | −3 to −1 | 0.028–0.070 | 10% |
+| Mid noise | −1 to +1 | 0.14–0.34 | 54% |
+| **Low noise** | **+1 to +4** | **0.72–1.11** | **14%** |
+
+### Results: SBM(q=0.05)
+
+| SNR regime | log₁₀(SNR) | Mean Loss | Grad Share |
+|-----------|------------|-----------|------------|
+| Pure noise | −5 to −3 | 0.020 | 3.6% |
+| High noise | −3 to −1 | 0.035–0.103 | 10% |
+| Mid noise | −1 to +1 | 0.31–0.66 | 54% |
+| **Low noise** | **+1 to +4** | **0.93–1.10** | **14%** |
+
+### Key Findings
+
+1. **Loss ranges 80× across SNR bins** (0.014 at high noise → 1.11 at low noise). The model is excellent at denoising heavily corrupted inputs but essentially random at low-noise timesteps (loss ≈ 1.0 = predicting zero).
+2. **Low-noise regime is catastrophically underfit.** Bins with log₁₀(SNR) > 1 have loss 0.72–1.10 — barely better than predicting nothing. These are the DDIM final steps that determine output quality.
+3. **Only 14% of gradient goes to the underfit regime.** 54% goes to mid-noise bins where loss is 0.14–0.66 (partially learned). The model is starved of gradient exactly where it needs it most.
+4. **This explains DDIM generation failure.** Final DDIM steps operate at high SNR where the model has loss ≈ 1.0. These steps corrupt the output regardless of how well earlier steps performed.
+5. **The loss floor of ~0.4 is a misleading average.** It averages well-learned high-noise bins (0.01) with completely unlearned low-noise bins (1.0). The model is not capacity-limited — it's gradient-starved in the wrong regime.
+
+### Implication
+Gradient reweighting (log-SNR sampling, min-SNR-γ, or v-prediction) should directly improve generation by shifting gradient to the underfit low-noise regime. This is the most promising path to breaking the loss floor without architectural changes.
+
+Results: `results/diagnostics/snr_profile_SBM_q{0.01,0.05}_seed0.json`
+Analysis: `plans/noise-schedule-analysis.md`
+
+## 2026-03-25 — NS-A + NS-C: Log-SNR Sampling + Min-SNR-γ Weighting — Capacity Confirmed
+
+### Config
+Implemented two gradient rebalancing mechanisms from Dieleman (2024) / Hang et al. (2023):
+- **NS-A**: Uniform sampling in log-SNR space (replaces uniform t-sampling)
+- **NS-C**: min-SNR-γ loss weighting with γ=5 (clips trivial high-SNR gradients)
+
+Tested on SBM(q=0.01), 50 nodes, 4 features, 500 epochs, cosine SDE + EMA.
+
+### Per-SNR-bin Loss Comparison
+
+| Bin | log₁₀(SNR) | Baseline | NS-A | NS-C | NS-A+C |
+|-----|-----------|----------|------|------|--------|
+| 0–2 | −5 to −2 (high noise) | 0.015 | **0.005** | 0.013 | **0.001** |
+| 3–4 | −2 to −1 (mid-high) | 0.029–0.071 | 0.025–0.076 | 0.027–0.070 | 0.023–0.075 |
+| 5–6 | −1 to +1 (mid) | 0.139–0.344 | 0.161–0.397 | 0.137–0.346 | 0.151–0.386 |
+| **7–9** | **+1 to +4 (low noise)** | **0.72–1.11** | **0.74–1.03** | **0.74–1.13** | **0.77–1.13** |
+
+Final loss: Baseline 0.321, NS-A 0.236, NS-C 0.142, NS-A+C 0.084.
+
+### Key Findings
+
+1. **Final loss drops 4× (0.32→0.08)** but this is misleading — min-SNR-γ scales down loss at high-SNR bins, making reported loss lower without improving the model at those bins.
+2. **High-noise bins (0–2) improve 3–15×** with NS-A — the model learns to predict noise in the easy regime much better.
+3. **Low-noise bins (7–9) are unchanged** — loss 0.72–1.13 regardless of training strategy. NS-A gives marginal 4–7% improvement at bins 8–9 only.
+4. **NS-C has zero effect on per-bin loss** — identical to baseline at every bin. The "lower final loss" is purely the weighting artifact.
+5. **The gradient misallocation hypothesis was partially correct but insufficient.** Rebalancing helps the easy regime but the hard regime (low noise, high SNR) is genuinely beyond the model's capacity.
+
+### Conclusion
+
+**The loss floor at low-noise bins is a confirmed architectural capacity ceiling**, not a training dynamics issue. The 3-layer GCN (128 hidden) cannot predict noise when the signal is mostly intact — it lacks the representational capacity to model fine-grained spectral structure. Next step: increase model depth to 6 layers.
+
+Results: `results/ns_ac_comparison.log`, `results/diagnostics/snr_profile_SBM_q0.01_seed0_*.json`

@@ -52,6 +52,8 @@ def run_phase2(
     pre_generate_only: bool = False,
     t_sampling: str = "uniform",
     min_snr_gamma: float | None = None,
+    hidden_dim: int = 128,
+    n_layers: int = 3,
 ) -> dict:
     """Run full Phase 2 experiment pipeline."""
     if t_knee_values is None:
@@ -73,6 +75,8 @@ def run_phase2(
         n_train_samples=n_train_samples,
         t_sampling=t_sampling,
         min_snr_gamma=min_snr_gamma,
+        hidden_dim=hidden_dim,
+        n_layers=n_layers,
     )
 
     logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}, "
@@ -186,6 +190,10 @@ def main():
                         help="Directory for cached feature datasets")
     parser.add_argument("--pre-generate-only", action="store_true",
                         help="Generate datasets and exit (for inspection before training)")
+    parser.add_argument("--hidden-dim", type=int, default=128,
+                        help="Score network hidden dimension (default: 128)")
+    parser.add_argument("--n-layers", type=int, default=3,
+                        help="Score network GCN layers (default: 3)")
     parser.add_argument("--t-sampling", choices=["uniform", "log_snr"], default="uniform",
                         help="Timestep sampling strategy: uniform (default) or log_snr (NS-A)")
     parser.add_argument("--min-snr-gamma", type=float, default=None,
@@ -215,6 +223,8 @@ def main():
         pre_generate_only=args.pre_generate_only,
         t_sampling=args.t_sampling,
         min_snr_gamma=args.min_snr_gamma,
+        hidden_dim=args.hidden_dim,
+        n_layers=args.n_layers,
     )
 
 
