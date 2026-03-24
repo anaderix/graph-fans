@@ -206,12 +206,139 @@
   }
   footer a { color: var(--accent); text-decoration: none; }
 
+  /* ─── Timeline ─── */
+  .timeline {
+    position: relative;
+    padding-left: 2.5rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .tl-day {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  .tl-day:last-child { margin-bottom: 0; }
+  .tl-day-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    margin-left: -2.5rem;
+    padding-left: 0;
+  }
+  .tl-day-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .tl-day-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .tl-entry {
+    position: relative;
+    margin-bottom: 0.75rem;
+  }
+  .tl-entry:last-child { margin-bottom: 0; }
+  .tl-entry::before {
+    content: '';
+    position: absolute;
+    left: -2.5rem;
+    top: 0.85rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    margin-left: 5px;
+    z-index: 1;
+  }
+  .tl-entry.go::before      { border-color: var(--green);  background: #1a3a1a; }
+  .tl-entry.nogo::before    { border-color: var(--red);    background: #3a1a1a; }
+  .tl-entry.pending::before { border-color: var(--border); background: #1a1a2a; }
+  .tl-entry.blocked::before { border-color: var(--orange); background: #2a1a0a; }
+  .tl-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .tl-card-header {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .tl-card-header:hover { background: rgba(255, 255, 255, 0.02); }
+  .tl-card-header h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    margin: 0;
+  }
+  .tl-card-summary {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    max-width: 40%;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tl-card-header .chevron {
+    color: var(--text-dim);
+    transition: transform 0.2s;
+    font-size: 1rem;
+  }
+  .tl-card.open .tl-card-header .chevron { transform: rotate(90deg); }
+  .tl-card-body {
+    display: none;
+    padding: 0 1rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .tl-card.open .tl-card-body {
+    display: block;
+    padding-top: 0.75rem;
+  }
+  .tl-card-body p,
+  .tl-card-body li { color: var(--text-dim); font-size: 0.85rem; }
+  .tl-card-body p { margin-bottom: 0.5rem; }
+  .tl-card-body p:last-child { margin-bottom: 0; }
+  .tl-card-body ul { padding-left: 1.25rem; margin-top: 0.5rem; }
+  .tl-card-body li { margin-bottom: 0.25rem; }
+  .tl-card-body strong { color: var(--text); }
+
   @media (max-width: 640px) {
     .container { padding: 1rem; }
     header h1 { font-size: 1.5rem; }
     .roadmap { gap: 0; }
     .roadmap-node { min-width: 80px; }
     .hypotheses { grid-template-columns: 1fr; }
+    .timeline { padding-left: 2rem; }
+    .timeline::before { left: 9px; }
+    .tl-day-label { margin-left: -2rem; }
+    .tl-day-dot { width: 18px; height: 18px; }
+    .tl-entry::before { left: -2rem; width: 10px; height: 10px; margin-left: 4px; }
+    .tl-card-summary { display: none; }
+    .tl-card-header h3 { font-size: 0.85rem; }
   }
 </style>
 </head>
@@ -547,6 +674,166 @@
       <h3>Success Criteria</h3>
       <p>Regime B: better spectral fidelity than uniform-noise baselines. H6: higher micro-scale fidelity on point clouds.</p>
     </div>
+  </div>
+</section>
+
+<!-- Experiment Timeline -->
+<section style="margin-bottom:2.5rem;">
+  <h2 style="font-size:1rem; color:var(--text-dim); margin-bottom:1.25rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;">Experiment Timeline</h2>
+  <div class="timeline">
+
+    <!-- Day 1 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-03-22 &mdash; Day 1</span>
+      </div>
+
+      <div class="tl-entry go">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-go">GO</span>
+            <h3>Phase 0 &mdash; Spectral Profiling</h3>
+            <span class="tl-card-summary">9/9 families pass G0</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Profiled spectral energy distribution across 9 graph families (3 seeds each). All exceed the 2&times; energy ratio threshold.</p>
+            <p><strong>Key finding:</strong> Energy profiles are hump-shaped or mid-band concentrated &mdash; not simple 1/f decay. Data-driven per-family weighting required.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry go">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-go">GO</span>
+            <h3>Phase 1a &mdash; Basis-Free Spectral Metrics</h3>
+            <span class="tl-card-summary">QBE reveals hidden fidelity gaps</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Implemented 3 basis-free spectral metrics: Spectral density JSD, Quantile-band energy (QBE) distance, Heat kernel signature (HKS) distance.</p>
+            <p><strong>Key finding:</strong> QBE detects spectral degradation invisible to degree/clustering/triangle MMD, especially for configuration-model baselines.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 2 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-03-23 &mdash; Day 2</span>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 2a &mdash; Baseline VP-SDE</h3>
+            <span class="tl-card-summary">SBM degraded &minus;120%</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Unstable training, spectral shaping actively hurt SBM (QBE 0.049 &rarr; 0.109). 0/3 families pass Bonferroni test.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 2b &mdash; Cosine Schedule + EMA</h3>
+            <span class="tl-card-summary">Stable but shaping is a no-op</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Fixed training stability (SBM improved 0.109 &rarr; 0.065), but spectral shaping is statistically indistinguishable from uniform. 0/3 pass.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 2c &mdash; Spectral Fidelity Loss</h3>
+            <span class="tl-card-summary">Tweedie estimate too noisy</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Added differentiable spectral fidelity loss via Tweedie denoising. Zero additional benefit &mdash; denoised estimate at intermediate timesteps too noisy for useful spectral gradient signal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 2d &mdash; Multiscale Features</h3>
+            <span class="tl-card-summary">Results identical to 2b/2c</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Switched to community-mode multiscale features with role-dependent generation. Results identical to 2b/2c &mdash; spectral noise shaping remains a no-op.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 3 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-03-24 &mdash; Day 3</span>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 2e &mdash; Dataset Training</h3>
+            <span class="tl-card-summary">Critical bug: model outputs noise</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Dataset fix improved absolute quality 14&times;, but uniform and spectral remain indistinguishable.</p>
+            <p><strong>Critical bug discovered:</strong> Generated features match random noise profile, not training data. Gen std 13.7 vs ref std 1.3. All Phase 2 results (2a&ndash;2e) invalid.</p>
+            <ul>
+              <li>Wrong training target: score formulation explodes near t=0</li>
+              <li>Reverse SDE adds noise at t&rarr;0, corrupting output</li>
+              <li>Insufficient training budget (16 passes/sample)</li>
+              <li>No dataset persistence for inspection</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry pending">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-pending">Pending</span>
+            <h3>Phase 2f &mdash; Fixes Applied, Pending Re-run</h3>
+            <span class="tl-card-summary">4 root causes fixed, 59/59 tests</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Fixed all 4 root causes from Phase 2e investigation:</p>
+            <ul>
+              <li>&epsilon;-prediction: noise target instead of &minus;noise/std (score)</li>
+              <li>DDIM sampling: deterministic reverse steps + Tweedie at t=0</li>
+              <li>Training budget: 2000 epochs &times; 32 timesteps = 64,000 steps</li>
+              <li>Dataset persistence: pre-generated and cached as .npz</li>
+            </ul>
+            <p>59/59 tests passing. Datasets inspected and validated. Awaiting experiment run.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
