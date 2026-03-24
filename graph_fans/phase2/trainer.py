@@ -53,6 +53,8 @@ class TrainConfig:
     spectral_loss_weight: float = 0.1
     # Dataset size
     n_train_samples: int = 500  # number of feature realizations per graph
+    # Architecture
+    conv_type: str = "gcn"  # "gcn" or "transformer"
     # NS-A: log-SNR uniform timestep sampling
     t_sampling: str = "uniform"  # "uniform" or "log_snr"
     # NS-C: min-SNR-γ loss weighting (None = disabled, 5.0 = standard)
@@ -132,6 +134,7 @@ class Trainer:
             n_features=self.n_features,
             hidden_dim=config.hidden_dim,
             n_layers=config.n_layers,
+            conv_type=config.conv_type,
         ).to(self.device)
 
         self.optimizer = torch.optim.Adam(

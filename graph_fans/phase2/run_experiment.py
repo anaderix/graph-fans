@@ -54,6 +54,7 @@ def run_phase2(
     min_snr_gamma: float | None = None,
     hidden_dim: int = 128,
     n_layers: int = 3,
+    conv_type: str = "gcn",
 ) -> dict:
     """Run full Phase 2 experiment pipeline."""
     if t_knee_values is None:
@@ -77,6 +78,7 @@ def run_phase2(
         min_snr_gamma=min_snr_gamma,
         hidden_dim=hidden_dim,
         n_layers=n_layers,
+        conv_type=conv_type,
     )
 
     logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}, "
@@ -194,6 +196,8 @@ def main():
                         help="Score network hidden dimension (default: 128)")
     parser.add_argument("--n-layers", type=int, default=3,
                         help="Score network GCN layers (default: 3)")
+    parser.add_argument("--conv-type", choices=["gcn", "transformer"], default="gcn",
+                        help="Graph convolution type (default: gcn)")
     parser.add_argument("--t-sampling", choices=["uniform", "log_snr"], default="uniform",
                         help="Timestep sampling strategy: uniform (default) or log_snr (NS-A)")
     parser.add_argument("--min-snr-gamma", type=float, default=None,
@@ -225,6 +229,7 @@ def main():
         min_snr_gamma=args.min_snr_gamma,
         hidden_dim=args.hidden_dim,
         n_layers=args.n_layers,
+        conv_type=args.conv_type,
     )
 
 

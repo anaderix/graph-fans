@@ -237,6 +237,7 @@ def run_diagnostic(
     min_snr_gamma: float | None = None,
     hidden_dim: int = 128,
     n_layers: int = 3,
+    conv_type: str = "gcn",
 ) -> dict:
     """Full pipeline: load data, train, evaluate, save.
 
@@ -279,6 +280,7 @@ def run_diagnostic(
         device=device,
         hidden_dim=hidden_dim,
         n_layers=n_layers,
+        conv_type=conv_type,
         n_gen_steps=200,
         sde_type="cosine",
         use_ema=True,
@@ -336,7 +338,7 @@ def run_diagnostic(
 
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
-    suffix = f"_{t_sampling}_L{n_layers}"
+    suffix = f"_{conv_type}_{t_sampling}_L{n_layers}"
     if min_snr_gamma is not None:
         suffix += f"_gamma{min_snr_gamma}"
     json_path = out_path / f"snr_profile_{safe_family}_seed{seed}{suffix}.json"
@@ -395,6 +397,10 @@ def main() -> None:
         help="Score network GCN layers (default: 3)",
     )
     parser.add_argument(
+        "--conv-type", choices=["gcn", "transformer"], default="gcn",
+        help="Graph convolution type (default: gcn)",
+    )
+    parser.add_argument(
         "--t-sampling",
         choices=["uniform", "log_snr"],
         default="uniform",
@@ -421,6 +427,7 @@ def main() -> None:
         min_snr_gamma=args.min_snr_gamma,
         hidden_dim=args.hidden_dim,
         n_layers=args.n_layers,
+        conv_type=args.conv_type,
     )
 
 

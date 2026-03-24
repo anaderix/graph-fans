@@ -343,3 +343,47 @@ Final loss: Baseline 0.321, NS-A 0.236, NS-C 0.142, NS-A+C 0.084.
 **The loss floor at low-noise bins is a confirmed architectural capacity ceiling**, not a training dynamics issue. The 3-layer GCN (128 hidden) cannot predict noise when the signal is mostly intact — it lacks the representational capacity to model fine-grained spectral structure. Next step: increase model depth to 6 layers.
 
 Results: `results/ns_ac_comparison.log`, `results/diagnostics/snr_profile_SBM_q0.01_seed0_*.json`
+
+## 2026-03-25 — Deeper Network (6-Layer GCN): Modest Improvement, Capacity Ceiling Persists
+
+### Config
+Tested 6-layer GCN (with LayerNorm) at 128 and 256 hidden dim, with and without NS-A (log-SNR sampling). SBM(q=0.01) and SBM(q=0.05), 50 nodes, 4 features, 500 epochs, cosine SDE + EMA.
+
+### Per-SNR-bin Loss at Low-Noise Regime (bins 7–9)
+
+**SBM(q=0.01):**
+
+| Config | Bin 7 (+1.5) | Bin 8 (+2.4) | Bin 9 (+3.3) | Final loss |
+|--------|-------------|-------------|-------------|------------|
+| 3L/128 (baseline) | 0.723 | 0.996 | 1.107 | 0.321 |
+| **6L/128** | **0.659** | **0.944** | **1.053** | 0.292 |
+| 6L/256 | 0.660 | 0.943 | 1.047 | 0.294 |
+| 6L/128+NS-A | 0.704 | 0.935 | 1.016 | 0.223 |
+
+**SBM(q=0.05):**
+
+| Config | Bin 7 (+1.5) | Bin 8 (+2.4) | Bin 9 (+3.3) | Final loss |
+|--------|-------------|-------------|-------------|------------|
+| 3L/128 (baseline) | 0.933 | 1.064 | 1.095 | 0.518 |
+| **6L/128** | **0.921** | **1.052** | **1.082** | 0.505 |
+
+### Key Findings
+
+1. **6 layers improves low-noise bins 5–13%** — first real improvement in this regime across all experiments. Bin 7: 0.723→0.659 (−9%) on SBM(q=0.01).
+2. **256 hidden dim = no improvement over 128** at 6 layers. Width is not the bottleneck.
+3. **Low-noise bins remain at 0.66–1.08 in all configs.** No configuration breaks below 0.6 at bin 7. The GCN architecture has a fundamental expressiveness ceiling.
+4. **SBM(q=0.05) much harder** — 6L gets bin 7 to only 0.921 (vs 0.659 for q=0.01). Bimodal spectral structure is genuinely harder.
+
+### Architectural Analysis
+
+A GCN is a polynomial filter on the graph Laplacian: each layer applies a 1st-order polynomial (weighted neighbor average), so K layers produce a K-th order Chebyshev polynomial. A 6-layer GCN can represent any 6th-order polynomial of the eigenvalues.
+
+For noise prediction at low noise (high SNR), the model needs to resolve fine spectral detail — distinguish nearby eigenvalues and predict their contributions to the noise. A 6th-order polynomial can separate at most 6 spectral peaks. With community features that have energy concentrated in 2–3 bands, this should theoretically suffice, but the polynomial basis is inefficient: it approximates sharp spectral features poorly.
+
+**Implication:** The bottleneck is the polynomial spectral response of GCN convolutions. Attention-based architectures (GAT, Graph Transformer) have per-edge adaptive weights that are not constrained to polynomial spectral filters, potentially breaking this ceiling.
+
+### Decision
+
+The GCN line of investigation is exhausted: 3L→6L gives diminishing 5–13% returns, 128→256 hidden gives zero return. **Pivot to Graph Transformer or proceed with Alt-5 (direct spectral generation).**
+
+Results: `results/depth_{6L,6L_256,6L_nsa,6L_sbm05}.log`

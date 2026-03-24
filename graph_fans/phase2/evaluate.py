@@ -189,6 +189,7 @@ def run_single_experiment(
         use_spectral_loss=config.use_spectral_loss,
         spectral_loss_weight=config.spectral_loss_weight,
         n_train_samples=config.n_train_samples,
+        conv_type=config.conv_type,
         t_sampling=config.t_sampling,
         min_snr_gamma=config.min_snr_gamma,
     )
