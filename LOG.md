@@ -141,3 +141,89 @@ Three experiments (2a, 2b, 2c) tested spectral noise shaping with increasing sop
 3. **Write up negative result:** Document that the FANS→graph transfer does not work at small scale with simple score networks. This is a publishable negative result.
 
 Results: `results/phase2c/`
+
+## 2026-03-23 — Phase 2d: Multiscale Features — G2: NO-GO
+
+Switched from smooth features to multiscale features (community-mode) with role-dependent generation. Cosine SDE + EMA + LR annealing. 1000 epochs, 3 seeds, NVIDIA L40S GPU.
+
+Results identical to 2b/2c — spectral noise shaping remains a no-op.
+
+Results: `results/phase2d/`
+
+## 2026-03-24 — Phase 2e: Dataset Training + Community Features — G2: NO-GO
+
+### Config
+Cosine SDE + EMA + LR annealing + 500-sample feature dataset per graph + community features. 1000 epochs, 3 seeds, NVIDIA L40S GPU.
+
+### Results
+
+| Family | Uniform QBE (high bands) | Spectral QBE | p-value |
+|--------|-------------------------|-------------|---------|
+| SBM(q=0.05) | 0.056 ± 0.000 | 0.056 ± 0.000 | 0.79 |
+| BA(m=5) | 0.009 ± 0.008 | 0.012 ± 0.011 | 0.76 |
+
+H2: ρ=−0.29, p=0.64. G2: NO-GO (0/2 families pass).
+
+Dataset fix improved absolute generation quality 14× (BA QBE 0.009 vs 0.125 in 2b), but uniform and spectral remain indistinguishable.
+
+### Critical Bug Discovered: Model Generates Pure Noise
+
+Post-hoc investigation revealed generated features have spectral profile matching random noise, not training data:
+
+    ref profile:   [0.386  0.  0.376  0.01  0.058  0.064  0.065  0.041]  ← bimodal (community)
+    gen profile:   [0.054  0.  0.016  0.035  0.217  0.258  0.246  0.173]  ← matches random noise
+    gen std: 13.7 vs ref std: 1.3 (10× too high)
+
+The "identical QBE" across all experiments was measuring noise-vs-noise distance. ALL Phase 2 results (2a–2e) are invalid.
+
+### Root Causes Confirmed
+
+1. **Wrong training target** (`trainer.py:187`): `target = -noise / std` (score formulation) — at small std near t=0, target explodes. Should be ε-prediction: `target = noise`
+2. **Reverse SDE adds noise at t→0** (`sde.py` reverse_step): stochastic noise at every step including final, corrupting output. Should use DDIM (deterministic) with Tweedie at t=0
+3. **Insufficient training**: 8,000–16,000 gradient steps = 16 passes/sample. Need ~64,000 (128 passes)
+4. **No dataset persistence**: features generated on-the-fly, impossible to inspect before training
+
+### Fix Plan
+
+See `~/.claude/plans/zany-churning-dolphin.md` and `~/projects/graph-fans/CONTEXT.md`.
+
+Results: `results/phase2e/`
+
+## 2026-03-24 — Phase 2f Prep: Code Fixes + Dataset Pre-generation
+
+### Code Fixes Applied
+
+Fixed 4 root causes from Phase 2e investigation:
+
+1. **ε-prediction** (`trainer.py`): Training target changed from `-noise/std` (score) to `noise` (epsilon). Eliminates target explosion at small std near t=0.
+2. **DDIM sampling** (`sde.py`, `trainer.py`): Added `alpha_bar()` + `ddim_step()` to both SDE classes. Generation now uses deterministic DDIM reverse steps with Tweedie formula at t=0 — no stochastic noise corruption.
+3. **Training budget** (`trainer.py`): Defaults increased to 2000 epochs × 32 timesteps = 64,000 steps (128 passes/sample, was 16).
+4. **Dataset persistence** (`dataset.py`, new): Pre-generate + cache train/ref datasets as `.npz`. Enables inspection before training.
+
+Also added: post-training sanity check (compares gen std and spectral profile to training data), Tweedie formula fix in `spectral_loss.py`.
+
+Tests: 59/59 passing (31 Phase 2 tests, up from 18).
+
+### Dataset Inspection (5 families × 3 seeds)
+
+All datasets: 500 train + 50 ref samples, 200 nodes, 16 features, community mode.
+
+| Family | Train Std | Spectral Profile (8 bands) | Max Ratio | Bimodal |
+|--------|-----------|---------------------------|-----------|---------|
+| SBM(q=0.01) | 1.21 | [0.805  0  0  0.019  0.042  0.052  0.049  0.034] | 43× | Yes |
+| SBM(q=0.05) | 1.28 | [0.387  0  0.373  0.010  0.059  0.064  0.065  0.042] | 37× | Yes |
+| SBM(q=0.1) | 1.34 | [0.437  0  0  0.274  0.064  0.088  0.082  0.055] | 8× | Yes |
+| BA(m=2) | 1.08 | [0.318  0.450  0.088  0.037  0.047  0.023  0.021  0.016] | 28× | No |
+| BA(m=5) | 1.17 | [0.264  0  0.407  0.178  0.065  0.038  0.031  0.017] | 24× | Yes |
+| **Random noise** | — | [0.007  0  0.016  0.037  0.221  0.274  0.251  0.195] | — | — |
+
+**Key observations:**
+- Features have std ≈ 1.1–1.3 (healthy), mean ≈ 0 (centered)
+- Spectral energy concentrated in **low/mid bands** (community structure), opposite to random noise (high bands)
+- Profiles stable across seeds (same graph topology, different feature realizations)
+- SBM(q=0.01) most extreme: 80% energy in band 0 (nearly disconnected communities)
+- BA(m=2) not bimodal but still highly non-uniform (77% in bands 0–1)
+
+All graphs connected, density 2–15%, spectral gaps 0.06–0.46.
+
+Datasets: `results/phase2f/datasets/`

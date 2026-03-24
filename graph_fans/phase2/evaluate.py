@@ -23,7 +23,7 @@ from graph_fans.phase0.spectral_profiler import (
     compute_band_energy,
 )
 from graph_fans.utils.graph_generators import generate_sbm, generate_ba, load_citation_network
-from graph_fans.utils.multiscale_features import generate_feature_dataset
+from .dataset import get_or_generate_dataset, validate_dataset
 from .noise_shaper import compute_importance_weights, ImportanceWeights
 from .trainer import Trainer, TrainConfig
 
@@ -146,6 +146,7 @@ def run_single_experiment(
     importance_weights: ImportanceWeights | None = None,
     B: int = 8,
     feature_mode: str = "community",
+    dataset_dir: str | Path = "results/phase2/datasets",
 ) -> Phase2Results:
     """Run a single training + generation + evaluation."""
     if config is None:
@@ -154,20 +155,17 @@ def run_single_experiment(
     # Fixed graph topology
     graph = _get_graph(family, n_nodes, seed=0)
 
-    # Training dataset: N feature realizations, seeds [seed*1000 .. seed*1000+N)
-    train_base_seed = seed * 10000
-    logger.info(f"  Generating {config.n_train_samples} training samples for {family}...")
-    train_dataset = generate_feature_dataset(
-        graph, n_samples=config.n_train_samples,
-        n_features=n_features, base_seed=train_base_seed, mode=feature_mode,
+    # Load or generate cached dataset
+    dataset = get_or_generate_dataset(
+        graph, family, seed,
+        n_train=config.n_train_samples,
+        n_ref=N_GEN_SAMPLES,
+        n_features=n_features,
+        feature_mode=feature_mode,
+        cache_dir=dataset_dir,
     )
-
-    # Held-out reference: separate seeds for evaluation
-    ref_base_seed = seed * 10000 + 100000  # well-separated from training
-    ref_dataset = generate_feature_dataset(
-        graph, n_samples=N_GEN_SAMPLES,
-        n_features=n_features, base_seed=ref_base_seed, mode=feature_mode,
-    )
+    train_dataset = dataset["train"]
+    ref_dataset = dataset["ref"]
 
     # Configure
     cfg = TrainConfig(
@@ -204,6 +202,11 @@ def run_single_experiment(
     history = trainer.train()
     train_time = time.time() - start
 
+    # Sanity check
+    sanity = trainer.sanity_check(train_dataset)
+    if sanity["warnings"]:
+        logger.warning(f"  Sanity check warnings for {family}/{method}/seed={seed}: {sanity['warnings']}")
+
     # Generate samples
     logger.info(f"  Generating {N_GEN_SAMPLES} samples...")
     gen_dataset = trainer.generate(n_samples=N_GEN_SAMPLES)
@@ -226,12 +229,28 @@ def run_h1a_experiment(
     B: int = 8,
     output_dir: str = "results/phase2",
     feature_mode: str = "community",
+    dataset_dir: str | Path = "results/phase2/datasets",
 ) -> pd.DataFrame:
     """Run H1-A: uniform vs spectral noise on primary families."""
     if families is None:
         families = ["SBM(q=0.05)", "BA(m=5)"]
     if config is None:
         config = TrainConfig()
+
+    # Pre-generate all datasets
+    logger.info("Pre-generating all H1-A datasets...")
+    for family in families:
+        graph = _get_graph(family, n_nodes, seed=0)
+        for seed in range(n_seeds):
+            ds = get_or_generate_dataset(
+                graph, family, seed,
+                n_train=config.n_train_samples, n_ref=N_GEN_SAMPLES,
+                n_features=n_features, feature_mode=feature_mode,
+                cache_dir=dataset_dir,
+            )
+            validation = validate_dataset(ds, graph, B)
+            if validation["warnings"]:
+                logger.warning(f"  {family} seed={seed}: {validation['warnings']}")
 
     phase0_energies = _load_phase0_energies()
     results = []
@@ -243,7 +262,7 @@ def run_h1a_experiment(
             for method in ["uniform", "spectral"]:
                 r = run_single_experiment(
                     family, method, seed, n_nodes, n_features, config,
-                    weights, B, feature_mode,
+                    weights, B, feature_mode, dataset_dir,
                 )
                 results.append(r)
 
@@ -280,6 +299,7 @@ def run_h2_experiment(
     B: int = 8,
     output_dir: str = "results/phase2",
     feature_mode: str = "community",
+    dataset_dir: str | Path = "results/phase2/datasets",
 ) -> pd.DataFrame:
     """Run H2: grid search over t_knee."""
     if families is None:
@@ -288,6 +308,18 @@ def run_h2_experiment(
         t_knee_values = [0.05, 0.10, 0.15, 0.20, 0.30]
     if config is None:
         config = TrainConfig()
+
+    # Pre-generate all datasets
+    logger.info("Pre-generating all H2 datasets...")
+    for family in families:
+        graph = _get_graph(family, n_nodes, seed=0)
+        for seed in range(n_seeds):
+            get_or_generate_dataset(
+                graph, family, seed,
+                n_train=config.n_train_samples, n_ref=N_GEN_SAMPLES,
+                n_features=n_features, feature_mode=feature_mode,
+                cache_dir=dataset_dir,
+            )
 
     phase0_energies = _load_phase0_energies()
     results = []
@@ -306,7 +338,7 @@ def run_h2_experiment(
                 method = f"spectral_ramp_tknee={t_knee}"
                 r = run_single_experiment(
                     family, method, seed, n_nodes, n_features, config,
-                    weights, B, feature_mode,
+                    weights, B, feature_mode, dataset_dir,
                 )
                 results.append((r, spectral_gap_ratio, t_knee))
 

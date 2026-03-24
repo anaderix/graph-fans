@@ -58,6 +58,36 @@ class VPSDE:
         x_t = mean_coeff * x_0 + std * noise
         return x_t, noise
 
+    def alpha_bar(self, t: float) -> float:
+        """Cumulative signal retention: alpha_bar(t) = mean_coeff(t)^2."""
+        mean_coeff, _ = self.marginal_params(t)
+        return float(mean_coeff ** 2)
+
+    def ddim_step(
+        self,
+        x_t: torch.Tensor,
+        eps_pred: torch.Tensor,
+        t_now: float,
+        t_next: float,
+    ) -> torch.Tensor:
+        """Deterministic DDIM reverse step (eta=0).
+
+        Args:
+            x_t: Current noisy data.
+            eps_pred: Predicted noise (epsilon).
+            t_now: Current timestep.
+            t_next: Next timestep (smaller). If <= 0, returns Tweedie estimate.
+
+        Returns:
+            Denoised data at t_next.
+        """
+        ab_now = max(self.alpha_bar(t_now), 1e-8)
+        x_0_hat = (x_t - np.sqrt(1 - ab_now) * eps_pred) / np.sqrt(ab_now)
+        if t_next <= 0:
+            return x_0_hat
+        ab_next = max(self.alpha_bar(t_next), 1e-8)
+        return np.sqrt(ab_next) * x_0_hat + np.sqrt(1 - ab_next) * eps_pred
+
     def reverse_step(
         self,
         x_t: torch.Tensor,
@@ -65,7 +95,7 @@ class VPSDE:
         t: float,
         dt: float,
     ) -> torch.Tensor:
-        """One reverse SDE step (Euler-Maruyama)."""
+        """One reverse SDE step (Euler-Maruyama). DEPRECATED: use ddim_step."""
         beta_t = self.beta(t)
         drift = -0.5 * beta_t * x_t - beta_t * score
         diffusion = np.sqrt(beta_t)
@@ -127,6 +157,35 @@ class CosineScheduleSDE:
         x_t = mean_coeff * x_0 + std * noise
         return x_t, noise
 
+    def alpha_bar(self, t: float) -> float:
+        """Cumulative signal retention (same as _alpha_bar_clipped)."""
+        return self._alpha_bar_clipped(t)
+
+    def ddim_step(
+        self,
+        x_t: torch.Tensor,
+        eps_pred: torch.Tensor,
+        t_now: float,
+        t_next: float,
+    ) -> torch.Tensor:
+        """Deterministic DDIM reverse step (eta=0).
+
+        Args:
+            x_t: Current noisy data.
+            eps_pred: Predicted noise (epsilon).
+            t_now: Current timestep.
+            t_next: Next timestep (smaller). If <= 0, returns Tweedie estimate.
+
+        Returns:
+            Denoised data at t_next.
+        """
+        ab_now = max(self.alpha_bar(t_now), 1e-8)
+        x_0_hat = (x_t - np.sqrt(1 - ab_now) * eps_pred) / np.sqrt(ab_now)
+        if t_next <= 0:
+            return x_0_hat
+        ab_next = max(self.alpha_bar(t_next), 1e-8)
+        return np.sqrt(ab_next) * x_0_hat + np.sqrt(1 - ab_next) * eps_pred
+
     def reverse_step(
         self,
         x_t: torch.Tensor,
@@ -134,7 +193,7 @@ class CosineScheduleSDE:
         t: float,
         dt: float,
     ) -> torch.Tensor:
-        """One reverse SDE step (Euler-Maruyama)."""
+        """One reverse SDE step (Euler-Maruyama). DEPRECATED: use ddim_step."""
         beta_t = self.beta(t)
         drift = -0.5 * beta_t * x_t - beta_t * score
         diffusion = np.sqrt(max(beta_t, 1e-8))

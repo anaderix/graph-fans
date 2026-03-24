@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 class TrainConfig:
     """Training configuration."""
 
-    n_epochs: int = 500
+    n_epochs: int = 2000
     lr: float = 1e-3
-    batch_timesteps: int = 16
+    batch_timesteps: int = 32
     weight_decay: float = 1e-4
     grad_clip: float = 1.0
     seed: int = 42
@@ -184,27 +184,25 @@ class Trainer:
                 noise = self._get_noise(t)
                 x_t, _ = self.sde.perturb(x_0, t, noise=noise)
 
-                _, std = self.sde.marginal_params(t)
-                if std > 1e-8:
-                    target = -noise / std
-                else:
-                    target = torch.zeros_like(noise)
+                # ε-prediction: target is the noise itself
+                target = noise
 
                 t_tensor = torch.tensor([t], dtype=torch.float32, device=self.device)
-                score_pred = self.model(x_t, t_tensor, self.edge_index)
+                eps_pred = self.model(x_t, t_tensor, self.edge_index)
 
-                loss = nn.functional.mse_loss(score_pred, target)
+                loss = nn.functional.mse_loss(eps_pred, target)
 
                 # Spectral loss
-                if self.config.use_spectral_loss and std > 1e-4:
-                    mean_coeff, _ = self.sde.marginal_params(t)
-                    x_hat_0 = tweedie_denoise(x_t, score_pred, mean_coeff, std)
-                    spec_loss = spectral_fidelity_loss(
-                        x_hat_0, x_0,
-                        self.eigenvectors, self.band_indices,
-                        self.importance_weights,
-                    )
-                    loss = loss + self.config.spectral_loss_weight * spec_loss
+                if self.config.use_spectral_loss:
+                    mean_coeff, std = self.sde.marginal_params(t)
+                    if std > 1e-4:
+                        x_hat_0 = tweedie_denoise(x_t, eps_pred, mean_coeff, std)
+                        spec_loss = spectral_fidelity_loss(
+                            x_hat_0, x_0,
+                            self.eigenvectors, self.band_indices,
+                            self.importance_weights,
+                        )
+                        loss = loss + self.config.spectral_loss_weight * spec_loss
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -230,10 +228,10 @@ class Trainer:
 
     @torch.no_grad()
     def generate(self, n_steps: int | None = None, n_samples: int = 1) -> np.ndarray:
-        """Generate feature samples via reverse SDE.
+        """Generate feature samples via deterministic DDIM reverse process.
 
         Args:
-            n_steps: Reverse SDE steps.
+            n_steps: Number of DDIM steps.
             n_samples: Number of independent samples to generate.
 
         Returns:
@@ -247,16 +245,19 @@ class Trainer:
         if self.ema is not None:
             original_weights = self.ema.apply(self.model)
 
+        # Time schedule: T → 0
+        ts = np.linspace(self.sde.T, 0, n_steps + 1)  # includes t=0
+
         all_samples = []
         for _ in range(n_samples):
             x = torch.randn(self.n_nodes, self.n_features, device=self.device)
-            dt = -self.sde.T / n_steps
-            ts = np.linspace(self.sde.T, 1e-5, n_steps)
 
-            for t in ts:
-                t_tensor = torch.tensor([t], dtype=torch.float32, device=self.device)
-                score = self.model(x, t_tensor, self.edge_index)
-                x = self.sde.reverse_step(x, score, t, dt)
+            for i in range(n_steps):
+                t_now = float(ts[i])
+                t_next = float(ts[i + 1])
+                t_tensor = torch.tensor([t_now], dtype=torch.float32, device=self.device)
+                eps_pred = self.model(x, t_tensor, self.edge_index)
+                x = self.sde.ddim_step(x, eps_pred, t_now, t_next)
 
             all_samples.append(x.cpu().numpy())
 
@@ -265,3 +266,59 @@ class Trainer:
 
         self.model.train()
         return np.stack(all_samples)  # [n_samples, n_nodes, n_features]
+
+    @torch.no_grad()
+    def sanity_check(self, train_data: np.ndarray, n_gen: int = 5) -> dict:
+        """Post-training sanity check: compare generated vs training statistics.
+
+        Args:
+            train_data: Training dataset [N, n_nodes, n_features].
+            n_gen: Number of samples to generate for comparison.
+
+        Returns:
+            Dict with 'train_std', 'gen_std', 'std_ratio', 'warnings'.
+        """
+        from graph_fans.phase0.spectral_profiler import compute_band_energy
+
+        gen_data = self.generate(n_samples=n_gen)
+
+        train_std = float(train_data.std())
+        gen_std = float(gen_data.std())
+        std_ratio = gen_std / max(train_std, 1e-8)
+
+        # Spectral profile comparison
+        def mean_profile(data):
+            profiles = []
+            for features in data:
+                energy = compute_band_energy(features, self.eigenvectors_np, self.band_indices)
+                total = energy.sum()
+                profiles.append(energy / total if total > 0 else energy)
+            return np.stack(profiles).mean(axis=0)
+
+        train_profile = mean_profile(train_data[:min(50, len(train_data))])
+        gen_profile = mean_profile(gen_data)
+        spectral_l2 = float(np.linalg.norm(train_profile - gen_profile))
+
+        warnings = []
+        if std_ratio > 3.0:
+            warnings.append(f"Generated std {gen_std:.2f} is {std_ratio:.1f}× training std {train_std:.2f}")
+        if std_ratio < 0.1:
+            warnings.append(f"Generated std {gen_std:.4f} is only {std_ratio:.2f}× training std {train_std:.2f}")
+        if spectral_l2 > 0.5:
+            warnings.append(f"Spectral L2 distance {spectral_l2:.3f} > 0.5 — generated profile differs significantly")
+
+        for w in warnings:
+            logger.warning(f"  SANITY CHECK: {w}")
+
+        if not warnings:
+            logger.info(f"  Sanity check passed: gen_std={gen_std:.3f}, train_std={train_std:.3f}, spectral_L2={spectral_l2:.3f}")
+
+        return {
+            "train_std": train_std,
+            "gen_std": gen_std,
+            "std_ratio": std_ratio,
+            "spectral_l2": spectral_l2,
+            "train_profile": train_profile.tolist(),
+            "gen_profile": gen_profile.tolist(),
+            "warnings": warnings,
+        }

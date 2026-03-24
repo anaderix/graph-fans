@@ -10,6 +10,8 @@ import argparse
 import logging
 from pathlib import Path
 
+import numpy as np
+
 import matplotlib
 matplotlib.use("Agg")
 
@@ -33,7 +35,8 @@ def run_phase2(
     n_features: int = 16,
     B: int = 8,
     n_seeds: int = 5,
-    n_epochs: int = 500,
+    n_epochs: int = 2000,
+    batch_timesteps: int = 32,
     t_knee_values: list[float] | None = None,
     h1a_families: list[str] | None = None,
     h2_families: list[str] | None = None,
@@ -45,6 +48,8 @@ def run_phase2(
     spectral_loss_weight: float = 0.1,
     feature_mode: str = "community",
     n_train_samples: int = 500,
+    dataset_dir: str = "results/phase2/datasets",
+    pre_generate_only: bool = False,
 ) -> dict:
     """Run full Phase 2 experiment pipeline."""
     if t_knee_values is None:
@@ -55,6 +60,7 @@ def run_phase2(
 
     config = TrainConfig(
         n_epochs=n_epochs,
+        batch_timesteps=batch_timesteps,
         device=device,
         B=B,
         sde_type=sde_type,
@@ -67,7 +73,29 @@ def run_phase2(
 
     logger.info(f"Config: sde={sde_type}, ema={use_ema}, lr_scheduler={use_lr_scheduler}, "
                 f"spectral_loss={use_spectral_loss}, features={feature_mode}, "
-                f"n_train_samples={n_train_samples}")
+                f"n_train_samples={n_train_samples}, epochs={n_epochs}, batch_timesteps={batch_timesteps}")
+
+    # Pre-generate datasets if requested
+    if pre_generate_only:
+        from .dataset import get_or_generate_dataset, validate_dataset
+        from .evaluate import _get_graph
+        all_families = set((h1a_families or ["SBM(q=0.05)", "BA(m=5)"]) +
+                          (h2_families or ["SBM(q=0.01)", "SBM(q=0.05)", "SBM(q=0.1)", "BA(m=2)", "BA(m=5)"]))
+        logger.info(f"Pre-generating datasets for {len(all_families)} families × {n_seeds} seeds...")
+        for family in sorted(all_families):
+            graph = _get_graph(family, n_nodes, seed=0)
+            for seed in range(n_seeds):
+                ds = get_or_generate_dataset(
+                    graph, family, seed,
+                    n_train=n_train_samples, n_ref=50,
+                    n_features=n_features, feature_mode=feature_mode,
+                    cache_dir=dataset_dir,
+                )
+                val = validate_dataset(ds, graph, B)
+                logger.info(f"  {family} seed={seed}: train_std={val['train_std']:.3f}, "
+                            f"profile={np.array2string(val['spectral_profile'], precision=3)}")
+        logger.info(f"Datasets saved to {dataset_dir}/. Inspect and re-run without --pre-generate-only.")
+        return {}
 
     # --- H1-A Experiment ---
     logger.info("\n=== H1-A: Uniform vs Spectral Noise ===")
@@ -80,6 +108,7 @@ def run_phase2(
         B=B,
         output_dir=output_dir,
         feature_mode=feature_mode,
+        dataset_dir=dataset_dir,
     )
 
     logger.info("\nH1-A Results Summary:")
@@ -98,6 +127,7 @@ def run_phase2(
         B=B,
         output_dir=output_dir,
         feature_mode=feature_mode,
+        dataset_dir=dataset_dir,
     )
 
     logger.info("\nH2 Results Summary:")
@@ -131,7 +161,9 @@ def main():
     parser.add_argument("--n-features", type=int, default=16)
     parser.add_argument("--bands", type=int, default=8)
     parser.add_argument("--seeds", type=int, default=5)
-    parser.add_argument("--epochs", type=int, default=500)
+    parser.add_argument("--epochs", type=int, default=2000)
+    parser.add_argument("--batch-timesteps", type=int, default=32,
+                        help="Number of timesteps per epoch (default: 32)")
     parser.add_argument("--t-knee-values", type=str, default="0.05,0.10,0.15,0.20,0.30")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--sde", choices=["vpsde", "cosine"], default="vpsde",
@@ -146,6 +178,10 @@ def main():
                         default="community", help="Feature generation mode")
     parser.add_argument("--n-train-samples", type=int, default=500,
                         help="Number of feature realizations per graph for training")
+    parser.add_argument("--dataset-dir", default="results/phase2/datasets",
+                        help="Directory for cached feature datasets")
+    parser.add_argument("--pre-generate-only", action="store_true",
+                        help="Generate datasets and exit (for inspection before training)")
     args = parser.parse_args()
 
     t_knee = [float(x) for x in args.t_knee_values.split(",")]
@@ -157,6 +193,7 @@ def main():
         B=args.bands,
         n_seeds=args.seeds,
         n_epochs=args.epochs,
+        batch_timesteps=args.batch_timesteps,
         t_knee_values=t_knee,
         device=args.device,
         sde_type=args.sde,
@@ -166,6 +203,8 @@ def main():
         spectral_loss_weight=getattr(args, 'spectral_loss_weight', 0.1),
         feature_mode=args.feature_mode,
         n_train_samples=args.n_train_samples,
+        dataset_dir=args.dataset_dir,
+        pre_generate_only=args.pre_generate_only,
     )
 
 

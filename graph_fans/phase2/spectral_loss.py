@@ -3,8 +3,8 @@
 Instead of shaping noise and hoping the model learns spectral structure,
 we add an auxiliary loss that explicitly supervises per-band energy preservation.
 
-The one-step denoised estimate (Tweedie's formula):
-    x_hat_0 = (x_t + std^2 * score) / mean_coeff
+The one-step denoised estimate (Tweedie's formula for ε-prediction):
+    x_hat_0 = (x_t - std * eps_pred) / mean_coeff
 
 Then: L_spectral = sum_b w_b * |E_b(x_hat_0) - E_b(x_0)| / E_total(x_0)
 """
@@ -87,17 +87,17 @@ def spectral_fidelity_loss(
 
 def tweedie_denoise(
     x_t: torch.Tensor,
-    score: torch.Tensor,
+    eps_pred: torch.Tensor,
     mean_coeff: float,
     std: float,
 ) -> torch.Tensor:
-    """One-step denoised estimate via Tweedie's formula.
+    """One-step denoised estimate via Tweedie's formula (ε-prediction).
 
-    x_hat_0 = (x_t + std^2 * score) / mean_coeff
+    x_hat_0 = (x_t - std * eps_pred) / mean_coeff
 
     Args:
         x_t: Noisy data [n_nodes, n_features].
-        score: Predicted score [n_nodes, n_features].
+        eps_pred: Predicted noise (epsilon) [n_nodes, n_features].
         mean_coeff: Marginal mean coefficient at time t.
         std: Marginal std at time t.
 
@@ -106,4 +106,4 @@ def tweedie_denoise(
     """
     if mean_coeff < 1e-8:
         return x_t
-    return (x_t + std**2 * score) / mean_coeff
+    return (x_t - std * eps_pred) / mean_coeff
