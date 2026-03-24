@@ -233,6 +233,8 @@ def run_diagnostic(
     device: str,
     n_snr_bins: int,
     output_dir: str,
+    t_sampling: str = "uniform",
+    min_snr_gamma: float | None = None,
 ) -> dict:
     """Full pipeline: load data, train, evaluate, save.
 
@@ -280,9 +282,11 @@ def run_diagnostic(
         use_ema=True,
         ema_decay=0.999,
         use_lr_scheduler=True,
-        use_spectral_noise=False,    # uniform t-sampling, no spectral shaping
+        use_spectral_noise=False,
         use_spectral_loss=False,
         n_train_samples=n_train_samples,
+        t_sampling=t_sampling,
+        min_snr_gamma=min_snr_gamma,
     )
 
     logger.info(f"Training for {epochs} epochs on {device} ...")
@@ -320,7 +324,8 @@ def run_diagnostic(
         "final_training_loss": final_loss,
         "training_loss_history": history["loss"],
         "sde_type": "cosine",
-        "t_sampling": "uniform",
+        "t_sampling": t_sampling,
+        "min_snr_gamma": min_snr_gamma,
         "prediction_target": "epsilon",
         "n_eval_t_points": N_EVAL_T_POINTS,
         "n_eval_pairs_per_t": N_EVAL_PAIRS_PER_T,
@@ -329,7 +334,10 @@ def run_diagnostic(
 
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
-    json_path = out_path / f"snr_profile_{safe_family}_seed{seed}.json"
+    suffix = f"_{t_sampling}"
+    if min_snr_gamma is not None:
+        suffix += f"_gamma{min_snr_gamma}"
+    json_path = out_path / f"snr_profile_{safe_family}_seed{seed}{suffix}.json"
     with open(json_path, "w") as f:
         json.dump(results, f, indent=2)
     logger.info(f"Results saved to {json_path}")
@@ -376,6 +384,18 @@ def main() -> None:
         default="results/diagnostics",
         help="Output directory for JSON results (default: results/diagnostics)",
     )
+    parser.add_argument(
+        "--t-sampling",
+        choices=["uniform", "log_snr"],
+        default="uniform",
+        help="Timestep sampling strategy (default: uniform)",
+    )
+    parser.add_argument(
+        "--min-snr-gamma",
+        type=float,
+        default=None,
+        help="min-SNR-gamma loss weighting (default: None=disabled, 5.0=standard)",
+    )
     args = parser.parse_args()
 
     run_diagnostic(
@@ -387,6 +407,8 @@ def main() -> None:
         device=args.device,
         n_snr_bins=args.n_snr_bins,
         output_dir=args.output_dir,
+        t_sampling=args.t_sampling,
+        min_snr_gamma=args.min_snr_gamma,
     )
 
 
