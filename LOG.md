@@ -387,3 +387,31 @@ For noise prediction at low noise (high SNR), the model needs to resolve fine sp
 The GCN line of investigation is exhausted: 3L→6L gives diminishing 5–13% returns, 128→256 hidden gives zero return. **Pivot to Graph Transformer or proceed with Alt-5 (direct spectral generation).**
 
 Results: `results/depth_{6L,6L_256,6L_nsa,6L_sbm05}.log`
+
+## 2026-03-25 — Architecture Comparison: Loss ≠ Generation Quality
+
+### Key Finding: TransformerConv Has Best Loss but WORST Generation
+
+Compared 3L GCN, 6L GCN, and 6L TransformerConv on SBM(q=0.01), 50 nodes, 500 epochs. Trained each, generated 50 samples, measured sanity check + spectral W1.
+
+| Model | Final Loss | Gen/Train Std | Spectral L2 | W1 Total |
+|-------|-----------|---------------|-------------|----------|
+| Oracle | — | — | — | 44 |
+| Random noise | — | — | — | 409 |
+| **3L GCN** | 0.308 | **1.54×** | **0.021** | **473** |
+| 6L GCN | 0.294 | 1.59× | 0.017 | 535 |
+| 6L Transformer | **0.247** | 2.30× | 0.054 | **1077** |
+
+**The 3L GCN generates the best features** despite having the highest loss. The Transformer's lower per-timestep MSE doesn't compose well through DDIM's 200 iterative steps — attention-based predictions are less smooth across the diffusion trajectory than GCN's polynomial filter.
+
+### Revised Diagnosis
+
+The loss floor was a **red herring**. Per-timestep MSE and generation quality are decoupled in iterative sampling. The GCN's polynomial spectral response acts as implicit regularization, producing smoother predictions that compose better across DDIM steps. The Transformer overfits each timestep independently.
+
+The 3L GCN at 50 nodes actually generates reasonably — std ratio 1.54×, spectral L2 = 0.021 (excellent). W1 of 473 is above the noise baseline (409) but far better than the 200-node results (1360+).
+
+### Implication
+
+The 3L GCN at 50 nodes may already be good enough to test spectral shaping properly. The earlier Phase 2f small-scale H1-A showed no QBE difference, but that used mean-profile QBE. With the spectral W1 metric, a shaping effect might now be measurable on generated samples (not just the 20-38% we saw in the W1 diagnostic on pre-trained models).
+
+Results: `results/diagnostics/arch_comparison.json`
