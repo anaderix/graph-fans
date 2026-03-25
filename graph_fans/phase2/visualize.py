@@ -114,113 +114,32 @@ def plot_h1a_summary(
     return fig
 
 
-def plot_t_knee_grid(
-    df: pd.DataFrame, save_path: str | Path | None = None
-) -> plt.Figure:
-    """Line plot: QBE distance vs t_knee for each family."""
-    fig, ax = plt.subplots(figsize=(10, 6))
-    families = df["family"].unique()
-    colors = sns.color_palette("husl", len(families))
-
-    for family, color in zip(families, colors):
-        fam_df = df[df["family"] == family]
-        means = fam_df.groupby("t_knee")["qbe_total"].mean()
-        stds = fam_df.groupby("t_knee")["qbe_total"].std()
-        sgr = fam_df["spectral_gap_ratio"].iloc[0]
-
-        ax.errorbar(
-            means.index, means.values, yerr=stds.values,
-            marker="o", label=f"{family} (λ₂/λₘ={sgr:.3f})",
-            color=color, capsize=3,
-        )
-
-    ax.set_xlabel("t_knee")
-    ax.set_ylabel("QBE Distance (total)")
-    ax.set_title("H2: Spectral Fidelity vs Transition Timestep")
-    ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=9)
-    fig.tight_layout()
-
-    if save_path:
-        save_figure(fig, save_path, "H2 t_knee Grid Search")
-    return fig
-
-
-def plot_h2_correlation(
+def plot_h1a_decision_summary(
     g2_decision: dict, save_path: str | Path | None = None
 ) -> plt.Figure:
-    """Scatter: optimal t_knee vs spectral gap ratio."""
-    fig, ax = plt.subplots(figsize=(8, 6))
+    """H1-A decision summary: per-family improvement bar chart."""
+    fig, ax = plt.subplots(figsize=(8, 5))
 
-    h2 = g2_decision["h2"]
-    families = list(h2["optimal_tknee"].keys())
-    tknee_vals = [h2["optimal_tknee"][f] for f in families]
-    sgr_vals = [h2["spectral_gap_ratios"][f] for f in families]
-
-    ax.scatter(sgr_vals, tknee_vals, s=120, c="steelblue", edgecolor="white", zorder=3)
-    for f, x, y in zip(families, sgr_vals, tknee_vals):
-        ax.annotate(f, (x, y), xytext=(5, 5), textcoords="offset points", fontsize=9)
-
-    rho = h2.get("spearman_rho")
-    p = h2.get("p_value")
-    ci = h2.get("bootstrap_ci_95", [None, None])
-
-    title = "H2: Optimal t_knee vs Spectral Gap Ratio"
-    if rho is not None:
-        title += f"\nSpearman ρ={rho:.3f}, p={p:.4f}"
-        if ci[0] is not None:
-            title += f", 95% CI=[{ci[0]:.3f}, {ci[1]:.3f}]"
-
-    ax.set_xlabel("Spectral Gap Ratio (λ₂/λ_max)")
-    ax.set_ylabel("Optimal t_knee*")
-    ax.set_title(title)
-    fig.tight_layout()
-
-    if save_path:
-        save_figure(fig, save_path, "H2 Spectral Gap Correlation")
-    return fig
-
-
-def plot_g2_summary(
-    g2_decision: dict, save_path: str | Path | None = None
-) -> plt.Figure:
-    """G2 gate decision summary."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-
-    # H1-A summary
     h1a = g2_decision["h1a"]
     families = list(h1a["details"].keys())
     improvements = [h1a["details"][f]["improvement"] for f in families]
     colors = ["green" if v > 0 else "red" for v in improvements]
-    ax1.barh(families, improvements, color=colors)
-    ax1.axvline(x=0, color="black", lw=1)
-    ax1.set_xlabel("QBE Improvement (uniform − spectral)")
-    ax1.set_title(f"H1-A: {'PASS' if h1a['pass'] else 'FAIL'} "
-                  f"({h1a['families_with_improvement']}/{h1a['total_families']} families improved)")
-
-    # H2 summary
-    h2 = g2_decision["h2"]
-    rho = h2.get("spearman_rho")
-    if rho is not None:
-        ax2.bar(["Spearman ρ"], [rho], color="steelblue")
-        ci = h2.get("bootstrap_ci_95", [None, None])
-        if ci[0] is not None:
-            ax2.errorbar(["Spearman ρ"], [rho],
-                         yerr=[[rho - ci[0]], [ci[1] - rho]],
-                         fmt="none", color="black", capsize=10)
-        ax2.axhline(y=0, color="black", lw=0.5)
-        ax2.set_ylabel("Correlation")
-        ax2.set_title(f"H2: {'PASS' if h2['pass'] else 'FAIL'} "
-                      f"(p={h2.get('p_value', 'N/A'):.4f})" if h2.get("p_value") else "H2")
-    else:
-        ax2.text(0.5, 0.5, "Insufficient data", ha="center", va="center", transform=ax2.transAxes)
-        ax2.set_title("H2: N/A")
+    ax.barh(families, improvements, color=colors)
+    ax.axvline(x=0, color="black", lw=1)
+    ax.set_xlabel("QBE Improvement (uniform − spectral)")
+    ax.set_title(
+        f"H1-A: {'PASS' if h1a['pass'] else 'FAIL'} "
+        f"({h1a['families_with_improvement']}/{h1a['total_families']} families improved)"
+    )
 
     decision = g2_decision["decision"]
     color = "green" if decision == "GO" else "red"
-    fig.text(0.5, -0.05, f"G2 Decision: {decision}", ha="center",
-             fontsize=14, fontweight="bold", color=color)
+    fig.text(
+        0.5, -0.05, f"Decision: {decision}",
+        ha="center", fontsize=14, fontweight="bold", color=color,
+    )
 
     fig.tight_layout()
     if save_path:
-        save_figure(fig, save_path, "G2 Gate Summary")
+        save_figure(fig, save_path, "H1-A Decision Summary")
     return fig

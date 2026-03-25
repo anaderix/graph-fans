@@ -33,7 +33,7 @@ class TrainConfig:
     seed: int = 42
     device: str = "cpu"
     use_spectral_noise: bool = False
-    t_knee: float | None = None
+    t_knee: float | None = None  # DEPRECATED (H2 removed): no longer used by the main pipeline
     alpha: float = 1.0
     epsilon: float = 1e-3
     B: int = 8

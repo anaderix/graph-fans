@@ -263,8 +263,59 @@ The configuration model baseline exposes a fundamental blind spot: graphs with i
     print(f"  Written: {out}")
 
 
+def build_followup_figures() -> None:
+    """Generate follow-up analysis figures if result JSONs exist.
+
+    Calls analyze_family_results.py, analyze_scale_results.py, and
+    analyze_downstream.py to produce PNG/MD files in results/diagnostics/.
+    Skips silently if input files do not yet exist.
+    """
+    import subprocess
+    import sys
+
+    diag_dir = RESULTS / "diagnostics"
+
+    family_json = diag_dir / "family_generalization.json"
+    if family_json.exists():
+        print(f"  Generating family comparison figures from {family_json}...")
+        subprocess.run([
+            sys.executable, "-m", "scripts.analyze_family_results" if False else
+            str(ROOT / "scripts" / "analyze_family_results.py"),
+            "--input", str(family_json),
+            "--output-dir", str(diag_dir),
+        ], check=True)
+    else:
+        print(f"  Skipping family figures (not found: {family_json})")
+
+    scale_files = list(diag_dir.glob("scale_study_n*.json"))
+    if scale_files:
+        print(f"  Generating scale study figures ({len(scale_files)} files)...")
+        subprocess.run([
+            sys.executable,
+            str(ROOT / "scripts" / "analyze_scale_results.py"),
+            "--result-dir", str(diag_dir),
+            "--output-dir", str(diag_dir),
+        ], check=True)
+    else:
+        print(f"  Skipping scale figures (no scale_study_n*.json in {diag_dir})")
+
+    downstream_json = diag_dir / "downstream_results.json"
+    if downstream_json.exists():
+        print(f"  Generating downstream figures from {downstream_json}...")
+        subprocess.run([
+            sys.executable,
+            str(ROOT / "scripts" / "analyze_downstream.py"),
+            "--input", str(downstream_json),
+            "--output-dir", str(diag_dir),
+        ], check=True)
+    else:
+        print(f"  Skipping downstream figures (not found: {downstream_json})")
+
+
 if __name__ == "__main__":
     print("Building HTML reports...")
     build_phase0()
     build_phase1a()
+    print("\nBuilding follow-up figures...")
+    build_followup_figures()
     print("Done.")

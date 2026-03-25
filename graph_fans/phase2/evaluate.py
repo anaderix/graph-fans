@@ -15,8 +15,6 @@ from pathlib import Path
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.stats import spearmanr
-
 from graph_fans.phase0.spectral_profiler import (
     compute_laplacian_spectrum,
     partition_into_bands,
@@ -292,87 +290,21 @@ def run_h1a_experiment(
     return df
 
 
-def run_h2_experiment(
-    families: list[str] | None = None,
-    t_knee_values: list[float] | None = None,
-    n_seeds: int = 5,
-    n_nodes: int = 200,
-    n_features: int = 16,
-    config: TrainConfig | None = None,
-    B: int = 8,
-    output_dir: str = "results/phase2",
-    feature_mode: str = "community",
-    dataset_dir: str | Path = "results/phase2/datasets",
-) -> pd.DataFrame:
-    """Run H2: grid search over t_knee."""
-    if families is None:
-        families = ["SBM(q=0.01)", "SBM(q=0.05)", "SBM(q=0.1)", "BA(m=2)", "BA(m=5)"]
-    if t_knee_values is None:
-        t_knee_values = [0.05, 0.10, 0.15, 0.20, 0.30]
-    if config is None:
-        config = TrainConfig()
-
-    # Pre-generate all datasets
-    logger.info("Pre-generating all H2 datasets...")
-    for family in families:
-        graph = _get_graph(family, n_nodes, seed=0)
-        for seed in range(n_seeds):
-            get_or_generate_dataset(
-                graph, family, seed,
-                n_train=config.n_train_samples, n_ref=N_GEN_SAMPLES,
-                n_features=n_features, feature_mode=feature_mode,
-                cache_dir=dataset_dir,
-            )
-
-    phase0_energies = _load_phase0_energies()
-    results = []
-
-    for family in families:
-        weights = _get_importance_weights(phase0_energies, family, config.alpha, config.epsilon)
-
-        graph = _get_graph(family, n_nodes, seed=0)
-        eigenvalues, _ = compute_laplacian_spectrum(graph)
-        lambda_2 = eigenvalues[1] if len(eigenvalues) > 1 else 0
-        lambda_max = eigenvalues[-1] if eigenvalues[-1] > 0 else 1
-        spectral_gap_ratio = lambda_2 / lambda_max
-
-        for t_knee in t_knee_values:
-            for seed in range(n_seeds):
-                method = f"spectral_ramp_tknee={t_knee}"
-                r = run_single_experiment(
-                    family, method, seed, n_nodes, n_features, config,
-                    weights, B, feature_mode, dataset_dir,
-                )
-                results.append((r, spectral_gap_ratio, t_knee))
-
-    rows = []
-    for r, sgr, tk in results:
-        rows.append({
-            "family": r.graph_family,
-            "t_knee": tk,
-            "seed": r.seed,
-            "spectral_gap_ratio": sgr,
-            "qbe_total": r.qbe_total,
-            "qbe_high_bands": r.qbe_high_bands,
-            "final_loss": r.final_loss,
-            "train_time_s": r.train_time_seconds,
-        })
-
-    df = pd.DataFrame(rows)
-    out_path = Path(output_dir)
-    out_path.mkdir(parents=True, exist_ok=True)
-    df.to_csv(out_path / "h2_results.csv", index=False)
-    logger.info(f"H2 results saved to {out_path / 'h2_results.csv'}")
-    return df
-
-
-def compute_g2_decision(
+def compute_h1a_decision(
     h1a_df: pd.DataFrame,
-    h2_df: pd.DataFrame,
     B: int = 8,
     output_dir: str = "results/phase2",
 ) -> dict:
-    """Compute G2 go/no-go decision."""
+    """Compute H1-A go/no-go decision based on uniform vs spectral W1 improvement.
+
+    Args:
+        h1a_df: DataFrame with columns family, method, qbe_high_bands, qbe_total.
+        B: Number of spectral bands.
+        output_dir: Directory to write g2_decision.json.
+
+    Returns:
+        Dict with keys 'decision' and 'h1a'.
+    """
     from scipy.stats import ttest_rel
 
     families = h1a_df["family"].unique()
@@ -415,57 +347,13 @@ def compute_g2_decision(
 
     h1a_pass = h1a_pass_count >= 2
 
-    # H2
-    optimal_tknee = {}
-    spectral_gaps = {}
-
-    for family in h2_df["family"].unique():
-        fam_df = h2_df[h2_df["family"] == family]
-        mean_by_tknee = fam_df.groupby("t_knee")["qbe_total"].mean()
-        best_tknee = mean_by_tknee.idxmin()
-        optimal_tknee[family] = best_tknee
-        spectral_gaps[family] = fam_df["spectral_gap_ratio"].iloc[0]
-
-    if len(optimal_tknee) >= 3:
-        families_ordered = sorted(optimal_tknee.keys())
-        tknee_vals = [optimal_tknee[f] for f in families_ordered]
-        sgr_vals = [spectral_gaps[f] for f in families_ordered]
-
-        rho, p_val_h2 = spearmanr(sgr_vals, tknee_vals)
-
-        rng = np.random.RandomState(42)
-        rhos_boot = []
-        for _ in range(10000):
-            idx = rng.choice(len(tknee_vals), size=len(tknee_vals), replace=True)
-            r, _ = spearmanr([sgr_vals[i] for i in idx], [tknee_vals[i] for i in idx])
-            if not np.isnan(r):
-                rhos_boot.append(r)
-        ci_low = float(np.percentile(rhos_boot, 2.5)) if rhos_boot else float("nan")
-        ci_high = float(np.percentile(rhos_boot, 97.5)) if rhos_boot else float("nan")
-
-        h2_pass = (rho > 0) and (p_val_h2 < 0.05)
-    else:
-        rho, p_val_h2 = float("nan"), float("nan")
-        ci_low, ci_high = float("nan"), float("nan")
-        h2_pass = False
-
-    g2_pass = h1a_pass
-
     decision = {
-        "decision": "GO" if g2_pass else "NO-GO",
+        "decision": "GO" if h1a_pass else "NO-GO",
         "h1a": {
             "pass": bool(h1a_pass),
             "families_with_improvement": h1a_pass_count,
             "total_families": len(families),
             "details": h1a_details,
-        },
-        "h2": {
-            "pass": bool(h2_pass),
-            "spearman_rho": float(rho) if not np.isnan(rho) else None,
-            "p_value": float(p_val_h2) if not np.isnan(p_val_h2) else None,
-            "bootstrap_ci_95": [ci_low, ci_high],
-            "optimal_tknee": {k: float(v) for k, v in optimal_tknee.items()},
-            "spectral_gap_ratios": {k: float(v) for k, v in spectral_gaps.items()},
         },
     }
 
@@ -474,5 +362,8 @@ def compute_g2_decision(
     with open(out_path / "g2_decision.json", "w") as f:
         json.dump(decision, f, indent=2)
 
-    logger.info(f"G2 Decision: {decision['decision']}")
+    logger.info(f"H1-A Decision: {decision['decision']}")
+    logger.info(
+        f"H1-A: {h1a_pass_count}/{len(families)} families with significant improvement"
+    )
     return decision

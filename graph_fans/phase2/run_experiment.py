@@ -1,4 +1,4 @@
-"""Main script for Phase 2: Regime A Core (H1-A + H2).
+"""Main script for Phase 2: Regime A Core (H1-A).
 
 Usage:
     uv run python -m graph_fans.phase2 [options]
@@ -15,14 +15,11 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 
-from .evaluate import run_h1a_experiment, run_h2_experiment, compute_g2_decision
+from .evaluate import run_h1a_experiment, compute_h1a_decision
 from .trainer import TrainConfig
 from .visualize import (
     plot_per_band_comparison,
     plot_h1a_summary,
-    plot_t_knee_grid,
-    plot_h2_correlation,
-    plot_g2_summary,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -37,9 +34,7 @@ def run_phase2(
     n_seeds: int = 5,
     n_epochs: int = 2000,
     batch_timesteps: int = 32,
-    t_knee_values: list[float] | None = None,
     h1a_families: list[str] | None = None,
-    h2_families: list[str] | None = None,
     device: str = "cpu",
     sde_type: str = "cosine",
     use_ema: bool = True,
@@ -56,10 +51,7 @@ def run_phase2(
     n_layers: int = 3,
     conv_type: str = "gcn",
 ) -> dict:
-    """Run full Phase 2 experiment pipeline."""
-    if t_knee_values is None:
-        t_knee_values = [0.05, 0.10, 0.15, 0.20, 0.30]
-
+    """Run Phase 2 experiment pipeline (H1-A only)."""
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
@@ -89,8 +81,7 @@ def run_phase2(
     if pre_generate_only:
         from .dataset import get_or_generate_dataset, validate_dataset
         from .evaluate import _get_graph
-        all_families = set((h1a_families or ["SBM(q=0.05)", "BA(m=5)"]) +
-                          (h2_families or ["SBM(q=0.01)", "SBM(q=0.05)", "SBM(q=0.1)", "BA(m=2)", "BA(m=5)"]))
+        all_families = set(h1a_families or ["SBM(q=0.05)", "BA(m=5)"])
         logger.info(f"Pre-generating datasets for {len(all_families)} families × {n_seeds} seeds...")
         for family in sorted(all_families):
             graph = _get_graph(family, n_nodes, seed=0)
@@ -125,47 +116,25 @@ def run_phase2(
     summary = h1a_df.groupby(["family", "method"])[["qbe_high_bands", "qbe_total"]].agg(["mean", "std"])
     logger.info(f"\n{summary}")
 
-    # --- H2 Experiment ---
-    logger.info("\n=== H2: Temporal Ramp Grid Search ===")
-    h2_df = run_h2_experiment(
-        families=h2_families,
-        t_knee_values=t_knee_values,
-        n_seeds=n_seeds,
-        n_nodes=n_nodes,
-        n_features=n_features,
-        config=config,
-        B=B,
-        output_dir=output_dir,
-        feature_mode=feature_mode,
-        dataset_dir=dataset_dir,
+    # --- H1-A Decision ---
+    logger.info("\n=== H1-A Decision ===")
+    g2 = compute_h1a_decision(h1a_df, B, output_dir)
+    logger.info(f"Decision: {g2['decision']}")
+    logger.info(
+        f"H1-A: {g2['h1a']['families_with_improvement']}/{g2['h1a']['total_families']} families improved"
     )
-
-    logger.info("\nH2 Results Summary:")
-    h2_summary = h2_df.groupby(["family", "t_knee"])["qbe_total"].agg(["mean", "std"])
-    logger.info(f"\n{h2_summary}")
-
-    # --- G2 Decision ---
-    logger.info("\n=== G2 Decision ===")
-    g2 = compute_g2_decision(h1a_df, h2_df, B, output_dir)
-    logger.info(f"G2: {g2['decision']}")
-    logger.info(f"H1-A: {g2['h1a']['families_with_improvement']}/{g2['h1a']['total_families']} families improved")
-    if g2["h2"]["spearman_rho"] is not None:
-        logger.info(f"H2: Spearman rho={g2['h2']['spearman_rho']:.3f}, p={g2['h2']['p_value']:.4f}")
 
     # --- Plots ---
     logger.info("\nGenerating plots...")
     plot_per_band_comparison(h1a_df, B, save_path=out_path / "per_band_comparison")
     plot_h1a_summary(h1a_df, save_path=out_path / "h1a_summary")
-    plot_t_knee_grid(h2_df, save_path=out_path / "t_knee_grid")
-    plot_h2_correlation(g2, save_path=out_path / "h2_correlation")
-    plot_g2_summary(g2, save_path=out_path / "g2_summary")
 
     logger.info(f"\nResults saved to {out_path}/")
     return g2
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Phase 2: Regime A Core (H1-A + H2)")
+    parser = argparse.ArgumentParser(description="Phase 2: Regime A Core (H1-A)")
     parser.add_argument("--output-dir", default="results/phase2")
     parser.add_argument("--n-nodes", type=int, default=200)
     parser.add_argument("--n-features", type=int, default=16)
@@ -174,7 +143,6 @@ def main():
     parser.add_argument("--epochs", type=int, default=2000)
     parser.add_argument("--batch-timesteps", type=int, default=32,
                         help="Number of timesteps per epoch (default: 32)")
-    parser.add_argument("--t-knee-values", type=str, default="0.05,0.10,0.15,0.20,0.30")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--sde", choices=["vpsde", "cosine"], default="vpsde",
                         help="SDE type: vpsde (linear beta) or cosine (Nichol & Dhariwal)")
@@ -204,8 +172,6 @@ def main():
                         help="min-SNR-γ loss weighting (NS-C). None=disabled, 5.0=standard")
     args = parser.parse_args()
 
-    t_knee = [float(x) for x in args.t_knee_values.split(",")]
-
     run_phase2(
         output_dir=args.output_dir,
         n_nodes=args.n_nodes,
@@ -214,13 +180,12 @@ def main():
         n_seeds=args.seeds,
         n_epochs=args.epochs,
         batch_timesteps=args.batch_timesteps,
-        t_knee_values=t_knee,
         device=args.device,
         sde_type=args.sde,
         use_ema=args.ema,
         use_lr_scheduler=args.lr_scheduler,
-        use_spectral_loss=getattr(args, 'spectral_loss', False),
-        spectral_loss_weight=getattr(args, 'spectral_loss_weight', 0.1),
+        use_spectral_loss=getattr(args, "spectral_loss", False),
+        spectral_loss_weight=getattr(args, "spectral_loss_weight", 0.1),
         feature_mode=args.feature_mode,
         n_train_samples=args.n_train_samples,
         dataset_dir=args.dataset_dir,

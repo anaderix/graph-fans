@@ -11,7 +11,7 @@ from graph_fans.phase0.spectral_profiler import compute_laplacian_spectrum, part
 from graph_fans.phase2.noise_shaper import (
     compute_importance_weights,
     shape_noise,
-    shape_noise_with_temporal_ramp,
+    shape_noise_with_temporal_ramp,  # retained in noise_shaper.py but not used in main pipeline
 )
 from graph_fans.phase2.score_network import SimpleScoreNetwork
 from graph_fans.phase2.sde import VPSDE, CosineScheduleSDE
@@ -111,51 +111,6 @@ class TestNoiseShaping:
         assert shaped_var > 0.1 * orig_var
         assert shaped_var < 10.0 * orig_var
 
-
-class TestTemporalRamp:
-    def test_below_knee_is_uniform(self, band_setup):
-        """Below t_knee, output should equal input noise."""
-        _, eigenvectors, band_indices, _ = band_setup
-        n = eigenvectors.shape[0]
-        noise = torch.randn(n, 4)
-        U = torch.tensor(eigenvectors, dtype=torch.float32)
-        energies = np.array([5.0, 3.0, 2.0, 1.0])
-        w = compute_importance_weights(energies)
-
-        result = shape_noise_with_temporal_ramp(noise, U, band_indices, w, t=0.05, t_knee=0.15)
-        torch.testing.assert_close(result, noise)
-
-    def test_above_knee_is_shaped(self, band_setup):
-        """Well above t_knee, output should differ from input."""
-        _, eigenvectors, band_indices, _ = band_setup
-        n = eigenvectors.shape[0]
-        torch.manual_seed(0)
-        noise = torch.randn(n, 4)
-        U = torch.tensor(eigenvectors, dtype=torch.float32)
-        energies = np.array([5.0, 3.0, 2.0, 1.0])
-        w = compute_importance_weights(energies)
-
-        result = shape_noise_with_temporal_ramp(noise, U, band_indices, w, t=0.99, t_knee=0.15)
-        diff = (result - noise).abs().mean().item()
-        assert diff > 0.01
-
-    def test_interpolation(self, band_setup):
-        """At intermediate t, result should be a blend."""
-        _, eigenvectors, band_indices, _ = band_setup
-        n = eigenvectors.shape[0]
-        torch.manual_seed(0)
-        noise = torch.randn(n, 4)
-        U = torch.tensor(eigenvectors, dtype=torch.float32)
-        energies = np.array([5.0, 3.0, 2.0, 1.0])
-        w = compute_importance_weights(energies)
-
-        result = shape_noise_with_temporal_ramp(noise, U, band_indices, w, t=0.5, t_knee=0.15)
-        fully_shaped = shape_noise(noise, U, band_indices, w)
-
-        diff_from_noise = (result - noise).abs().mean().item()
-        diff_from_shaped = (result - fully_shaped).abs().mean().item()
-        assert diff_from_noise > 0.001
-        assert diff_from_shaped > 0.001
 
 
 class TestScoreNetwork:
@@ -443,29 +398,6 @@ class TestIntegration:
         assert r_uniform.graph_family == "SBM(q=0.05)"
         assert r_spectral.method == "spectral"
 
-    def test_h2_grid_search_runs(self):
-        """H2 grid search with 2 t_knee values completes without error."""
-        from graph_fans.phase2.evaluate import run_single_experiment
-
-        energies = np.array([5.0, 3.0, 2.0, 1.0])
-        weights = compute_importance_weights(energies)
-        config = TrainConfig(
-            n_epochs=10, batch_timesteps=2, seed=0, device="cpu",
-            hidden_dim=32, n_layers=2, B=4, n_gen_steps=10,
-            n_train_samples=20,
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            for t_knee in [0.1, 0.3]:
-                r = run_single_experiment(
-                    "SBM(q=0.05)", f"spectral_ramp_tknee={t_knee}", seed=0,
-                    n_nodes=30, n_features=4, config=config,
-                    importance_weights=weights, B=4, feature_mode="smooth",
-                    dataset_dir=tmpdir,
-                )
-                assert r.qbe_total >= 0
-                assert f"tknee={t_knee}" in r.method
-
 
 class TestLogSNRSampling:
     """Tests for NS-A: log-SNR uniform timestep sampling."""
@@ -586,3 +518,58 @@ class TestMinSNRGamma:
         assert all(np.isfinite(l) for l in history["loss"]), (
             "NaN or Inf detected in loss history"
         )
+
+
+class TestCleanup:
+    """Verify CLEANUP-1,2: H2 code removed from active pipelines."""
+
+    def test_no_t_knee_args_in_argparse(self):
+        """argparse in run_experiment must not expose --t-knee-values."""
+        import subprocess
+        result = subprocess.run(
+            ["uv", "run", "python", "-m", "graph_fans.phase2", "--help"],
+            capture_output=True, text=True,
+            cwd="/home/anaderi/projects/graph-fans",
+        )
+        assert "--t-knee-values" not in result.stdout, (
+            "CLEANUP failed: --t-knee-values still present in --help output"
+        )
+
+    def test_compute_h1a_decision_signature(self):
+        """compute_h1a_decision accepts (h1a_df, B, output_dir) and returns dict
+        with keys 'decision' and 'h1a' only — no 'h2' key."""
+        import inspect
+        import tempfile
+        import pandas as pd
+        from graph_fans.phase2.evaluate import compute_h1a_decision
+
+        sig = inspect.signature(compute_h1a_decision)
+        assert "h2_df" not in sig.parameters, (
+            "compute_h1a_decision still has h2_df parameter"
+        )
+
+        # Build a minimal DataFrame to test the function
+        rows = []
+        for seed in range(3):
+            rows.append({"family": "SBM(q=0.05)", "method": "uniform",
+                         "seed": seed, "qbe_high_bands": 0.1, "qbe_total": 0.2})
+            rows.append({"family": "SBM(q=0.05)", "method": "spectral",
+                         "seed": seed, "qbe_high_bands": 0.08, "qbe_total": 0.15})
+        df = pd.DataFrame(rows)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = compute_h1a_decision(df, B=8, output_dir=tmpdir)
+
+        assert "decision" in result
+        assert "h1a" in result
+        assert "h2" not in result, "compute_h1a_decision must not return 'h2' key"
+
+    def test_get_graph_new_families(self):
+        """_get_graph handles SBM(q=0.1), BA(m=2), BA(m=5) and returns n_nodes=50."""
+        from graph_fans.phase2.evaluate import _get_graph
+
+        for family in ["SBM(q=0.1)", "BA(m=2)", "BA(m=5)"]:
+            g = _get_graph(family, 50, seed=0)
+            assert g.number_of_nodes() == 50, (
+                f"Expected 50 nodes for {family}, got {g.number_of_nodes()}"
+            )
