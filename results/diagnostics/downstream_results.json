@@ -1,0 +1,170 @@
+[
+  {
+    "family": "SBM(q=0.05)",
+    "n_nodes": 50,
+    "uniform_acc_per_seed": [
+      0.3032,
+      0.3008,
+      0.3052,
+      0.3024,
+      0.304
+    ],
+    "spectral_acc_per_seed": [
+      0.3068,
+      0.3016,
+      0.3084,
+      0.3064,
+      0.3064
+    ],
+    "uniform_acc_mean": 0.30312000000000006,
+    "uniform_acc_std": 0.0014837789592793158,
+    "spectral_acc_mean": 0.30592,
+    "spectral_acc_std": 0.002282454818829948,
+    "improvement_pct": 0.9237265769332174,
+    "t_stat": 4.9497474683057785,
+    "p_val": 0.007762602689870988,
+    "significant": true,
+    "n_communities": 5,
+    "per_seed": [
+      {
+        "seed": 0,
+        "uniform": {
+          "train_acc": 0.30828,
+          "test_acc": 0.3032
+        },
+        "spectral": {
+          "train_acc": 0.31144,
+          "test_acc": 0.3068
+        }
+      },
+      {
+        "seed": 1,
+        "uniform": {
+          "train_acc": 0.30538,
+          "test_acc": 0.3008
+        },
+        "spectral": {
+          "train_acc": 0.3046,
+          "test_acc": 0.3016
+        }
+      },
+      {
+        "seed": 2,
+        "uniform": {
+          "train_acc": 0.31114,
+          "test_acc": 0.3052
+        },
+        "spectral": {
+          "train_acc": 0.312,
+          "test_acc": 0.3084
+        }
+      },
+      {
+        "seed": 3,
+        "uniform": {
+          "train_acc": 0.30988,
+          "test_acc": 0.3024
+        },
+        "spectral": {
+          "train_acc": 0.31186,
+          "test_acc": 0.3064
+        }
+      },
+      {
+        "seed": 4,
+        "uniform": {
+          "train_acc": 0.31062,
+          "test_acc": 0.304
+        },
+        "spectral": {
+          "train_acc": 0.3107,
+          "test_acc": 0.3064
+        }
+      }
+    ]
+  },
+  {
+    "family": "BA(m=5)",
+    "n_nodes": 50,
+    "uniform_acc_per_seed": [
+      0.3228,
+      0.3244,
+      0.3264,
+      0.3248,
+      0.3236
+    ],
+    "spectral_acc_per_seed": [
+      0.3216,
+      0.3244,
+      0.3248,
+      0.322,
+      0.3268
+    ],
+    "uniform_acc_mean": 0.32439999999999997,
+    "uniform_acc_std": 0.0012132600710482609,
+    "spectral_acc_mean": 0.32392,
+    "spectral_acc_std": 0.0019166637681137422,
+    "improvement_pct": -0.14796547472255872,
+    "t_stat": -0.46923713220347,
+    "p_val": 0.6633345363406326,
+    "significant": false,
+    "n_communities": 4,
+    "per_seed": [
+      {
+        "seed": 0,
+        "uniform": {
+          "train_acc": 0.3295,
+          "test_acc": 0.3228
+        },
+        "spectral": {
+          "train_acc": 0.32706,
+          "test_acc": 0.3216
+        }
+      },
+      {
+        "seed": 1,
+        "uniform": {
+          "train_acc": 0.32984,
+          "test_acc": 0.3244
+        },
+        "spectral": {
+          "train_acc": 0.32848,
+          "test_acc": 0.3244
+        }
+      },
+      {
+        "seed": 2,
+        "uniform": {
+          "train_acc": 0.336,
+          "test_acc": 0.3264
+        },
+        "spectral": {
+          "train_acc": 0.33202,
+          "test_acc": 0.3248
+        }
+      },
+      {
+        "seed": 3,
+        "uniform": {
+          "train_acc": 0.32948,
+          "test_acc": 0.3248
+        },
+        "spectral": {
+          "train_acc": 0.33208,
+          "test_acc": 0.322
+        }
+      },
+      {
+        "seed": 4,
+        "uniform": {
+          "train_acc": 0.33024,
+          "test_acc": 0.3236
+        },
+        "spectral": {
+          "train_acc": 0.33064,
+          "test_acc": 0.3268
+        }
+      }
+    ]
+  }
+]
