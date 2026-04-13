@@ -40,6 +40,7 @@ class TrainConfig:
     device: str = "cpu"
     use_spectral_noise: bool = False
     noise_shaping: str = "uniform"  # "uniform", "band", or "mode"
+    shape_gen_noise: bool = False  # shape initial generation noise to match training
     t_knee: float | None = None  # DEPRECATED (H2 removed): no longer used by the main pipeline
     alpha: float = 1.0
     epsilon: float = 1e-3
@@ -322,6 +323,14 @@ class Trainer:
         all_samples = []
         for _ in range(n_samples):
             x = torch.randn(self.n_nodes, self.n_features, device=self.device)
+            if self.config.shape_gen_noise:
+                effective = self.config.noise_shaping
+                if effective == "uniform" and self.config.use_spectral_noise:
+                    effective = "band"
+                if effective == "band" and self.importance_weights is not None:
+                    x = shape_noise(x, self.eigenvectors, self.band_indices, self.importance_weights)
+                elif effective == "mode" and self.mode_weights is not None:
+                    x = shape_noise_per_mode(x, self.eigenvectors, self.mode_weights)
 
             for i in range(n_steps):
                 t_now = float(ts[i])

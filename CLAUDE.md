@@ -50,7 +50,7 @@ uv run python -m graph_fans.phase2 --epochs 50 --seeds 1 --n-nodes 30  # quick l
 - **G2: CONDITIONAL GO** — Spectral shaping works at n=50 with W1 metric (6-12% improvement, significant across 3/4 families after power boost)
 - **H2 (temporal ramp): DEAD** — Removed from codebase, <1% effect
 - **Phase 3 (persistence bands): DEPRIORITIZED** — No meaningful scale separation in persistence at n=50
-- **Phase 3a (per-mode shaping): PLANNED** — See `plans/phase3a-plan.md`
+- **Phase 3a (per-mode shaping): NO-GO** — Per-mode shaping worsens W1 by 50-94% due to train/generate noise mismatch. Band shaping (Phase 2g) remains best.
 
 ## Running experiments
 
@@ -58,7 +58,7 @@ uv run python -m graph_fans.phase2 --epochs 50 --seeds 1 --n-nodes 30  # quick l
 # Phase 2g-style shaping test (W1 metric)
 uv run python scripts/test_shaping_w1.py --families "SBM(q=0.05)" --n-seeds 5 --device cpu
 
-# Phase 3a (when implemented)
+# Phase 3a (per-mode shaping, NO-GO — results only)
 uv run python scripts/test_phase3a_shaping_w1.py --validate-only
 uv run python scripts/test_phase3a_shaping_w1.py --device cpu --n-seeds 5
 ```

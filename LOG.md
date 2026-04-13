@@ -583,3 +583,50 @@ Phase 3 as designed (Vietoris-Rips persistence on shortest-path distances) is no
 
 Script: `scripts/explore_persistence_bands.py`
 Results: `results/graph_diagnostics/persistence_{SBMq005,SBMq01,BAm2}.png`, `results/graph_diagnostics/persistence_analysis.json`
+
+## 2026-04-14 — Phase 3a: Per-Mode Noise Shaping — NO-GO
+
+### Motivation
+
+Phase 2g validated per-band spectral noise shaping (B=8 bands, 6-12% W1 improvement). Since the W1 evaluation metric operates per eigenmode, per-mode shaping (n=50 weights instead of 8) could provide finer spectral resolution. Mode importance weights have 120x contrast range vs 11x for bands — potentially more signal for the score network.
+
+### Method
+
+3-way comparison: uniform vs band-spectral (B=8) vs mode-spectral (n=50). SBM(q=0.05) 5 seeds + SBM(q=0.1) 3 seeds. 500 epochs, 3L GCN 128h, cosine SDE + EMA, W1 evaluation. Paired t-test with Bonferroni correction (alpha=0.0125).
+
+### Results
+
+**SBM(q=0.05) — 5 seeds:**
+
+| Method | Mean W1 | vs Uniform | t-stat | p-value | Significant? |
+|--------|---------|-----------|--------|---------|--------------|
+| Uniform | 725.8 +/- 80.5 | — | — | — | — |
+| Band | 627.9 +/- 87.9 | -13.5% (better) | 10.16 | 0.00053 | **Yes** |
+| Mode | 1261.0 +/- 179.4 | +73.7% (worse) | -7.79 | 0.0015 | **Yes** |
+
+**SBM(q=0.1) — 3 seeds (incomplete):**
+
+| Method | Mean W1 | vs Uniform |
+|--------|---------|-----------|
+| Uniform | 1037.2 +/- 23.9 | — |
+| Band | 941.6 +/- 60.1 | -9.2% (better) |
+| Mode | 1622.4 +/- 49.4 | +56.4% (worse) |
+
+Per-seed mode W1 degradation: +50% to +94% across all 8 completed seed triples. No seed showed mode shaping improving over uniform.
+
+### Training loss paradox
+
+Mode shaping achieves the lowest training loss (0.381 vs 0.421 uniform) but the worst W1 (1261 vs 726). The model fits the shaped noise well, but generation uses unshaped noise (x_T = torch.randn), creating a distributional mismatch. Band shaping's per-band variance normalization partially masks this mismatch; per-mode shaping's raw sqrt(g_k) scaling at 120x contrast makes it catastrophic.
+
+### Gate decision
+
+**Phase 3a per-mode shaping: NO-GO** — conclusively harmful. Experiment stopped early at 24/60 runs (2 of 4 families) because the result was unambiguous.
+
+### Implications
+
+- Band shaping (Phase 2g) remains the best approach
+- Phase 3b (matched generation noise) should fix the train/generate mismatch by shaping x_T to match training noise
+- Granularity is not the bottleneck — the train/generate noise distribution consistency is
+
+Report: `results/phase3a/Report-Phase3a.md`
+Results: `results/phase3a/phase3a_results.json`, `results/phase3a/phase3a_run.log`

@@ -724,3 +724,90 @@ class TestPerModeShaping:
             mode_energies.sum(), total_energy, rtol=1e-5,
             err_msg="Mode energy sum should equal total signal energy (Parseval's)"
         )
+
+
+class TestMatchedNoise:
+    """Tests for Phase 3b: matched generation noise."""
+
+    def test_shape_gen_noise_default_false(self):
+        """Default shape_gen_noise is False for backward compatibility."""
+        config = TrainConfig()
+        assert config.shape_gen_noise is False
+
+    def test_generate_shaped_noise_start(self, small_graph):
+        """With shape_gen_noise=True and band shaping, generation produces
+        different output than without (same seed, same model weights)."""
+        graph, dataset = small_graph
+        evals, evecs = compute_laplacian_spectrum(graph)
+        _, band_indices = partition_into_bands(evals, B=4)
+        from graph_fans.phase0.spectral_profiler import compute_band_energy
+        band_energies = compute_band_energy(dataset[0], evecs, band_indices)
+        iw = compute_importance_weights(band_energies)
+
+        # Train one model with band shaping and shape_gen_noise=False
+        config_mismatched = TrainConfig(
+            n_epochs=10, batch_timesteps=2,
+            seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_gen_steps=10, n_train_samples=10,
+            use_spectral_noise=True,
+            shape_gen_noise=False,
+            B=4,
+        )
+        trainer_mis = Trainer(config_mismatched, graph, dataset, importance_weights=iw)
+        trainer_mis.train()
+
+        # Train another model with same config but shape_gen_noise=True
+        config_matched = TrainConfig(
+            n_epochs=10, batch_timesteps=2,
+            seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_gen_steps=10, n_train_samples=10,
+            use_spectral_noise=True,
+            shape_gen_noise=True,
+            B=4,
+        )
+        trainer_mat = Trainer(config_matched, graph, dataset, importance_weights=iw)
+        trainer_mat.train()
+
+        # Generate with same random seed — should differ due to noise shaping
+        torch.manual_seed(123)
+        gen_mis = trainer_mis.generate(n_steps=10, n_samples=1)
+        torch.manual_seed(123)
+        gen_mat = trainer_mat.generate(n_steps=10, n_samples=1)
+
+        # Models trained identically (same seed), but generation starts differ
+        # because shape_gen_noise reshapes the initial randn
+        assert not np.allclose(gen_mis, gen_mat, atol=1e-3), (
+            "Matched and mismatched generation should produce different outputs"
+        )
+
+    def test_generate_uniform_unaffected(self, small_graph):
+        """With shape_gen_noise=True but noise_shaping='uniform' (no spectral
+        shaping), generation is unchanged — no shaping to apply.
+
+        Uses a single trainer, toggling shape_gen_noise between generate calls
+        to ensure identical model weights.
+        """
+        graph, dataset = small_graph
+
+        config = TrainConfig(
+            n_epochs=5, batch_timesteps=2,
+            seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_gen_steps=10, n_train_samples=10,
+            noise_shaping="uniform",
+            shape_gen_noise=False,
+        )
+        trainer = Trainer(config, graph, dataset)
+        trainer.train()
+
+        # Generate with shape_gen_noise=False
+        torch.manual_seed(99)
+        gen_off = trainer.generate(n_steps=10, n_samples=1)
+
+        # Toggle to True and generate again with same seed
+        trainer.config.shape_gen_noise = True
+        torch.manual_seed(99)
+        gen_on = trainer.generate(n_steps=10, n_samples=1)
+
+        np.testing.assert_allclose(gen_off, gen_on, atol=1e-5,
+            err_msg="shape_gen_noise=True with uniform shaping should not change output"
+        )

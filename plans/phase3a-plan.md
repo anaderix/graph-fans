@@ -96,6 +96,10 @@ uv run python scripts/test_phase3a_shaping_w1.py --device cuda --n-seeds 5
 - **Separate `ModeImportanceWeights` dataclass**: explicit type distinction at call sites, no confusion with band-level code.
 - **Same hyperparameters as 2g**: n=50, 4 features, 500 epochs, 3L GCN 128h, cosine SDE, EMA 0.999 — isolates the single variable (band vs mode shaping).
 
+## Follow-up: Phase 3b
+
+Phase 3b (see `plans/phase3b-plan.md`) tests matched noise — shaping the initial generation noise to match training noise. Currently there's a distributional mismatch: training corrupts features with shaped noise, but generation starts from uniform `torch.randn`. Phase 3b fixes this and reuses Phase 3a results as the mismatched baseline.
+
 ## Risk: weight contrast too high
 
 Per-mode weights span 120-168x. Mode 0 (constant eigenvector) gets weight ~0.02, while low-energy high-frequency modes get weight ~2-3. The `sqrt(g_k)` scaling means noise coefficients range from 0.14x to 1.7x — this is actually moderate. If instability occurs, try `alpha=0.5` (reduces contrast) or clip max weight ratio at 20x.
