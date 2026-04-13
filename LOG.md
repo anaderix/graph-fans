@@ -539,3 +539,47 @@ The spectral shaping effect generalizes across families (3/4 significant) and pe
 
 Report: `results/Report-Phase2g-Followup.md` (updated with Power Boost addendum)
 Results: `results/diagnostics/power_{sbm01_n50,bam5_n150,bam5_n200}.json`
+
+## 2026-04-14 — Pre-Phase 3 Check: Persistence-Informed Bands Viability
+
+### Motivation
+
+Phase 3 (H4: persistence-informed band boundaries) was designed when evaluation used QBE (mean-profile comparison). Since Phase 2f/2g switched to per-mode Wasserstein-1, the rationale for optimizing band boundaries is weaker: W1 operates per eigenmode, and per-mode importance weighting could bypass bands entirely. Before investing 3-4 weeks, tested whether persistent homology reveals meaningful spectral scale structure on the families that gave positive Phase 2g results.
+
+### Method
+
+Computed persistent homology (H0, H1) on 3 distance metrics for SBM(q=0.05), SBM(q=0.1), and BA(m=2), all at n=50:
+
+1. **Shortest-path distance** — the approach specified in the Phase 3 roadmap
+2. **Effective resistance** — spectrally-aware, R_eff(i,j) = sum (u_k(i)-u_k(j))^2 / lambda_k
+3. **Diffusion distance** (t=1.0) — heat kernel based, continuous
+
+Compared persistence-derived band boundaries against uniform and eigenvalue-gap boundaries. Evaluated energy profiles and importance weight contrast under each scheme.
+
+### Results
+
+**Shortest-path persistence: completely degenerate.** All 3 families show exactly 1 unique H0 death time (distance=1). Integer distances on small dense graphs produce zero topological variation.
+
+**Effective resistance & diffusion persistence: continuous but nearly uniform.**
+
+| Family | Eff. Resistance H0 CV | Diffusion H0 CV | Unique Deaths |
+|--------|----------------------|-----------------|---------------|
+| SBM(q=0.05) | 0.026 | 0.053 | 49 / 49 |
+| SBM(q=0.1) | 0.015 | 0.030 | 49 / 49 |
+| BA(m=2) | 0.033 | 0.070 | 47 / 47 |
+
+Lifetime CV < 0.1 across all families — no meaningful scale separation in the persistence features. All components merge at roughly the same rate; no multi-scale topological structure for persistence-informed boundaries to exploit.
+
+**Eigenvalue gaps are more informative than persistence.** Direct eigenvalue gap analysis shows clear structure (large gaps in low-frequency region separating community-encoding modes from bulk). Weight contrast under gap-based bands: 25-106x vs 8-19x for uniform.
+
+### Conclusion
+
+Phase 3 as designed (Vietoris-Rips persistence on shortest-path distances) is not viable for these graph families at this scale. Even with spectrally-aware distance metrics, persistence diagrams lack the scale separation needed for meaningful band boundaries. Two factors:
+
+1. **Metric switch:** W1 evaluates per eigenmode, making band boundaries less critical for evaluation. Per-mode importance weighting (no bands) is the natural next step.
+2. **Graph structure:** n=50 dense graphs don't have multi-scale topological features. Persistence may be more useful on larger, sparser, irregular graphs (social networks, protein-protein) — but those are not the families where spectral shaping has been validated.
+
+**Decision:** Phase 3 deprioritized. If band optimization is revisited, eigenvalue gap analysis (no TDA) is a simpler and more informative starting point than persistence homology.
+
+Script: `scripts/explore_persistence_bands.py`
+Results: `results/graph_diagnostics/persistence_{SBMq005,SBMq01,BAm2}.png`, `results/graph_diagnostics/persistence_analysis.json`

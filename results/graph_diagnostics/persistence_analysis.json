@@ -1,0 +1,269 @@
+[
+  {
+    "family": "SBM(q=0.05)",
+    "n_nodes": 50,
+    "lambda_max": 1.6792,
+    "spectral_gap": 0.2376,
+    "persistence": {
+      "shortest_path": {
+        "distance": "shortest_path",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 1,
+        "h0_lifetime_cv": 0.0,
+        "h0_max_lifetime": 1.0,
+        "h0_lifetime_range": [
+          1.0,
+          1.0
+        ],
+        "n_h1": 59
+      },
+      "effective_resistance": {
+        "distance": "effective_resistance",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 49,
+        "h0_lifetime_cv": 0.0262,
+        "h0_max_lifetime": 1.4293,
+        "h0_lifetime_range": [
+          1.2176,
+          1.4293
+        ],
+        "n_h1": 61
+      },
+      "diffusion_t1": {
+        "distance": "diffusion_t1",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 49,
+        "h0_lifetime_cv": 0.0534,
+        "h0_max_lifetime": 0.5176,
+        "h0_lifetime_range": [
+          0.3699,
+          0.5176
+        ],
+        "n_h1": 61
+      }
+    },
+    "n_gap_boundaries": 7,
+    "n_eff_boundaries": 7,
+    "n_diff_boundaries": 7,
+    "gap_boundaries": [
+      0.2777,
+      0.3437,
+      0.3973,
+      0.49,
+      1.3145,
+      1.3922,
+      1.5307
+    ],
+    "eff_boundaries": [
+      0.2376,
+      0.7516,
+      0.9381,
+      1.0384,
+      1.2668,
+      1.4597,
+      1.6792
+    ],
+    "diff_boundaries": [
+      0.2376,
+      0.6083,
+      0.7836,
+      0.8875,
+      1.0053,
+      1.2229,
+      1.6792
+    ],
+    "uniform_boundaries": [
+      0.2099,
+      0.4198,
+      0.6297,
+      0.8396,
+      1.0495,
+      1.2594,
+      1.4693
+    ],
+    "weight_contrast": {
+      "uniform": 8.22,
+      "eigenvalue_gap": 25.09,
+      "eff_resistance": 86.48,
+      "diffusion": 86.48
+    }
+  },
+  {
+    "family": "SBM(q=0.1)",
+    "n_nodes": 50,
+    "lambda_max": 1.6108,
+    "spectral_gap": 0.3962,
+    "persistence": {
+      "shortest_path": {
+        "distance": "shortest_path",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 1,
+        "h0_lifetime_cv": 0.0,
+        "h0_max_lifetime": 1.0,
+        "h0_lifetime_range": [
+          1.0,
+          1.0
+        ],
+        "n_h1": 70
+      },
+      "effective_resistance": {
+        "distance": "effective_resistance",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 49,
+        "h0_lifetime_cv": 0.0148,
+        "h0_max_lifetime": 1.4007,
+        "h0_lifetime_range": [
+          1.3155,
+          1.4007
+        ],
+        "n_h1": 72
+      },
+      "diffusion_t1": {
+        "distance": "diffusion_t1",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 49,
+        "h0_lifetime_cv": 0.0297,
+        "h0_max_lifetime": 0.511,
+        "h0_lifetime_range": [
+          0.4459,
+          0.511
+        ],
+        "n_h1": 72
+      }
+    },
+    "n_gap_boundaries": 7,
+    "n_eff_boundaries": 7,
+    "n_diff_boundaries": 7,
+    "gap_boundaries": [
+      0.4383,
+      0.535,
+      0.9287,
+      0.9931,
+      1.1734,
+      1.5345,
+      1.5847
+    ],
+    "eff_boundaries": [
+      0.3962,
+      0.6622,
+      0.8558,
+      1.0448,
+      1.2735,
+      1.3787,
+      1.6108
+    ],
+    "diff_boundaries": [
+      0.3962,
+      0.8744,
+      0.9339,
+      1.0626,
+      1.2973,
+      1.5092,
+      1.6108
+    ],
+    "uniform_boundaries": [
+      0.2013,
+      0.4027,
+      0.604,
+      0.8054,
+      1.0067,
+      1.2081,
+      1.4094
+    ],
+    "weight_contrast": {
+      "uniform": 7.66,
+      "eigenvalue_gap": 105.97,
+      "eff_resistance": 92.03,
+      "diffusion": 92.03
+    }
+  },
+  {
+    "family": "BA(m=2)",
+    "n_nodes": 50,
+    "lambda_max": 1.7917,
+    "spectral_gap": 0.2252,
+    "persistence": {
+      "shortest_path": {
+        "distance": "shortest_path",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 1,
+        "h0_lifetime_cv": 0.0,
+        "h0_max_lifetime": 1.0,
+        "h0_lifetime_range": [
+          1.0,
+          1.0
+        ],
+        "n_h1": 27
+      },
+      "effective_resistance": {
+        "distance": "effective_resistance",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 47,
+        "h0_lifetime_cv": 0.0334,
+        "h0_max_lifetime": 1.4217,
+        "h0_lifetime_range": [
+          1.2213,
+          1.4217
+        ],
+        "n_h1": 25
+      },
+      "diffusion_t1": {
+        "distance": "diffusion_t1",
+        "n_h0": 49,
+        "n_unique_h0_deaths": 47,
+        "h0_lifetime_cv": 0.0704,
+        "h0_max_lifetime": 0.517,
+        "h0_lifetime_range": [
+          0.3711,
+          0.517
+        ],
+        "n_h1": 26
+      }
+    },
+    "n_gap_boundaries": 7,
+    "n_eff_boundaries": 7,
+    "n_diff_boundaries": 7,
+    "gap_boundaries": [
+      0.4531,
+      0.7143,
+      0.9534,
+      1.0391,
+      1.1721,
+      1.3533,
+      1.4715
+    ],
+    "eff_boundaries": [
+      0.2252,
+      0.7061,
+      0.7839,
+      0.8819,
+      1.0585,
+      1.4525,
+      1.7917
+    ],
+    "diff_boundaries": [
+      0.2252,
+      0.6574,
+      0.8405,
+      1.1899,
+      1.4769,
+      1.6784,
+      1.7917
+    ],
+    "uniform_boundaries": [
+      0.224,
+      0.4479,
+      0.6719,
+      0.8959,
+      1.1198,
+      1.3438,
+      1.5677
+    ],
+    "weight_contrast": {
+      "uniform": 19.15,
+      "eigenvalue_gap": 72.56,
+      "eff_resistance": 77.13,
+      "diffusion": 78.71
+    }
+  }
+]
