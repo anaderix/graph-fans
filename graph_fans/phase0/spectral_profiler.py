@@ -119,6 +119,20 @@ def compute_band_energy(
     return band_energies
 
 
+def compute_mode_energy(features: np.ndarray, eigenvectors: np.ndarray) -> np.ndarray:
+    """Compute per-eigenmode energy: sum of squared spectral coefficients.
+
+    Args:
+        features: [n_nodes, n_features]
+        eigenvectors: [n_nodes, n_nodes]
+
+    Returns:
+        mode_energies: [n_modes] energy per eigenmode
+    """
+    coeffs = eigenvectors.T @ features  # [n_modes, n_features]
+    return (coeffs ** 2).sum(axis=1)    # [n_modes]
+
+
 def compute_energy_ratio(band_energies: np.ndarray) -> float:
     """Compute ratio of max to min non-zero band energy.
 

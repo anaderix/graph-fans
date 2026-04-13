@@ -13,7 +13,13 @@ import torch
 import torch.nn as nn
 
 from graph_fans.phase0.spectral_profiler import compute_laplacian_spectrum, partition_into_bands
-from .noise_shaper import ImportanceWeights, shape_noise, shape_noise_with_temporal_ramp
+from .noise_shaper import (
+    ImportanceWeights,
+    ModeImportanceWeights,
+    shape_noise,
+    shape_noise_per_mode,
+    shape_noise_with_temporal_ramp,
+)
 from .score_network import SimpleScoreNetwork
 from .sde import VPSDE, CosineScheduleSDE
 from .spectral_loss import spectral_fidelity_loss, tweedie_denoise
@@ -33,6 +39,7 @@ class TrainConfig:
     seed: int = 42
     device: str = "cpu"
     use_spectral_noise: bool = False
+    noise_shaping: str = "uniform"  # "uniform", "band", or "mode"
     t_knee: float | None = None  # DEPRECATED (H2 removed): no longer used by the main pipeline
     alpha: float = 1.0
     epsilon: float = 1e-3
@@ -98,6 +105,7 @@ class Trainer:
         graph: nx.Graph,
         feature_dataset: np.ndarray,  # [N, n_nodes, n_features]
         importance_weights: ImportanceWeights | None = None,
+        mode_weights: ModeImportanceWeights | None = None,
     ):
         self.config = config
         self.device = torch.device(config.device)
@@ -122,6 +130,7 @@ class Trainer:
         _, self.band_indices = partition_into_bands(eigenvalues, B=config.B)
 
         self.importance_weights = importance_weights
+        self.mode_weights = mode_weights
 
         # SDE
         if config.sde_type == "cosine":
@@ -177,22 +186,36 @@ class Trainer:
         return 0.5 * (lo + hi)
 
     def _get_noise(self, t: float) -> torch.Tensor:
-        """Generate noise, optionally shaped spectrally."""
+        """Generate noise, optionally shaped spectrally.
+
+        Resolves effective shaping mode from noise_shaping config and legacy
+        use_spectral_noise flag. Priority: noise_shaping > use_spectral_noise.
+        """
         noise = torch.randn(self.n_nodes, self.n_features, device=self.device)
 
-        if not self.config.use_spectral_noise or self.importance_weights is None:
-            return noise
+        # Resolve effective shaping mode
+        effective = self.config.noise_shaping
+        if effective == "uniform" and self.config.use_spectral_noise:
+            effective = "band"  # legacy compatibility
 
-        if self.config.t_knee is not None:
-            return shape_noise_with_temporal_ramp(
-                noise, self.eigenvectors, self.band_indices,
-                self.importance_weights, t, self.config.t_knee,
+        if effective == "mode" and self.mode_weights is not None:
+            return shape_noise_per_mode(
+                noise, self.eigenvectors, self.mode_weights,
             )
-        else:
-            return shape_noise(
-                noise, self.eigenvectors, self.band_indices,
-                self.importance_weights,
-            )
+
+        if effective == "band" and self.importance_weights is not None:
+            if self.config.t_knee is not None:
+                return shape_noise_with_temporal_ramp(
+                    noise, self.eigenvectors, self.band_indices,
+                    self.importance_weights, t, self.config.t_knee,
+                )
+            else:
+                return shape_noise(
+                    noise, self.eigenvectors, self.band_indices,
+                    self.importance_weights,
+                )
+
+        return noise
 
     def train(self) -> dict[str, list[float]]:
         """Run training, sampling random features + random timesteps each step."""

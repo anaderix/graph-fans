@@ -7,10 +7,17 @@ import numpy as np
 import pytest
 import torch
 
-from graph_fans.phase0.spectral_profiler import compute_laplacian_spectrum, partition_into_bands
+from graph_fans.phase0.spectral_profiler import (
+    compute_laplacian_spectrum,
+    compute_mode_energy,
+    partition_into_bands,
+)
 from graph_fans.phase2.noise_shaper import (
+    ModeImportanceWeights,
     compute_importance_weights,
+    compute_mode_importance_weights,
     shape_noise,
+    shape_noise_per_mode,
     shape_noise_with_temporal_ramp,  # retained in noise_shaper.py but not used in main pipeline
 )
 from graph_fans.phase2.score_network import SimpleScoreNetwork
@@ -573,3 +580,147 @@ class TestCleanup:
             assert g.number_of_nodes() == 50, (
                 f"Expected 50 nodes for {family}, got {g.number_of_nodes()}"
             )
+
+
+class TestPerModeShaping:
+    """Tests for Phase 3a: per-mode noise shaping."""
+
+    def test_compute_mode_importance_weights_shape(self):
+        """Correct shape [n_modes], mean~1, inverse relationship."""
+        energies = np.array([10.0, 5.0, 2.0, 1.0, 0.5, 8.0])
+        w = compute_mode_importance_weights(energies)
+        assert w.weights.shape == (6,)
+        np.testing.assert_allclose(w.weights.mean(), 1.0, atol=1e-6)
+        # High-energy mode should get lower weight than low-energy mode
+        high_idx = np.argmax(energies)
+        low_idx = np.argmin(energies)
+        assert w.weights[high_idx] < w.weights[low_idx], (
+            f"Expected inverse relationship: weight[{high_idx}]={w.weights[high_idx]:.4f} "
+            f"should be < weight[{low_idx}]={w.weights[low_idx]:.4f}"
+        )
+
+    def test_compute_mode_importance_weights_zero_energy(self):
+        """Zero-energy edge case returns uniform weights."""
+        energies = np.zeros(5)
+        w = compute_mode_importance_weights(energies)
+        np.testing.assert_array_equal(w.weights, np.ones(5))
+
+    def test_shape_noise_per_mode_output_shape(self, band_setup):
+        """Output shape matches input."""
+        _, eigenvectors, _, features = band_setup
+        n, d = features.shape
+        noise = torch.randn(n, d)
+        U = torch.tensor(eigenvectors, dtype=torch.float32)
+
+        energies = np.random.rand(n) + 0.1
+        w = compute_mode_importance_weights(energies)
+
+        shaped = shape_noise_per_mode(noise, U, w)
+        assert shaped.shape == (n, d)
+
+    def test_shape_noise_per_mode_variance(self, band_setup):
+        """Total variance is reasonable (0.1x to 10x original)."""
+        _, eigenvectors, _, features = band_setup
+        n, d = features.shape
+        torch.manual_seed(0)
+        noise = torch.randn(n, d)
+        U = torch.tensor(eigenvectors, dtype=torch.float32)
+
+        energies = np.random.rand(n) + 0.1
+        w = compute_mode_importance_weights(energies)
+
+        shaped = shape_noise_per_mode(noise, U, w)
+        orig_var = noise.var().item()
+        shaped_var = shaped.var().item()
+        assert shaped_var > 0.1 * orig_var, (
+            f"Shaped variance {shaped_var:.4f} too low vs original {orig_var:.4f}"
+        )
+        assert shaped_var < 10.0 * orig_var, (
+            f"Shaped variance {shaped_var:.4f} too high vs original {orig_var:.4f}"
+        )
+
+    def test_trainer_mode_shaping(self, small_graph):
+        """Trainer with noise_shaping='mode' trains without error (10 epochs)."""
+        graph, dataset = small_graph
+        n_nodes = graph.number_of_nodes()
+
+        # Compute mode weights from training data
+        evals, evecs = compute_laplacian_spectrum(graph)
+        mode_energies = compute_mode_energy(dataset[0], evecs)
+        mw = compute_mode_importance_weights(mode_energies)
+
+        config = TrainConfig(
+            n_epochs=10, batch_timesteps=2,
+            seed=42, device="cpu", hidden_dim=32, n_layers=2,
+            n_train_samples=10,
+            noise_shaping="mode",
+        )
+        trainer = Trainer(
+            config, graph, dataset,
+            mode_weights=mw,
+        )
+        history = trainer.train()
+        assert len(history["loss"]) == 10
+        assert all(np.isfinite(l) for l in history["loss"]), (
+            "NaN or Inf detected in loss history with mode shaping"
+        )
+
+    def test_backward_compat_band(self, small_graph):
+        """noise_shaping='band' matches old use_spectral_noise=True behavior."""
+        graph, dataset = small_graph
+
+        # Compute band weights
+        evals, evecs = compute_laplacian_spectrum(graph)
+        _, band_indices = partition_into_bands(evals, B=4)
+        from graph_fans.phase0.spectral_profiler import compute_band_energy
+        band_energies = compute_band_energy(dataset[0], evecs, band_indices)
+        iw = compute_importance_weights(band_energies)
+
+        # Run with legacy use_spectral_noise=True
+        torch.manual_seed(99)
+        np.random.seed(99)
+        config_legacy = TrainConfig(
+            n_epochs=5, batch_timesteps=2,
+            seed=99, device="cpu", hidden_dim=32, n_layers=2,
+            n_train_samples=10,
+            use_spectral_noise=True,
+            B=4,
+        )
+        trainer_legacy = Trainer(config_legacy, graph, dataset, importance_weights=iw)
+        history_legacy = trainer_legacy.train()
+
+        # Run with new noise_shaping="band"
+        torch.manual_seed(99)
+        np.random.seed(99)
+        config_new = TrainConfig(
+            n_epochs=5, batch_timesteps=2,
+            seed=99, device="cpu", hidden_dim=32, n_layers=2,
+            n_train_samples=10,
+            noise_shaping="band",
+            B=4,
+        )
+        trainer_new = Trainer(config_new, graph, dataset, importance_weights=iw)
+        history_new = trainer_new.train()
+
+        # Losses should be identical (same noise generation path)
+        np.testing.assert_allclose(
+            history_legacy["loss"], history_new["loss"], atol=1e-5,
+            err_msg="Band shaping via noise_shaping='band' should match legacy use_spectral_noise=True"
+        )
+
+    def test_compute_mode_energy(self):
+        """compute_mode_energy returns correct shape and values."""
+        n_nodes, n_features = 20, 4
+        np.random.seed(42)
+        features = np.random.randn(n_nodes, n_features)
+        eigenvectors = np.linalg.qr(np.random.randn(n_nodes, n_nodes))[0]
+
+        mode_energies = compute_mode_energy(features, eigenvectors)
+        assert mode_energies.shape == (n_nodes,)
+        assert np.all(mode_energies >= 0)
+        # Total energy should be preserved (Parseval's theorem)
+        total_energy = (features ** 2).sum()
+        np.testing.assert_allclose(
+            mode_energies.sum(), total_energy, rtol=1e-5,
+            err_msg="Mode energy sum should equal total signal energy (Parseval's)"
+        )

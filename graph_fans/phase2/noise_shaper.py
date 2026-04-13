@@ -21,6 +21,16 @@ class ImportanceWeights:
     epsilon: float  # stability constant
 
 
+@dataclass
+class ModeImportanceWeights:
+    """Per-eigenmode importance weights."""
+
+    mode_energies: np.ndarray  # [n_modes] raw per-mode energies
+    weights: np.ndarray  # [n_modes] importance weights g_k
+    alpha: float
+    epsilon: float
+
+
 def compute_importance_weights(
     band_energies: np.ndarray,
     alpha: float = 1.0,
@@ -52,6 +62,43 @@ def compute_importance_weights(
 
     return ImportanceWeights(
         band_energies=band_energies,
+        weights=weights,
+        alpha=alpha,
+        epsilon=epsilon,
+    )
+
+
+def compute_mode_importance_weights(
+    mode_energies: np.ndarray,
+    alpha: float = 1.0,
+    epsilon: float = 1e-3,
+) -> ModeImportanceWeights:
+    """Compute FANS-style importance weights per eigenmode.
+
+    g_k = (pi_k + epsilon)^(-alpha), where pi_k is normalized mode energy.
+    High-energy modes get lower weights; low-energy (underrepresented) modes get boosted.
+
+    Args:
+        mode_energies: Raw per-mode energies [n_modes].
+        alpha: Power exponent. Higher = more aggressive boosting.
+        epsilon: Stability constant to prevent division by zero.
+    """
+    total = mode_energies.sum()
+    if total < 1e-10:
+        return ModeImportanceWeights(
+            mode_energies=mode_energies,
+            weights=np.ones(len(mode_energies)),
+            alpha=alpha,
+            epsilon=epsilon,
+        )
+
+    pi = mode_energies / total  # normalized mode energy
+    weights = (pi + epsilon) ** (-alpha)
+    # Normalize weights so mean = 1 (preserves overall noise scale)
+    weights = weights / weights.mean()
+
+    return ModeImportanceWeights(
+        mode_energies=mode_energies,
         weights=weights,
         alpha=alpha,
         epsilon=epsilon,
@@ -102,6 +149,43 @@ def shape_noise(
         coeffs_scaled[idx] = band_coeffs
 
     shaped = U @ coeffs_scaled  # [n, n_features]
+    return shaped
+
+
+def shape_noise_per_mode(
+    noise: torch.Tensor,
+    eigenvectors: torch.Tensor,
+    weights: ModeImportanceWeights,
+) -> torch.Tensor:
+    """Shape noise in the Laplacian eigenbasis with per-mode importance weighting.
+
+    1. Project noise into eigenbasis: coeffs = U^T @ noise
+    2. Scale each mode k by sqrt(g_k)
+    3. Project back: shaped = U @ coeffs_scaled
+
+    No empirical variance normalization: input is i.i.d. Gaussian, orthogonal
+    projection preserves that, so sqrt(g_k) gives exact variance g_k per mode.
+    Per-band normalizes because it groups modes; per-mode has only n_features
+    values per mode — too few for stable std estimation.
+
+    Args:
+        noise: Standard Gaussian noise [n_nodes, n_features].
+        eigenvectors: Eigenvector matrix [n_nodes, n_nodes] (columns are eigenvectors).
+        weights: Per-mode importance weights from compute_mode_importance_weights.
+
+    Returns:
+        Shaped noise [n_nodes, n_features].
+    """
+    U = eigenvectors  # [n, n]
+    coeffs = U.T @ noise  # [n_modes, n_features]
+
+    # Scale each mode by sqrt(g_k) — weights.weights is [n_modes]
+    scale = torch.tensor(
+        np.sqrt(weights.weights), dtype=noise.dtype, device=noise.device,
+    )  # [n_modes]
+    coeffs_scaled = coeffs * scale.unsqueeze(1)  # [n_modes, n_features]
+
+    shaped = U @ coeffs_scaled  # [n_nodes, n_features]
     return shaped
 
 
