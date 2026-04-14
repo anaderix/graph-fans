@@ -375,7 +375,7 @@
       <div class="roadmap-label"><strong>Phase 3</strong>Spectral<br>Refinement</div>
     </div>
     <div class="roadmap-node">
-      <div class="roadmap-dot pending">&bull;</div>
+      <div class="roadmap-dot nogo">G4</div>
       <div class="roadmap-label"><strong>Phase 4</strong>Info-Guided<br>Schedules</div>
     </div>
     <div class="roadmap-node">
@@ -412,7 +412,7 @@
   |       |       Persistence, per-mode, matched noise all failed.
   |       |       Band shaping (Phase 2g) remains best.
   |       |
-  |       +---> Phase 4 (Info-Guided Schedules) .... <span style="color:var(--text-dim)">Planned</span>
+  |       +---> Phase 4 (Info-Guided Schedules) .... <span style="color:var(--nogo)">NO-GO (4a, 4b)</span>
   |       |       4a: InfoNoise training  4b: InfoGrid DDIM
   |       |       4c: Per-band schedules  4d: Spectral conditioning
   |       |
@@ -453,10 +453,10 @@
       <td><span class="badge badge-nogo">NO-GO</span></td>
     </tr>
     <tr>
-      <td style="color:var(--text-dim)">G4</td>
+      <td>G4</td>
       <td>Phase 4</td>
       <td>Info-guided schedule or per-band dynamics improves W1 on &ge;1/2 families</td>
-      <td><span class="badge badge-pending">Planned</span></td>
+      <td><span class="badge badge-nogo">NO-GO (4a, 4b)</span></td>
     </tr>
   </table>
 </section>
@@ -725,7 +725,7 @@
   <!-- Phase 4 -->
   <div class="phase" id="phase4">
     <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
-      <span class="badge badge-pending">Planned</span>
+      <span class="badge badge-nogo">NO-GO (4a, 4b)</span>
       <h2>Phase 4 &mdash; Information-Guided Spectral Diffusion</h2>
       <span class="chevron">&#9654;</span>
     </div>
@@ -746,17 +746,33 @@
         <tr><td><strong>4d</strong></td><td>Spectral conditioning of score network</td><td>1 week</td><td>Low</td></tr>
       </table>
 
-      <h3>Key Insight: Gradient Misallocation</h3>
-      <p>The NS-D diagnostic (Phase 2f) showed 54% of gradient goes to mid-noise bins while the underfit low-noise regime (loss 0.72&ndash;1.10) gets only 14%. NS-A/NS-C couldn&rsquo;t fix this. InfoNoise reframes the problem: maybe the GCN doesn&rsquo;t <em>need</em> to learn at low noise &mdash; the &ldquo;decision window&rdquo; for community features is likely in the mid-noise range where the GCN is competent.</p>
+      <h3>Results: Phase 4a &mdash; InfoNoise Training (NO-GO)</h3>
+      <table>
+        <tr><th>Family</th><th>Uniform W1</th><th>Band W1</th><th>InfoNoise W1</th><th>InfoNoise+Band W1</th></tr>
+        <tr><td>SBM(q=0.05)</td><td>728.6</td><td class="better">627.9</td><td class="worse">4,201,215</td><td class="worse">4,195,543</td></tr>
+        <tr><td>BA(m=2)</td><td>675.9</td><td class="better">618.6</td><td class="worse">2,105,523</td><td class="worse">2,156,509</td></tr>
+      </table>
+      <p>InfoNoise models produce pure noise (std ratio 85&ndash;100&times;). Band shaping replicates Phase 2g: SBM 13.8%, BA 8.5%.</p>
 
-      <h3>Motivated by</h3>
-      <ul>
-        <li><strong>InfoNoise</strong> (Raya et al., arXiv:2602.18647) &mdash; information-guided noise allocation</li>
-        <li><strong>Spectrally-Guided Schedules</strong> (Esteves &amp; Makadia, arXiv:2603.19222) &mdash; per-instance noise schedules from spectral properties</li>
-      </ul>
+      <h3>Results: Phase 4b &mdash; InfoGrid DDIM (NO-GO)</h3>
+      <table>
+        <tr><th>Config</th><th>Uniform Grid W1</th><th>InfoGrid W1</th><th>Change</th></tr>
+        <tr><td>SBM/band/200</td><td>627.9</td><td>33,798</td><td class="worse">&minus;5283%</td></tr>
+        <tr><td>BA/band/200</td><td>618.6</td><td>14,909</td><td class="worse">&minus;2310%</td></tr>
+      </table>
 
-      <h3>Gate</h3>
-      <p>W1 improvement &gt; 0 on &ge;1/2 families. Even if no W1 gain, the entropy-rate profile diagnostic for graph diffusion is a novel contribution.</p>
+      <div class="insight">
+        <strong>Root cause:</strong> The entropy rate r(&sigma;) = mmse(&sigma;)/&sigma;&sup3; is dominated by the 1/&sigma;&sup3; divergence. The 3L GCN has loss &asymp; 1.0 at low &sigma; (capacity ceiling), so <strong>80% of InfoNoise sampling and InfoGrid steps concentrate at &sigma; &lt; 0.08</strong> &mdash; exactly where the model can&rsquo;t learn (training) or corrupts output (inference). InfoNoise&rsquo;s assumption that the model is near Bayes-optimal fails for capacity-limited GCNs. This also retroactively explains the NS-A/NS-C failures from Phase 2f.
+      </div>
+
+      <h3>Remaining Sub-phases</h3>
+      <table>
+        <tr><th>Phase</th><th>Approach</th><th>Status</th></tr>
+        <tr><td><strong>4a</strong></td><td>InfoNoise adaptive timestep sampling</td><td><span class="badge badge-nogo">NO-GO</span></td></tr>
+        <tr><td><strong>4b</strong></td><td>InfoGrid DDIM (non-uniform reverse steps)</td><td><span class="badge badge-nogo">NO-GO</span></td></tr>
+        <tr><td><strong>4c</strong></td><td>Per-band noise schedules</td><td><span class="badge badge-pending">Pending</span> &mdash; does not assume near-Bayes optimality</td></tr>
+        <tr><td><strong>4d</strong></td><td>Spectral conditioning of score network</td><td><span class="badge badge-pending">Pending</span> &mdash; does not assume near-Bayes optimality</td></tr>
+      </table>
 
       <p style="margin-top:1rem;"><a href="https://github.com/anaderix/graph-fans/blob/main/plans/phase4.md" style="color:var(--accent);text-decoration:none;">&#128196; Full plan: plans/phase4.md</a></p>
     </div>
@@ -1139,6 +1155,44 @@
           <div class="tl-card-body">
             <p>Tested shaping DDIM start noise to match shaped training noise. 3 conditions (uniform, band-mismatched, band-matched), 4 families, 5 seeds, 60 runs.</p>
             <p><strong>Key finding:</strong> Band-mismatched (Phase 2g) wins every seed in all 4 families. DDIM&rsquo;s iterative correction compensates for the mismatch. Shaping x<sub>T</sub> introduces a distribution the model never saw during training, making things worse. The &ldquo;mismatch&rdquo; is a feature &mdash; future work should target score network capacity, not noise alignment.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 6 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-04-15 &mdash; Day 6</span>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 4a &mdash; InfoNoise-Guided Training</h3>
+            <span class="tl-card-summary">Entropy-rate sampling creates death spiral</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Tested InfoNoise (Raya et al.) data-adaptive timestep sampling based on conditional entropy rate. 4-way comparison: uniform, band (Phase 2g), info_noise, info_noise+band. 2 families &times; 5 seeds = 40 runs on L40S GPU.</p>
+            <p><strong>Key finding:</strong> InfoNoise <strong>catastrophically fails</strong> (W1 = 2&ndash;4 million vs 600&ndash;700 for uniform). The entropy rate r(&sigma;) = mmse(&sigma;)/&sigma;&sup3; concentrates 80% of sampling at &sigma; &lt; 0.08 where the GCN has loss &asymp; 1.0 (capacity ceiling). Death spiral: model trains only where it can&rsquo;t learn, never improves. InfoNoise assumes near-Bayes-optimal denoising &mdash; this assumption fails for capacity-limited score networks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 4b &mdash; InfoGrid for DDIM</h3>
+            <span class="tl-card-summary">Non-uniform DDIM spacing corrupts output</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Tested InfoGrid (non-uniform DDIM step spacing from entropy-rate profile) on uniform-trained models. 2 grid types &times; 3 step budgets &times; 2 training methods &times; 2 families &times; 5 seeds = 120 generation runs.</p>
+            <p><strong>Key finding:</strong> InfoGrid is <strong>2,000&ndash;6,700% worse</strong> than uniform spacing across all 12 conditions (p &lt; 0.0001). Same root cause as 4a: entropy-rate profile concentrates steps at low &sigma; where model loss &asymp; 1.0, so those DDIM steps corrupt rather than refine. Uniform spacing is near-optimal for the cosine schedule with a capacity-limited GCN.</p>
           </div>
         </div>
       </div>

@@ -672,3 +672,84 @@ DDIM's 200-step iterative correction compensates for the initial noise mismatch.
 
 Report: `results/phase3b/Report-Phase3b.md`
 Results: `results/phase3b/phase3b_results.json`, `results/phase3b/phase3b_run.log`
+
+## 2026-04-15 — Phase 4a: InfoNoise-Guided Training — NO-GO
+
+### Motivation
+
+InfoNoise (Raya et al., arXiv:2602.18647) proposes data-adaptive timestep sampling based on the conditional entropy rate d/dσ H[x₀|x_σ] = mmse(σ)/σ³. The NS-D diagnostic (Phase 2f) had identified gradient misallocation as a potential bottleneck. InfoNoise concentrates training on the "informative window" where uncertainty collapses fastest — a principled alternative to the failed NS-A/NS-C approaches.
+
+### Config
+
+3L GCN 128h, 50 nodes, 4 features, community mode, 500 epochs, cosine SDE + EMA + LR annealing. 4-way comparison: uniform, band (Phase 2g), info_noise, info_noise+band. 2 families × 5 seeds = 40 runs. NVIDIA L40S GPU.
+
+### Results
+
+| Family | Uniform W1 | Band W1 | InfoNoise W1 | InfoNoise+Band W1 |
+|--------|-----------|---------|-------------|-------------------|
+| SBM(q=0.05) | 728.6 | 627.9 | 4,201,214.6 | 4,195,543.2 |
+| BA(m=2) | 675.9 | 618.6 | 2,105,523.1 | 2,156,509.1 |
+
+Band vs uniform replicates Phase 2g: SBM 13.8% (p=0.0011), BA 8.5% (p=0.0158).
+InfoNoise models produce pure noise: std_ratio 85-100×, all sanity checks fail.
+
+### Entropy Rate Diagnostic
+
+The entropy rate profile reveals the failure mechanism:
+
+| Sigma region | EMA loss | Raw rate (loss/σ³) | Gated rate | Share of sampling |
+|-------------|----------|-------------------|------------|-------------------|
+| σ = 0.014 (low noise) | 1.00 | 370,702 | 999 | 10.6% per bin |
+| σ = 0.125 (mid noise) | 0.97 | 500 | 330 | 3.5% |
+| σ = 0.580 (high noise) | 0.65 | 3 | 3 | 0.0% |
+| σ = 0.896 (very high) | 0.20 | 0.3 | 0.3 | 0.0% |
+
+80% of InfoNoise sampling mass goes to σ < 0.08 — exactly the regime where the 3L GCN has loss ≈ 1.0 (capacity ceiling from NS-D diagnostic). Even with gated regularization (suppresses raw rate by 370×), the 1/σ³ divergence dominates.
+
+### Key Findings
+
+1. **InfoNoise creates a death spiral** for capacity-limited models. The entropy rate formula r(σ) = mmse(σ)/σ³ concentrates training where the model can't learn, preventing it from ever learning, keeping losses high, keeping the entropy rate concentrated there.
+2. **InfoNoise's assumption fails:** the entropy rate measures where the *Bayes-optimal* denoiser resolves uncertainty fastest. For image models (near Bayes-optimal), this identifies a useful informative window. For the 3L GCN (far from Bayes-optimal at low noise), the "informative window" is an artifact of the 1/σ³ pole, not genuine information dynamics.
+3. **This retroactively explains NS-A/NS-C failure** (Phase 2f): all approaches that concentrate gradient at low noise fail because the bottleneck is model capacity, not training allocation.
+
+### Gate decision
+
+**Phase 4a: NO-GO** — InfoNoise adaptive t-sampling is catastrophically harmful for graph diffusion with capacity-limited score networks.
+
+Results: `results/phase4a/info_noise_results.json`, `results/phase4a/entropy_rate_profiles/`
+
+## 2026-04-15 — Phase 4b: InfoGrid for DDIM — NO-GO
+
+### Motivation
+
+Even though InfoNoise training failed (4a), InfoGrid (non-uniform DDIM step spacing concentrated in the informative window) could improve inference by allocating more steps where the model actually resolves structure. Tested with uniform-trained models to avoid the training failure.
+
+### Config
+
+2 training methods (uniform, band) × 2 grid types (uniform, InfoGrid) × 3 step budgets (200, 100, 50) × 2 families × 5 seeds = 120 generation runs. Entropy rate profiles recorded during uniform t-sampling via `record_entropy_rate=True`.
+
+### Results
+
+| Config | Uniform Grid W1 | InfoGrid W1 | Change |
+|--------|-----------------|-------------|--------|
+| SBM/band/200 steps | 627.9 ± 87.9 | 33,797.9 ± 4,587.6 | −5283% |
+| SBM/band/100 steps | 749.8 ± 107.5 | 44,629.6 ± 5,502.6 | −5852% |
+| BA/band/200 steps | 618.6 ± 112.0 | 14,908.9 ± 1,312.3 | −2310% |
+| BA/band/100 steps | 778.3 ± 124.1 | 20,355.7 ± 1,797.0 | −2515% |
+
+All 12 conditions significantly worse (p < 0.0001).
+
+### Key Findings
+
+1. **Same root cause as 4a.** The entropy rate profile from uniform-trained models also has the 1/σ³ divergence at low sigma. InfoGrid concentrates DDIM steps where the model does *harmful* denoising (loss ≈ 1.0 = predicting zero noise, effectively adding noise).
+2. **Uniform DDIM spacing is near-optimal** for the 3L GCN. The cosine schedule's implicit σ distribution already concentrates DDIM steps in the mid-noise range where the model is competent.
+
+### Gate decision
+
+**Phase 4b: NO-GO** — InfoGrid concentrates DDIM steps in the wrong regime for capacity-limited models.
+
+Results: `results/phase4b/info_grid_results.json`
+
+### Implications for Phase 4c-4d
+
+The Phase 4a/4b results narrow the viable approaches. Information-theoretic noise schedule optimization assumes a model near the Bayes frontier — invalid for the 3L GCN. The remaining Phase 4 directions (per-band noise schedules, spectral conditioning) do not make this assumption and remain viable.

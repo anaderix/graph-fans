@@ -20,6 +20,14 @@ from .noise_shaper import (
     shape_noise_per_mode,
     shape_noise_with_temporal_ramp,
 )
+from .info_noise import (
+    InfoNoiseState,
+    create_info_noise_state,
+    get_entropy_rate_profile,
+    record_observation,
+    sample_sigma,
+    sigma_to_t_batch,
+)
 from .score_network import SimpleScoreNetwork
 from .sde import VPSDE, CosineScheduleSDE
 from .spectral_loss import spectral_fidelity_loss, tweedie_denoise
@@ -64,9 +72,19 @@ class TrainConfig:
     # Architecture
     conv_type: str = "gcn"  # "gcn" or "transformer"
     # NS-A: log-SNR uniform timestep sampling
-    t_sampling: str = "uniform"  # "uniform" or "log_snr"
+    t_sampling: str = "uniform"  # "uniform", "log_snr", or "info_noise"
     # NS-C: min-SNR-γ loss weighting (None = disabled, 5.0 = standard)
     min_snr_gamma: float | None = None
+    # Phase 4a: InfoNoise adaptive timestep sampling parameters
+    info_noise_n_bins: int = 20
+    info_noise_buffer_capacity: int = 256
+    info_noise_ema_alpha: float = 0.01
+    info_noise_warm_up_steps: int = 2000
+    info_noise_refresh_interval: int = 500
+    # Phase 4a/4b: record entropy rate profile during any training mode
+    record_entropy_rate: bool = False  # enable to build profiles for InfoGrid without adaptive sampling
+    # Phase 4b: InfoGrid DDIM step spacing
+    ddim_grid: str = "uniform"  # "uniform" or "info"
 
 
 class EMA:
@@ -161,6 +179,22 @@ class Trainer:
         if config.use_ema:
             self.ema = EMA(self.model, decay=config.ema_decay)
 
+        # Phase 4a/4b: InfoNoise state (for adaptive sampling OR just recording profiles)
+        self.info_noise_state: InfoNoiseState | None = None
+        if config.t_sampling == "info_noise" or config.record_entropy_rate:
+            self.info_noise_state = create_info_noise_state(
+                self.sde,
+                n_bins=config.info_noise_n_bins,
+                buffer_capacity=config.info_noise_buffer_capacity,
+                ema_alpha=config.info_noise_ema_alpha,
+                warm_up_steps=config.info_noise_warm_up_steps,
+                refresh_interval=config.info_noise_refresh_interval,
+            )
+            logger.info(
+                f"  InfoNoise enabled: {config.info_noise_n_bins} bins, "
+                f"warm_up={config.info_noise_warm_up_steps}"
+            )
+
     def _snr_to_t(self, target_snr: float) -> float:
         """Binary search to find t such that SNR(t) ≈ target_snr.
 
@@ -239,6 +273,15 @@ class Trainer:
                 log_snr_max = np.log(ab_0 / max(1.0 - ab_0, 1e-10))
                 log_snrs = np.random.uniform(log_snr_min, log_snr_max, size=self.config.batch_timesteps)
                 ts = np.array([self._snr_to_t(np.exp(ls)) for ls in log_snrs])
+            elif self.config.t_sampling == "info_noise" and self.info_noise_state is not None:
+                # Phase 4a: InfoNoise adaptive sampling
+                rng = np.random.default_rng(np.random.randint(0, 2**31))
+                sigmas = sample_sigma(self.info_noise_state, self.config.batch_timesteps, rng)
+                if sigmas is None:
+                    # Still in warm-up: use uniform t sampling
+                    ts = np.random.uniform(1e-5, self.sde.T, size=self.config.batch_timesteps)
+                else:
+                    ts = sigma_to_t_batch(self.sde, sigmas)
             else:
                 ts = np.random.uniform(1e-5, self.sde.T, size=self.config.batch_timesteps)
             sample_indices = np.random.randint(0, self.n_samples, size=self.config.batch_timesteps)
@@ -256,6 +299,7 @@ class Trainer:
                 eps_pred = self.model(x_t, t_tensor, self.edge_index)
 
                 loss = nn.functional.mse_loss(eps_pred, target)
+                raw_mse = loss.item()
 
                 # NS-C: min-SNR-γ loss weighting
                 if self.config.min_snr_gamma is not None:
@@ -275,6 +319,11 @@ class Trainer:
                             self.importance_weights,
                         )
                         loss = loss + self.config.spectral_loss_weight * spec_loss
+
+                # Phase 4a: record raw MSE for InfoNoise (before weighting/augmentation)
+                if self.info_noise_state is not None:
+                    _, sigma = self.sde.marginal_params(t)
+                    record_observation(self.info_noise_state, sigma, raw_mse)
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -311,6 +360,13 @@ class Trainer:
         """
         if n_steps is None:
             n_steps = self.config.n_gen_steps
+
+        # Phase 4b: InfoGrid DDIM step spacing
+        if self.config.ddim_grid == "info" and self.info_noise_state is not None:
+            from .info_grid import build_info_grid
+            profile = get_entropy_rate_profile(self.info_noise_state)
+            ts = build_info_grid(profile, self.sde, n_steps=n_steps)
+            return self.generate_with_grid(ts, n_samples=n_samples)
 
         self.model.eval()
         original_weights = None
@@ -402,3 +458,64 @@ class Trainer:
             "gen_profile": gen_profile.tolist(),
             "warnings": warnings,
         }
+
+    def get_info_noise_profile(self) -> dict | None:
+        """Export the entropy rate profile from InfoNoise state.
+
+        Returns:
+            JSON-serializable dict, or None if InfoNoise is not active.
+        """
+        if self.info_noise_state is None:
+            return None
+        return get_entropy_rate_profile(self.info_noise_state)
+
+    @torch.no_grad()
+    def generate_with_grid(
+        self,
+        ts: np.ndarray,
+        n_samples: int = 1,
+    ) -> np.ndarray:
+        """Generate feature samples using an external timestep grid.
+
+        This allows InfoGrid or other non-uniform step schedules to be injected.
+        The grid must be decreasing from T to 0.
+
+        Args:
+            ts: Timestep array of shape [n_steps + 1], decreasing from T to 0.
+            n_samples: Number of independent samples to generate.
+
+        Returns:
+            Generated features [n_samples, n_nodes, n_features].
+        """
+        self.model.eval()
+        original_weights = None
+        if self.ema is not None:
+            original_weights = self.ema.apply(self.model)
+
+        n_steps = len(ts) - 1
+        all_samples = []
+        for _ in range(n_samples):
+            x = torch.randn(self.n_nodes, self.n_features, device=self.device)
+            if self.config.shape_gen_noise:
+                effective = self.config.noise_shaping
+                if effective == "uniform" and self.config.use_spectral_noise:
+                    effective = "band"
+                if effective == "band" and self.importance_weights is not None:
+                    x = shape_noise(x, self.eigenvectors, self.band_indices, self.importance_weights)
+                elif effective == "mode" and self.mode_weights is not None:
+                    x = shape_noise_per_mode(x, self.eigenvectors, self.mode_weights)
+
+            for i in range(n_steps):
+                t_now = float(ts[i])
+                t_next = float(ts[i + 1])
+                t_tensor = torch.tensor([t_now], dtype=torch.float32, device=self.device)
+                eps_pred = self.model(x, t_tensor, self.edge_index)
+                x = self.sde.ddim_step(x, eps_pred, t_now, t_next)
+
+            all_samples.append(x.cpu().numpy())
+
+        if self.ema is not None and original_weights is not None:
+            self.ema.restore(self.model, original_weights)
+
+        self.model.train()
+        return np.stack(all_samples)  # [n_samples, n_nodes, n_features]
