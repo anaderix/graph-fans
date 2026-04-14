@@ -51,6 +51,7 @@ uv run python -m graph_fans.phase2 --epochs 50 --seeds 1 --n-nodes 30  # quick l
 - **H2 (temporal ramp): DEAD** — Removed from codebase, <1% effect
 - **Phase 3 (persistence bands): DEPRIORITIZED** — No meaningful scale separation in persistence at n=50
 - **Phase 3a (per-mode shaping): NO-GO** — Per-mode shaping worsens W1 by 50-94% due to train/generate noise mismatch. Band shaping (Phase 2g) remains best.
+- **Phase 3b (matched gen noise): NO-GO** — Matching generation start to shaped training noise worsens W1. DDIM compensates for the mismatch; band-mismatched (Phase 2g) remains best.
 
 ## Running experiments
 

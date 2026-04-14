@@ -1,0 +1,718 @@
+INFO: 
+================================================================================
+INFO:   SBM(q=0.05) (n=50)
+INFO: ================================================================================
+INFO:   Loading cached dataset: results/phase3b/datasets/SBM_q0.05_seed0.npz
+INFO:   Band weights (from seed-0 train): [0.138 0.25  0.755 0.975 1.65  1.291 1.521 1.42 ]
+INFO:   Loading cached dataset: results/phase3b/datasets/SBM_q0.05_seed0.npz
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.090035
+INFO:   Epoch 100/500, loss=0.396613
+INFO:   Epoch 200/500, loss=0.385023
+INFO:   Epoch 300/500, loss=0.365489
+INFO:   Epoch 400/500, loss=0.476707
+INFO:   Epoch 500/500, loss=0.512559
+INFO:   Sanity check passed: gen_std=2.019, train_std=1.312, spectral_L2=0.290
+INFO:   SBM(q=0.05)/seed=0/uniform: loss=0.513, std_ratio=1.54, W1=676.6 (low=166.5, high=2.7)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.029739
+INFO:   Epoch 100/500, loss=0.385074
+INFO:   Epoch 200/500, loss=0.374916
+INFO:   Epoch 300/500, loss=0.379167
+INFO:   Epoch 400/500, loss=0.463908
+INFO:   Epoch 500/500, loss=0.527734
+INFO:   Sanity check passed: gen_std=1.979, train_std=1.312, spectral_L2=0.323
+INFO:   SBM(q=0.05)/seed=0/band-mismatched: loss=0.528, std_ratio=1.51, W1=575.0 (low=141.2, high=2.5)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.029739
+INFO:   Epoch 100/500, loss=0.385074
+INFO:   Epoch 200/500, loss=0.374916
+INFO:   Epoch 300/500, loss=0.379167
+INFO:   Epoch 400/500, loss=0.463908
+INFO:   Epoch 500/500, loss=0.527734
+INFO:   Sanity check passed: gen_std=2.063, train_std=1.312, spectral_L2=0.408
+INFO:   SBM(q=0.05)/seed=0/band-matched: loss=0.528, std_ratio=1.57, W1=640.6 (low=157.6, high=2.5)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.05) seed=1...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.05_seed1.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.037599
+INFO:   Epoch 100/500, loss=0.483934
+INFO:   Epoch 200/500, loss=0.459793
+INFO:   Epoch 300/500, loss=0.616077
+INFO:   Epoch 400/500, loss=0.416154
+INFO:   Epoch 500/500, loss=0.426778
+INFO:   Sanity check passed: gen_std=2.178, train_std=1.284, spectral_L2=0.438
+INFO:   SBM(q=0.05)/seed=1/uniform: loss=0.427, std_ratio=1.70, W1=629.3 (low=155.1, high=2.2)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.055318
+INFO:   Epoch 100/500, loss=0.528083
+INFO:   Epoch 200/500, loss=0.454359
+INFO:   Epoch 300/500, loss=0.637484
+INFO:   Epoch 400/500, loss=0.421571
+INFO:   Epoch 500/500, loss=0.427727
+INFO:   Sanity check passed: gen_std=1.902, train_std=1.284, spectral_L2=0.384
+INFO:   SBM(q=0.05)/seed=1/band-mismatched: loss=0.428, std_ratio=1.48, W1=548.7 (low=134.7, high=2.5)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.055318
+INFO:   Epoch 100/500, loss=0.528083
+INFO:   Epoch 200/500, loss=0.454359
+INFO:   Epoch 300/500, loss=0.637484
+INFO:   Epoch 400/500, loss=0.421571
+INFO:   Epoch 500/500, loss=0.427727
+WARNING:   SANITY CHECK: Spectral L2 distance 0.541 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.05)/seed=1/band-matched: loss=0.428, std_ratio=1.69, W1=612.0 (low=150.6, high=2.4)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.05) seed=2...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.05_seed2.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.085032
+INFO:   Epoch 100/500, loss=0.529843
+INFO:   Epoch 200/500, loss=0.450626
+INFO:   Epoch 300/500, loss=0.426912
+INFO:   Epoch 400/500, loss=0.193196
+INFO:   Epoch 500/500, loss=0.346026
+INFO:   Sanity check passed: gen_std=2.356, train_std=1.294, spectral_L2=0.470
+INFO:   SBM(q=0.05)/seed=2/uniform: loss=0.346, std_ratio=1.82, W1=657.2 (low=161.0, high=3.3)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.066468
+INFO:   Epoch 100/500, loss=0.554842
+INFO:   Epoch 200/500, loss=0.459000
+INFO:   Epoch 300/500, loss=0.423742
+INFO:   Epoch 400/500, loss=0.197210
+INFO:   Epoch 500/500, loss=0.344548
+INFO:   Sanity check passed: gen_std=2.166, train_std=1.294, spectral_L2=0.437
+INFO:   SBM(q=0.05)/seed=2/band-mismatched: loss=0.345, std_ratio=1.67, W1=549.2 (low=134.6, high=2.7)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.066468
+INFO:   Epoch 100/500, loss=0.554842
+INFO:   Epoch 200/500, loss=0.459000
+INFO:   Epoch 300/500, loss=0.423742
+INFO:   Epoch 400/500, loss=0.197210
+INFO:   Epoch 500/500, loss=0.344548
+INFO:   Sanity check passed: gen_std=2.154, train_std=1.294, spectral_L2=0.440
+INFO:   SBM(q=0.05)/seed=2/band-matched: loss=0.345, std_ratio=1.67, W1=585.2 (low=143.5, high=2.8)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.05) seed=3...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.05_seed3.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.984101
+INFO:   Epoch 100/500, loss=0.453094
+INFO:   Epoch 200/500, loss=0.501464
+INFO:   Epoch 300/500, loss=0.333464
+INFO:   Epoch 400/500, loss=0.309302
+INFO:   Epoch 500/500, loss=0.405711
+INFO:   Sanity check passed: gen_std=2.353, train_std=1.328, spectral_L2=0.438
+INFO:   SBM(q=0.05)/seed=3/uniform: loss=0.406, std_ratio=1.77, W1=807.3 (low=193.9, high=7.9)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.048105
+INFO:   Epoch 100/500, loss=0.447760
+INFO:   Epoch 200/500, loss=0.528889
+INFO:   Epoch 300/500, loss=0.348430
+INFO:   Epoch 400/500, loss=0.302460
+INFO:   Epoch 500/500, loss=0.422239
+INFO:   Sanity check passed: gen_std=2.238, train_std=1.328, spectral_L2=0.452
+INFO:   SBM(q=0.05)/seed=3/band-mismatched: loss=0.422, std_ratio=1.68, W1=710.0 (low=171.3, high=6.2)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.048105
+INFO:   Epoch 100/500, loss=0.447760
+INFO:   Epoch 200/500, loss=0.528889
+INFO:   Epoch 300/500, loss=0.348430
+INFO:   Epoch 400/500, loss=0.302460
+INFO:   Epoch 500/500, loss=0.422239
+INFO:   Sanity check passed: gen_std=2.232, train_std=1.328, spectral_L2=0.499
+INFO:   SBM(q=0.05)/seed=3/band-matched: loss=0.422, std_ratio=1.68, W1=799.7 (low=193.8, high=6.1)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.05) seed=4...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.05_seed4.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.039735
+INFO:   Epoch 100/500, loss=0.499425
+INFO:   Epoch 200/500, loss=0.430459
+INFO:   Epoch 300/500, loss=0.340666
+INFO:   Epoch 400/500, loss=0.439577
+INFO:   Epoch 500/500, loss=0.415449
+INFO:   Sanity check passed: gen_std=2.002, train_std=1.320, spectral_L2=0.459
+INFO:   SBM(q=0.05)/seed=4/uniform: loss=0.415, std_ratio=1.52, W1=831.7 (low=202.5, high=5.5)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.030557
+INFO:   Epoch 100/500, loss=0.511614
+INFO:   Epoch 200/500, loss=0.429397
+INFO:   Epoch 300/500, loss=0.346349
+INFO:   Epoch 400/500, loss=0.466747
+INFO:   Epoch 500/500, loss=0.413637
+INFO:   Sanity check passed: gen_std=1.802, train_std=1.320, spectral_L2=0.362
+INFO:   SBM(q=0.05)/seed=4/band-mismatched: loss=0.414, std_ratio=1.37, W1=756.8 (low=184.0, high=5.2)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.030557
+INFO:   Epoch 100/500, loss=0.511614
+INFO:   Epoch 200/500, loss=0.429397
+INFO:   Epoch 300/500, loss=0.346349
+INFO:   Epoch 400/500, loss=0.466747
+INFO:   Epoch 500/500, loss=0.413637
+INFO:   Sanity check passed: gen_std=2.088, train_std=1.320, spectral_L2=0.484
+INFO:   SBM(q=0.05)/seed=4/band-matched: loss=0.414, std_ratio=1.58, W1=788.0 (low=192.2, high=4.8)
+INFO: 
+  SBM(q=0.05) uniform vs band-mismatched:
+INFO:     uniform W1: 720.5 +/- 82.6
+INFO:     band-mismatched W1: 627.9 +/- 87.9
+INFO:     Improvement: 92.5 (12.8%)
+INFO:     t=14.647, p=0.0001
+INFO:     SIGNIFICANT (Bonferroni alpha=0.0125)
+INFO: 
+  SBM(q=0.05) uniform vs band-matched:
+INFO:     uniform W1: 720.5 +/- 82.6
+INFO:     band-matched W1: 685.1 +/- 90.6
+INFO:     Improvement: 35.4 (4.9%)
+INFO:     t=3.152, p=0.0344
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO: 
+  SBM(q=0.05) band-mismatched vs band-matched:
+INFO:     band-mismatched W1: 627.9 +/- 87.9
+INFO:     band-matched W1: 685.1 +/- 90.6
+INFO:     Improvement: -57.2 (-9.1%)
+INFO:     t=-5.341, p=0.0059
+INFO:     SIGNIFICANT (Bonferroni alpha=0.0125)
+INFO:   Saved intermediate results to results/phase3b/phase3b_results.json
+INFO: 
+================================================================================
+INFO:   SBM(q=0.1) (n=50)
+INFO: ================================================================================
+INFO:   Loading cached dataset: results/phase3b/datasets/SBM_q0.1_seed0.npz
+INFO:   Band weights (from seed-0 train): [0.186 1.16  0.315 0.988 1.472 1.264 0.906 1.709]
+INFO:   Loading cached dataset: results/phase3b/datasets/SBM_q0.1_seed0.npz
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.999171
+INFO:   Epoch 100/500, loss=0.406602
+INFO:   Epoch 200/500, loss=0.392778
+INFO:   Epoch 300/500, loss=0.384252
+INFO:   Epoch 400/500, loss=0.465946
+INFO:   Epoch 500/500, loss=0.517416
+INFO:   Sanity check passed: gen_std=2.198, train_std=1.254, spectral_L2=0.436
+INFO:   SBM(q=0.1)/seed=0/uniform: loss=0.517, std_ratio=1.75, W1=1012.2 (low=245.5, high=7.5)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.039052
+INFO:   Epoch 100/500, loss=0.396249
+INFO:   Epoch 200/500, loss=0.381274
+INFO:   Epoch 300/500, loss=0.397411
+INFO:   Epoch 400/500, loss=0.464710
+INFO:   Epoch 500/500, loss=0.534803
+INFO:   Sanity check passed: gen_std=2.331, train_std=1.254, spectral_L2=0.444
+INFO:   SBM(q=0.1)/seed=0/band-mismatched: loss=0.535, std_ratio=1.86, W1=898.4 (low=216.6, high=8.0)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.039052
+INFO:   Epoch 100/500, loss=0.396249
+INFO:   Epoch 200/500, loss=0.381274
+INFO:   Epoch 300/500, loss=0.397411
+INFO:   Epoch 400/500, loss=0.464710
+INFO:   Epoch 500/500, loss=0.534803
+WARNING:   SANITY CHECK: Spectral L2 distance 0.618 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=0/band-matched: loss=0.535, std_ratio=2.03, W1=1039.4 (low=251.8, high=8.0)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.1) seed=1...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.1_seed1.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.018229
+INFO:   Epoch 100/500, loss=0.475851
+INFO:   Epoch 200/500, loss=0.455113
+INFO:   Epoch 300/500, loss=0.627351
+INFO:   Epoch 400/500, loss=0.421049
+INFO:   Epoch 500/500, loss=0.431851
+WARNING:   SANITY CHECK: Spectral L2 distance 0.619 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=1/uniform: loss=0.432, std_ratio=1.90, W1=1059.4 (low=257.5, high=7.3)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.130691
+INFO:   Epoch 100/500, loss=0.517479
+INFO:   Epoch 200/500, loss=0.459425
+INFO:   Epoch 300/500, loss=0.670508
+INFO:   Epoch 400/500, loss=0.433660
+INFO:   Epoch 500/500, loss=0.435599
+WARNING:   SANITY CHECK: Spectral L2 distance 0.558 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=1/band-mismatched: loss=0.436, std_ratio=1.62, W1=917.1 (low=220.7, high=8.6)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.130691
+INFO:   Epoch 100/500, loss=0.517479
+INFO:   Epoch 200/500, loss=0.459425
+INFO:   Epoch 300/500, loss=0.670508
+INFO:   Epoch 400/500, loss=0.433660
+INFO:   Epoch 500/500, loss=0.435600
+WARNING:   SANITY CHECK: Spectral L2 distance 0.639 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=1/band-matched: loss=0.436, std_ratio=1.84, W1=1005.9 (low=242.4, high=9.1)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.1) seed=2...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.1_seed2.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.065566
+INFO:   Epoch 100/500, loss=0.529851
+INFO:   Epoch 200/500, loss=0.463864
+INFO:   Epoch 300/500, loss=0.425525
+INFO:   Epoch 400/500, loss=0.206428
+INFO:   Epoch 500/500, loss=0.346966
+WARNING:   SANITY CHECK: Spectral L2 distance 0.621 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=2/uniform: loss=0.347, std_ratio=2.01, W1=1040.1 (low=253.1, high=7.0)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.074513
+INFO:   Epoch 100/500, loss=0.555290
+INFO:   Epoch 200/500, loss=0.471696
+INFO:   Epoch 300/500, loss=0.426442
+INFO:   Epoch 400/500, loss=0.219097
+INFO:   Epoch 500/500, loss=0.348645
+WARNING:   SANITY CHECK: Spectral L2 distance 0.625 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=2/band-mismatched: loss=0.349, std_ratio=1.93, W1=1009.4 (low=244.9, high=7.4)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.074513
+INFO:   Epoch 100/500, loss=0.555290
+INFO:   Epoch 200/500, loss=0.471696
+INFO:   Epoch 300/500, loss=0.426442
+INFO:   Epoch 400/500, loss=0.219097
+INFO:   Epoch 500/500, loss=0.348645
+WARNING:   SANITY CHECK: Spectral L2 distance 0.628 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=2/band-matched: loss=0.349, std_ratio=1.94, W1=1129.5 (low=274.4, high=8.0)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.1) seed=3...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.1_seed3.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.978874
+INFO:   Epoch 100/500, loss=0.451693
+INFO:   Epoch 200/500, loss=0.507537
+INFO:   Epoch 300/500, loss=0.335132
+INFO:   Epoch 400/500, loss=0.317187
+INFO:   Epoch 500/500, loss=0.400055
+WARNING:   SANITY CHECK: Spectral L2 distance 0.633 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=3/uniform: loss=0.400, std_ratio=2.03, W1=1040.1 (low=254.6, high=5.4)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.044673
+INFO:   Epoch 100/500, loss=0.447972
+INFO:   Epoch 200/500, loss=0.529139
+INFO:   Epoch 300/500, loss=0.366887
+INFO:   Epoch 400/500, loss=0.317221
+INFO:   Epoch 500/500, loss=0.422655
+WARNING:   SANITY CHECK: Spectral L2 distance 0.622 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=3/band-mismatched: loss=0.423, std_ratio=2.01, W1=1009.4 (low=247.3, high=5.0)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.044673
+INFO:   Epoch 100/500, loss=0.447972
+INFO:   Epoch 200/500, loss=0.529139
+INFO:   Epoch 300/500, loss=0.366887
+INFO:   Epoch 400/500, loss=0.317221
+INFO:   Epoch 500/500, loss=0.422655
+WARNING:   SANITY CHECK: Spectral L2 distance 0.664 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=3/band-matched: loss=0.423, std_ratio=2.00, W1=1146.7 (low=280.7, high=6.0)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.1) seed=4...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.1_seed4.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.036389
+INFO:   Epoch 100/500, loss=0.509612
+INFO:   Epoch 200/500, loss=0.425691
+INFO:   Epoch 300/500, loss=0.353492
+INFO:   Epoch 400/500, loss=0.443520
+INFO:   Epoch 500/500, loss=0.433079
+WARNING:   SANITY CHECK: Spectral L2 distance 0.628 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=4/uniform: loss=0.433, std_ratio=1.80, W1=1028.2 (low=250.3, high=6.7)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.050203
+INFO:   Epoch 100/500, loss=0.520253
+INFO:   Epoch 200/500, loss=0.436161
+INFO:   Epoch 300/500, loss=0.362550
+INFO:   Epoch 400/500, loss=0.454818
+INFO:   Epoch 500/500, loss=0.436230
+WARNING:   SANITY CHECK: Spectral L2 distance 0.593 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=4/band-mismatched: loss=0.436, std_ratio=1.76, W1=984.0 (low=239.0, high=7.0)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.050203
+INFO:   Epoch 100/500, loss=0.520253
+INFO:   Epoch 200/500, loss=0.436161
+INFO:   Epoch 300/500, loss=0.362550
+INFO:   Epoch 400/500, loss=0.454818
+INFO:   Epoch 500/500, loss=0.436230
+WARNING:   SANITY CHECK: Spectral L2 distance 0.650 > 0.5 — generated profile differs significantly
+INFO:   SBM(q=0.1)/seed=4/band-matched: loss=0.436, std_ratio=1.91, W1=1085.4 (low=263.9, high=7.4)
+INFO: 
+  SBM(q=0.1) uniform vs band-mismatched:
+INFO:     uniform W1: 1036.0 +/- 15.5
+INFO:     band-mismatched W1: 963.7 +/- 46.9
+INFO:     Improvement: 72.4 (7.0%)
+INFO:     t=3.105, p=0.0360
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO: 
+  SBM(q=0.1) uniform vs band-matched:
+INFO:     uniform W1: 1036.0 +/- 15.5
+INFO:     band-matched W1: 1081.4 +/- 53.0
+INFO:     Improvement: -45.4 (-4.4%)
+INFO:     t=-1.608, p=0.1832
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO: 
+  SBM(q=0.1) band-mismatched vs band-matched:
+INFO:     band-mismatched W1: 963.7 +/- 46.9
+INFO:     band-matched W1: 1081.4 +/- 53.0
+INFO:     Improvement: -117.7 (-12.2%)
+INFO:     t=-11.670, p=0.0003
+INFO:     SIGNIFICANT (Bonferroni alpha=0.0125)
+INFO:   Saved intermediate results to results/phase3b/phase3b_results.json
+INFO: 
+================================================================================
+INFO:   BA(m=2) (n=50)
+INFO: ================================================================================
+INFO:   Loading cached dataset: results/phase3b/datasets/BA_m2_seed0.npz
+INFO:   Band weights (from seed-0 train): [0.127 0.105 0.48  1.351 1.03  1.952 1.312 1.644]
+INFO:   Loading cached dataset: results/phase3b/datasets/BA_m2_seed0.npz
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.988445
+INFO:   Epoch 100/500, loss=0.385596
+INFO:   Epoch 200/500, loss=0.380750
+INFO:   Epoch 300/500, loss=0.378107
+INFO:   Epoch 400/500, loss=0.446789
+INFO:   Epoch 500/500, loss=0.489980
+INFO:   Sanity check passed: gen_std=1.951, train_std=1.231, spectral_L2=0.230
+INFO:   BA(m=2)/seed=0/uniform: loss=0.490, std_ratio=1.58, W1=540.0 (low=126.8, high=8.2)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.009557
+INFO:   Epoch 100/500, loss=0.375136
+INFO:   Epoch 200/500, loss=0.372117
+INFO:   Epoch 300/500, loss=0.390227
+INFO:   Epoch 400/500, loss=0.439805
+INFO:   Epoch 500/500, loss=0.502895
+INFO:   Sanity check passed: gen_std=1.895, train_std=1.231, spectral_L2=0.268
+INFO:   BA(m=2)/seed=0/band-mismatched: loss=0.503, std_ratio=1.54, W1=455.8 (low=106.6, high=7.4)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.009557
+INFO:   Epoch 100/500, loss=0.375136
+INFO:   Epoch 200/500, loss=0.372117
+INFO:   Epoch 300/500, loss=0.390227
+INFO:   Epoch 400/500, loss=0.439805
+INFO:   Epoch 500/500, loss=0.502895
+INFO:   Sanity check passed: gen_std=1.841, train_std=1.231, spectral_L2=0.358
+INFO:   BA(m=2)/seed=0/band-matched: loss=0.503, std_ratio=1.50, W1=472.6 (low=110.5, high=7.7)
+INFO:   Generating 100 train + 50 ref samples for BA(m=2) seed=1...
+INFO:   Saved dataset: results/phase3b/datasets/BA_m2_seed1.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.010643
+INFO:   Epoch 100/500, loss=0.474504
+INFO:   Epoch 200/500, loss=0.460275
+INFO:   Epoch 300/500, loss=0.595014
+INFO:   Epoch 400/500, loss=0.400462
+INFO:   Epoch 500/500, loss=0.397310
+INFO:   Sanity check passed: gen_std=2.065, train_std=1.235, spectral_L2=0.363
+INFO:   BA(m=2)/seed=1/uniform: loss=0.397, std_ratio=1.67, W1=723.8 (low=167.9, high=13.1)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.033854
+INFO:   Epoch 100/500, loss=0.498166
+INFO:   Epoch 200/500, loss=0.451023
+INFO:   Epoch 300/500, loss=0.613858
+INFO:   Epoch 400/500, loss=0.412421
+INFO:   Epoch 500/500, loss=0.403680
+INFO:   Sanity check passed: gen_std=2.013, train_std=1.235, spectral_L2=0.331
+INFO:   BA(m=2)/seed=1/band-mismatched: loss=0.404, std_ratio=1.63, W1=647.9 (low=151.3, high=10.7)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.033854
+INFO:   Epoch 100/500, loss=0.498166
+INFO:   Epoch 200/500, loss=0.451023
+INFO:   Epoch 300/500, loss=0.613858
+INFO:   Epoch 400/500, loss=0.412421
+INFO:   Epoch 500/500, loss=0.403680
+INFO:   Sanity check passed: gen_std=2.185, train_std=1.235, spectral_L2=0.427
+INFO:   BA(m=2)/seed=1/band-matched: loss=0.404, std_ratio=1.77, W1=674.1 (low=157.0, high=11.5)
+INFO:   Generating 100 train + 50 ref samples for BA(m=2) seed=2...
+INFO:   Saved dataset: results/phase3b/datasets/BA_m2_seed2.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.081625
+INFO:   Epoch 100/500, loss=0.508540
+INFO:   Epoch 200/500, loss=0.442750
+INFO:   Epoch 300/500, loss=0.411688
+INFO:   Epoch 400/500, loss=0.187695
+INFO:   Epoch 500/500, loss=0.323825
+INFO:   Sanity check passed: gen_std=2.091, train_std=1.222, spectral_L2=0.328
+INFO:   BA(m=2)/seed=2/uniform: loss=0.324, std_ratio=1.71, W1=587.4 (low=135.2, high=11.7)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.092272
+INFO:   Epoch 100/500, loss=0.525253
+INFO:   Epoch 200/500, loss=0.443226
+INFO:   Epoch 300/500, loss=0.436975
+INFO:   Epoch 400/500, loss=0.195454
+INFO:   Epoch 500/500, loss=0.325486
+INFO:   Sanity check passed: gen_std=2.093, train_std=1.222, spectral_L2=0.324
+INFO:   BA(m=2)/seed=2/band-mismatched: loss=0.325, std_ratio=1.71, W1=544.1 (low=125.2, high=10.8)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.092272
+INFO:   Epoch 100/500, loss=0.525253
+INFO:   Epoch 200/500, loss=0.443226
+INFO:   Epoch 300/500, loss=0.436975
+INFO:   Epoch 400/500, loss=0.195454
+INFO:   Epoch 500/500, loss=0.325486
+INFO:   Sanity check passed: gen_std=2.063, train_std=1.222, spectral_L2=0.368
+INFO:   BA(m=2)/seed=2/band-matched: loss=0.325, std_ratio=1.69, W1=596.4 (low=137.1, high=12.0)
+INFO:   Generating 100 train + 50 ref samples for BA(m=2) seed=3...
+INFO:   Saved dataset: results/phase3b/datasets/BA_m2_seed3.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.974080
+INFO:   Epoch 100/500, loss=0.441879
+INFO:   Epoch 200/500, loss=0.487511
+INFO:   Epoch 300/500, loss=0.316776
+INFO:   Epoch 400/500, loss=0.285972
+INFO:   Epoch 500/500, loss=0.383101
+INFO:   Sanity check passed: gen_std=2.339, train_std=1.261, spectral_L2=0.460
+INFO:   BA(m=2)/seed=3/uniform: loss=0.383, std_ratio=1.86, W1=794.1 (low=185.4, high=13.1)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.033093
+INFO:   Epoch 100/500, loss=0.424855
+INFO:   Epoch 200/500, loss=0.525213
+INFO:   Epoch 300/500, loss=0.336697
+INFO:   Epoch 400/500, loss=0.283080
+INFO:   Epoch 500/500, loss=0.403153
+INFO:   Sanity check passed: gen_std=2.311, train_std=1.261, spectral_L2=0.456
+INFO:   BA(m=2)/seed=3/band-mismatched: loss=0.403, std_ratio=1.83, W1=786.4 (low=183.9, high=12.7)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.033093
+INFO:   Epoch 100/500, loss=0.424855
+INFO:   Epoch 200/500, loss=0.525213
+INFO:   Epoch 300/500, loss=0.336697
+INFO:   Epoch 400/500, loss=0.283080
+INFO:   Epoch 500/500, loss=0.403153
+INFO:   Sanity check passed: gen_std=2.353, train_std=1.261, spectral_L2=0.490
+INFO:   BA(m=2)/seed=3/band-matched: loss=0.403, std_ratio=1.87, W1=855.6 (low=199.4, high=14.5)
+INFO:   Generating 100 train + 50 ref samples for BA(m=2) seed=4...
+INFO:   Saved dataset: results/phase3b/datasets/BA_m2_seed4.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.026236
+INFO:   Epoch 100/500, loss=0.489241
+INFO:   Epoch 200/500, loss=0.414093
+INFO:   Epoch 300/500, loss=0.333426
+INFO:   Epoch 400/500, loss=0.413766
+INFO:   Epoch 500/500, loss=0.398419
+INFO:   Sanity check passed: gen_std=2.151, train_std=1.267, spectral_L2=0.251
+INFO:   BA(m=2)/seed=4/uniform: loss=0.398, std_ratio=1.70, W1=734.1 (low=170.0, high=13.6)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.067757
+INFO:   Epoch 100/500, loss=0.499955
+INFO:   Epoch 200/500, loss=0.413789
+INFO:   Epoch 300/500, loss=0.339514
+INFO:   Epoch 400/500, loss=0.419226
+INFO:   Epoch 500/500, loss=0.397084
+INFO:   Sanity check passed: gen_std=2.094, train_std=1.267, spectral_L2=0.211
+INFO:   BA(m=2)/seed=4/band-mismatched: loss=0.397, std_ratio=1.65, W1=658.9 (low=153.6, high=11.1)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.067757
+INFO:   Epoch 100/500, loss=0.499955
+INFO:   Epoch 200/500, loss=0.413789
+INFO:   Epoch 300/500, loss=0.339514
+INFO:   Epoch 400/500, loss=0.419226
+INFO:   Epoch 500/500, loss=0.397084
+INFO:   Sanity check passed: gen_std=2.243, train_std=1.267, spectral_L2=0.367
+INFO:   BA(m=2)/seed=4/band-matched: loss=0.397, std_ratio=1.77, W1=718.6 (low=167.5, high=12.2)
+INFO: 
+  BA(m=2) uniform vs band-mismatched:
+INFO:     uniform W1: 675.9 +/- 95.9
+INFO:     band-mismatched W1: 618.6 +/- 112.0
+INFO:     Improvement: 57.2 (8.5%)
+INFO:     t=4.024, p=0.0158
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO: 
+  BA(m=2) uniform vs band-matched:
+INFO:     uniform W1: 675.9 +/- 95.9
+INFO:     band-matched W1: 663.5 +/- 127.3
+INFO:     Improvement: 12.4 (1.8%)
+INFO:     t=0.545, p=0.6144
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO: 
+  BA(m=2) band-mismatched vs band-matched:
+INFO:     band-mismatched W1: 618.6 +/- 112.0
+INFO:     band-matched W1: 663.5 +/- 127.3
+INFO:     Improvement: -44.8 (-7.2%)
+INFO:     t=-4.485, p=0.0110
+INFO:     SIGNIFICANT (Bonferroni alpha=0.0125)
+INFO:   Saved intermediate results to results/phase3b/phase3b_results.json
+INFO: 
+================================================================================
+INFO:   SBM(q=0.01) (n=50)
+INFO: ================================================================================
+INFO:   Loading cached dataset: results/phase3b/datasets/SBM_q0.01_seed0.npz
+INFO:   Band weights (from seed-0 train): [0.019 1.21  0.837 0.998 2.241 0.77  0.738 1.187]
+INFO:   Loading cached dataset: results/phase3b/datasets/SBM_q0.01_seed0.npz
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.031026
+INFO:   Epoch 100/500, loss=0.286966
+INFO:   Epoch 200/500, loss=0.276575
+INFO:   Epoch 300/500, loss=0.226074
+INFO:   Epoch 400/500, loss=0.322164
+INFO:   Epoch 500/500, loss=0.308297
+INFO:   Sanity check passed: gen_std=2.048, train_std=1.335, spectral_L2=0.019
+INFO:   SBM(q=0.01)/seed=0/uniform: loss=0.308, std_ratio=1.53, W1=559.3 (low=131.4, high=8.4)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.003406
+INFO:   Epoch 100/500, loss=0.277079
+INFO:   Epoch 200/500, loss=0.271174
+INFO:   Epoch 300/500, loss=0.232579
+INFO:   Epoch 400/500, loss=0.309227
+INFO:   Epoch 500/500, loss=0.309053
+INFO:   Sanity check passed: gen_std=2.153, train_std=1.335, spectral_L2=0.015
+INFO:   SBM(q=0.01)/seed=0/band-mismatched: loss=0.309, std_ratio=1.61, W1=555.6 (low=130.5, high=8.4)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.003406
+INFO:   Epoch 100/500, loss=0.277079
+INFO:   Epoch 200/500, loss=0.271174
+INFO:   Epoch 300/500, loss=0.232579
+INFO:   Epoch 400/500, loss=0.309227
+INFO:   Epoch 500/500, loss=0.309053
+INFO:   Sanity check passed: gen_std=2.094, train_std=1.335, spectral_L2=0.020
+INFO:   SBM(q=0.01)/seed=0/band-matched: loss=0.309, std_ratio=1.57, W1=570.6 (low=133.8, high=8.8)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.01) seed=1...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.01_seed1.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.037802
+INFO:   Epoch 100/500, loss=0.417923
+INFO:   Epoch 200/500, loss=0.421637
+INFO:   Epoch 300/500, loss=0.402601
+INFO:   Epoch 400/500, loss=0.235743
+INFO:   Epoch 500/500, loss=0.255684
+INFO:   Sanity check passed: gen_std=2.389, train_std=1.357, spectral_L2=0.038
+INFO:   SBM(q=0.01)/seed=1/uniform: loss=0.256, std_ratio=1.76, W1=729.9 (low=170.6, high=11.9)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.049814
+INFO:   Epoch 100/500, loss=0.442636
+INFO:   Epoch 200/500, loss=0.413328
+INFO:   Epoch 300/500, loss=0.416956
+INFO:   Epoch 400/500, loss=0.242752
+INFO:   Epoch 500/500, loss=0.253925
+INFO:   Sanity check passed: gen_std=2.593, train_std=1.357, spectral_L2=0.021
+INFO:   SBM(q=0.01)/seed=1/band-mismatched: loss=0.254, std_ratio=1.91, W1=963.0 (low=226.5, high=14.2)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.049814
+INFO:   Epoch 100/500, loss=0.442636
+INFO:   Epoch 200/500, loss=0.413328
+INFO:   Epoch 300/500, loss=0.416956
+INFO:   Epoch 400/500, loss=0.242752
+INFO:   Epoch 500/500, loss=0.253925
+INFO:   Sanity check passed: gen_std=2.637, train_std=1.357, spectral_L2=0.019
+INFO:   SBM(q=0.01)/seed=1/band-matched: loss=0.254, std_ratio=1.94, W1=999.6 (low=235.1, high=14.8)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.01) seed=2...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.01_seed2.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.053697
+INFO:   Epoch 100/500, loss=0.376705
+INFO:   Epoch 200/500, loss=0.313528
+INFO:   Epoch 300/500, loss=0.249988
+INFO:   Epoch 400/500, loss=0.109030
+INFO:   Epoch 500/500, loss=0.199324
+INFO:   Sanity check passed: gen_std=2.553, train_std=1.374, spectral_L2=0.029
+INFO:   SBM(q=0.01)/seed=2/uniform: loss=0.199, std_ratio=1.86, W1=922.5 (low=216.4, high=14.3)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.036672
+INFO:   Epoch 100/500, loss=0.393505
+INFO:   Epoch 200/500, loss=0.311479
+INFO:   Epoch 300/500, loss=0.257966
+INFO:   Epoch 400/500, loss=0.117543
+INFO:   Epoch 500/500, loss=0.200473
+INFO:   Sanity check passed: gen_std=2.489, train_std=1.374, spectral_L2=0.020
+INFO:   SBM(q=0.01)/seed=2/band-mismatched: loss=0.200, std_ratio=1.81, W1=730.6 (low=170.5, high=12.2)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.036672
+INFO:   Epoch 100/500, loss=0.393505
+INFO:   Epoch 200/500, loss=0.311479
+INFO:   Epoch 300/500, loss=0.257966
+INFO:   Epoch 400/500, loss=0.117543
+INFO:   Epoch 500/500, loss=0.200473
+INFO:   Sanity check passed: gen_std=2.441, train_std=1.374, spectral_L2=0.020
+INFO:   SBM(q=0.01)/seed=2/band-matched: loss=0.200, std_ratio=1.78, W1=736.7 (low=171.7, high=12.5)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.01) seed=3...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.01_seed3.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.994767
+INFO:   Epoch 100/500, loss=0.342569
+INFO:   Epoch 200/500, loss=0.345640
+INFO:   Epoch 300/500, loss=0.215056
+INFO:   Epoch 400/500, loss=0.176316
+INFO:   Epoch 500/500, loss=0.243255
+INFO:   Sanity check passed: gen_std=2.483, train_std=1.378, spectral_L2=0.021
+INFO:   SBM(q=0.01)/seed=3/uniform: loss=0.243, std_ratio=1.80, W1=704.0 (low=163.8, high=12.2)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.039493
+INFO:   Epoch 100/500, loss=0.345658
+INFO:   Epoch 200/500, loss=0.360349
+INFO:   Epoch 300/500, loss=0.219881
+INFO:   Epoch 400/500, loss=0.173703
+INFO:   Epoch 500/500, loss=0.254039
+INFO:   Sanity check passed: gen_std=2.455, train_std=1.378, spectral_L2=0.017
+INFO:   SBM(q=0.01)/seed=3/band-mismatched: loss=0.254, std_ratio=1.78, W1=647.0 (low=150.0, high=11.8)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.039493
+INFO:   Epoch 100/500, loss=0.345658
+INFO:   Epoch 200/500, loss=0.360349
+INFO:   Epoch 300/500, loss=0.219881
+INFO:   Epoch 400/500, loss=0.173703
+INFO:   Epoch 500/500, loss=0.254039
+INFO:   Sanity check passed: gen_std=2.550, train_std=1.378, spectral_L2=0.015
+INFO:   SBM(q=0.01)/seed=3/band-matched: loss=0.254, std_ratio=1.85, W1=658.7 (low=152.8, high=11.9)
+INFO:   Generating 100 train + 50 ref samples for SBM(q=0.01) seed=4...
+INFO:   Saved dataset: results/phase3b/datasets/SBM_q0.01_seed4.npz (train=(100, 50, 4), ref=(50, 50, 4))
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.016086
+INFO:   Epoch 100/500, loss=0.382070
+INFO:   Epoch 200/500, loss=0.281324
+INFO:   Epoch 300/500, loss=0.230503
+INFO:   Epoch 400/500, loss=0.284890
+INFO:   Epoch 500/500, loss=0.254125
+INFO:   Sanity check passed: gen_std=1.782, train_std=1.313, spectral_L2=0.022
+INFO:   SBM(q=0.01)/seed=4/uniform: loss=0.254, std_ratio=1.36, W1=427.9 (low=99.6, high=7.3)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.022733
+INFO:   Epoch 100/500, loss=0.379073
+INFO:   Epoch 200/500, loss=0.271181
+INFO:   Epoch 300/500, loss=0.232429
+INFO:   Epoch 400/500, loss=0.292518
+INFO:   Epoch 500/500, loss=0.251182
+INFO:   Sanity check passed: gen_std=1.962, train_std=1.313, spectral_L2=0.023
+INFO:   SBM(q=0.01)/seed=4/band-mismatched: loss=0.251, std_ratio=1.49, W1=549.8 (low=128.6, high=8.8)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.022733
+INFO:   Epoch 100/500, loss=0.379073
+INFO:   Epoch 200/500, loss=0.271181
+INFO:   Epoch 300/500, loss=0.232429
+INFO:   Epoch 400/500, loss=0.292518
+INFO:   Epoch 500/500, loss=0.251182
+INFO:   Sanity check passed: gen_std=2.033, train_std=1.313, spectral_L2=0.024
+INFO:   SBM(q=0.01)/seed=4/band-matched: loss=0.251, std_ratio=1.55, W1=552.7 (low=129.3, high=8.8)
+INFO: 
+  SBM(q=0.01) uniform vs band-mismatched:
+INFO:     uniform W1: 668.7 +/- 167.0
+INFO:     band-mismatched W1: 689.2 +/- 152.1
+INFO:     Improvement: -20.5 (-3.1%)
+INFO:     t=-0.280, p=0.7934
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO: 
+  SBM(q=0.01) uniform vs band-matched:
+INFO:     uniform W1: 668.7 +/- 167.0
+INFO:     band-matched W1: 703.7 +/- 162.0
+INFO:     Improvement: -35.0 (-5.2%)
+INFO:     t=-0.453, p=0.6738
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO: 
+  SBM(q=0.01) band-mismatched vs band-matched:
+INFO:     band-mismatched W1: 689.2 +/- 152.1
+INFO:     band-matched W1: 703.7 +/- 162.0
+INFO:     Improvement: -14.5 (-2.1%)
+INFO:     t=-2.437, p=0.0714
+INFO:     not significant (Bonferroni alpha=0.0125)
+INFO:   Saved intermediate results to results/phase3b/phase3b_results.json
+
+==============================================================================================================
+Family                 Uniform W1  Mismatch W1   Matched W1   U-Mis Imp%   U-Mat Imp%   Mis-Mat Imp%
+--------------------------------------------------------------------------------------------------------------
+SBM(q=0.05)                 720.5        627.9        685.1       12.8%*        4.9%          -9.1%* 
+SBM(q=0.1)                 1036.0        963.7       1081.4        7.0%        -4.4%         -12.2%* 
+BA(m=2)                     675.9        618.6        663.5        8.5%         1.8%          -7.2%* 
+SBM(q=0.01)                 668.7        689.2        703.7       -3.1%        -5.2%          -2.1%  
+==============================================================================================================
+* = significant at Bonferroni-corrected alpha=0.0125
+Key comparison: band-mismatched vs band-matched (last column)
+
+==============================================================================================================
+Family               Comparison                                    p-val     t-stat       Imp%   Sig?
+--------------------------------------------------------------------------------------------------------------
+SBM(q=0.05)          uniform_vs_band-mismatched                   0.0001     14.647      12.8%      *
+SBM(q=0.05)          uniform_vs_band-matched                      0.0344      3.152       4.9%       
+SBM(q=0.05)          band-mismatched_vs_band-matched              0.0059     -5.341      -9.1%      *
+SBM(q=0.1)           uniform_vs_band-mismatched                   0.0360      3.105       7.0%       
+SBM(q=0.1)           uniform_vs_band-matched                      0.1832     -1.608      -4.4%       
+SBM(q=0.1)           band-mismatched_vs_band-matched              0.0003    -11.670     -12.2%      *
+BA(m=2)              uniform_vs_band-mismatched                   0.0158      4.024       8.5%       
+BA(m=2)              uniform_vs_band-matched                      0.6144      0.545       1.8%       
+BA(m=2)              band-mismatched_vs_band-matched              0.0110     -4.485      -7.2%      *
+SBM(q=0.01)          uniform_vs_band-mismatched                   0.7934     -0.280      -3.1%       
+SBM(q=0.01)          uniform_vs_band-matched                      0.6738     -0.453      -5.2%       
+SBM(q=0.01)          band-mismatched_vs_band-matched              0.0714     -2.437      -2.1%       
+==============================================================================================================
+
+Saved to results/phase3b/phase3b_results.json

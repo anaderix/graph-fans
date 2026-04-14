@@ -630,3 +630,45 @@ Mode shaping achieves the lowest training loss (0.381 vs 0.421 uniform) but the 
 
 Report: `results/phase3a/Report-Phase3a.md`
 Results: `results/phase3a/phase3a_results.json`, `results/phase3a/phase3a_run.log`
+
+## 2026-04-14 — Phase 3b: Matched Generation Noise — NO-GO
+
+### Motivation
+
+Phase 3a attributed per-mode shaping's failure to the train/generate noise mismatch (training uses shaped noise, generation starts from uniform Gaussian). Phase 3b tested whether aligning the generation start noise with the shaped training noise would amplify the 6-12% W1 improvement from Phase 2g.
+
+### Method
+
+3-way comparison: uniform vs band-mismatched (Phase 2g: shaped training, uniform generation) vs band-matched (shaped training, shaped generation). 4 families, 5 seeds each, 60 total runs. 3L GCN 128h, 50 nodes, 4 features, 500 epochs, cosine SDE + EMA, W1 evaluation. Paired t-test with Bonferroni correction (alpha=0.0125).
+
+### Results
+
+| Family | Uniform W1 | Mismatched W1 | Matched W1 | U->Mis | U->Mat | Mis->Mat |
+|--------|-----------|--------------|------------|--------|--------|----------|
+| SBM(q=0.05) | 720.5 ± 82.6 | 627.9 ± 87.9 | 685.1 ± 90.6 | 12.8%* | 4.9% | −9.1%* |
+| SBM(q=0.1) | 1036.0 ± 15.5 | 963.7 ± 46.9 | 1081.4 ± 53.0 | 7.0% | −4.4% | −12.2%* |
+| BA(m=2) | 675.9 ± 95.9 | 618.6 ± 112.0 | 663.5 ± 127.3 | 8.5% | 1.8% | −7.2%* |
+| SBM(q=0.01) | 668.7 ± 167.0 | 689.2 ± 152.1 | 703.7 ± 162.0 | −3.1% | −5.2% | −2.1% |
+
+\* significant at Bonferroni-corrected alpha=0.0125
+
+**Band-mismatched wins in all 4 families.** Mismatched beats matched in 20/20 seeds across all families. In 3/4 families, the mismatched-vs-matched difference is statistically significant (p=0.006, 0.0003, 0.011).
+
+For SBM(q=0.1), matched noise is actually **worse than uniform** (−4.4%, 4/5 seeds).
+
+### Root cause
+
+DDIM's 200-step iterative correction compensates for the initial noise mismatch. Band shaping's per-band variance normalization keeps shaped noise close enough to N(0,1) that DDIM handles the transition smoothly. Shaping the generation start introduces a novel distribution the score network has never encountered during training (shaped noise paired with reverse, not forward, process), causing DDIM trajectories to diverge more.
+
+### Gate decision
+
+**Phase 3b matched generation noise: NO-GO** — matching generation start to shaped training noise is counterproductive. The "mismatch" is a feature, not a bug. Band-mismatched (Phase 2g) remains the best configuration.
+
+### Implications
+
+- Train/generate noise mismatch is not a bottleneck — Phase 3a's failure was caused by extreme weight contrast (120x), not the mismatch itself
+- DDIM is robust to initial noise distribution (consistent with Song et al. 2021)
+- Future work should target score network capacity and training dynamics, not noise distribution alignment
+
+Report: `results/phase3b/Report-Phase3b.md`
+Results: `results/phase3b/phase3b_results.json`, `results/phase3b/phase3b_run.log`
