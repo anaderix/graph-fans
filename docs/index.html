@@ -371,8 +371,8 @@
       <div class="roadmap-label"><strong>Phase 2</strong>Regime A<br>Core</div>
     </div>
     <div class="roadmap-node">
-      <div class="roadmap-dot pending">&bull;</div>
-      <div class="roadmap-label"><strong>Phase 3</strong>Persistence<br>Bands</div>
+      <div class="roadmap-dot nogo">G3</div>
+      <div class="roadmap-label"><strong>Phase 3</strong>Spectral<br>Refinement</div>
     </div>
     <div class="roadmap-node">
       <div class="roadmap-dot pending">&bull;</div>
@@ -444,10 +444,10 @@
       <td><span class="badge badge-go">CONDITIONAL GO</span></td>
     </tr>
     <tr>
-      <td style="color:var(--text-dim)">G3</td>
+      <td style="color:var(--red)">G3</td>
       <td>Phase 3</td>
-      <td>Persistence bands outperform uniform by &ge;5% on irregular graphs</td>
-      <td><span class="badge badge-pending">Pending</span></td>
+      <td>Spectral refinement improves beyond Phase 2g band shaping</td>
+      <td><span class="badge badge-nogo">NO-GO</span></td>
     </tr>
     <tr>
       <td style="color:var(--text-dim)">G4</td>
@@ -674,25 +674,48 @@
   <!-- Phase 3 -->
   <div class="phase" id="phase3">
     <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
-      <span class="badge badge-pending">Pending</span>
-      <h2>Phase 3 &mdash; Persistence-Informed Bands (H4)</h2>
+      <span class="badge badge-nogo">NO-GO</span>
+      <h2>Phase 3 &mdash; Spectral Refinement (Persistence, Per-Mode, Matched Noise)</h2>
       <span class="chevron">&#9654;</span>
     </div>
     <div class="phase-body">
       <h3>Goal</h3>
-      <p>Test whether persistence-informed band boundaries outperform uniform/quantile partitioning on irregular graphs.</p>
-      <p><em>Unblocked by G2 conditional GO. Regime A spectral shaping confirmed on 3/4 families.</em></p>
+      <p>Improve upon Phase 2g&rsquo;s band shaping via finer spectral resolution or noise distribution alignment.</p>
 
-      <h3>Plan</h3>
-      <ul>
-        <li>Persistent homology on graph filtrations (Vietoris-Rips on shortest-path distances)</li>
-        <li>Extract natural scale boundaries from persistence diagram gaps</li>
-        <li>4-condition ablation: uniform, quantile, persistence-informed, random bands</li>
-        <li>Evaluate on irregular (CV &gt; 1.0) vs regular (CV &lt; 0.5) graphs</li>
-      </ul>
+      <h3>Pre-Phase 3 Check &mdash; Persistence Bands Not Viable</h3>
+      <p>Tested persistent homology (H0, H1) on 3 distance metrics for SBM(q=0.05), SBM(q=0.1), BA(m=2) at n=50.</p>
+      <table>
+        <tr><th>Family</th><th>Eff. Resistance H0 CV</th><th>Diffusion H0 CV</th></tr>
+        <tr><td>SBM (q=0.05)</td><td>0.026</td><td>0.053</td></tr>
+        <tr><td>SBM (q=0.1)</td><td>0.015</td><td>0.030</td></tr>
+        <tr><td>BA (m=2)</td><td>0.033</td><td>0.070</td></tr>
+      </table>
+      <p>Lifetime CV &lt; 0.1 across all families &mdash; no meaningful scale separation. Shortest-path persistence completely degenerate (1 unique death time). Persistence-informed bands <strong>deprioritized</strong>.</p>
 
-      <h3>Success Criteria</h3>
-      <p>Persistence bands outperform uniform by &ge;5% on irregular graphs; advantage is larger on irregular vs regular.</p>
+      <h3>Phase 3a &mdash; Per-Mode Shaping (NO-GO)</h3>
+      <p>Tested per-eigenmode shaping (n=50 individual weights, 120&times; contrast) vs band shaping (B=8, 11&times; contrast). Stopped early at 24/60 runs &mdash; result conclusive.</p>
+      <table>
+        <tr><th>Method</th><th>SBM(q=0.05) W1</th><th>vs Uniform</th></tr>
+        <tr><td>Uniform</td><td>726 &pm; 81</td><td>&mdash;</td></tr>
+        <tr><td>Band (B=8)</td><td>628 &pm; 88</td><td class="better">&minus;13.5%</td></tr>
+        <tr><td>Mode (n=50)</td><td class="worse">1261 &pm; 179</td><td class="worse">+73.7%</td></tr>
+      </table>
+      <p>Per-mode shaping <strong>degrades W1 by 50&ndash;94%</strong> across all seeds despite achieving the lowest training loss. Root cause: 120&times; weight contrast creates catastrophic train/generate noise mismatch.</p>
+
+      <h3>Phase 3b &mdash; Matched Generation Noise (NO-GO)</h3>
+      <p>Tested whether shaping DDIM generation start noise to match shaped training noise would fix the mismatch. 60/60 runs, 4 families, 5 seeds.</p>
+      <table>
+        <tr><th>Family</th><th>Uniform W1</th><th>Mismatched W1</th><th>Matched W1</th></tr>
+        <tr><td>SBM (q=0.05)</td><td>721 &pm; 83</td><td class="better">628 &pm; 88 (&minus;13%)</td><td>685 &pm; 91 (&minus;5%)</td></tr>
+        <tr><td>SBM (q=0.1)</td><td>1036 &pm; 16</td><td class="better">964 &pm; 47 (&minus;7%)</td><td class="worse">1081 &pm; 53 (+4%)</td></tr>
+        <tr><td>BA (m=2)</td><td>676 &pm; 96</td><td class="better">619 &pm; 112 (&minus;8%)</td><td>664 &pm; 127 (&minus;2%)</td></tr>
+        <tr><td>SBM (q=0.01)</td><td>669 &pm; 167</td><td>689 &pm; 152</td><td>704 &pm; 162</td></tr>
+      </table>
+      <p><strong>Band-mismatched wins 20/20 seeds.</strong> Matched noise is worse than mismatched in every comparison (significant in 3/4 families). For SBM(q=0.1), matched is worse than uniform.</p>
+
+      <div class="insight">
+        <strong>Key finding:</strong> DDIM&rsquo;s 200-step iterative correction compensates for the train/generate noise mismatch. Band shaping&rsquo;s per-band variance normalization keeps noise close enough to Gaussian that DDIM handles the rest. The &ldquo;mismatch&rdquo; is a feature, not a bug. <strong>Phase 2g&rsquo;s band-mismatched configuration remains optimal.</strong> Future work should target score network capacity, not noise distribution alignment.
+      </div>
     </div>
   </div>
 
@@ -1034,6 +1057,59 @@
             </ul>
             <p><strong>Family gate now passes:</strong> 3/4 families significant (SBM q=0.05, SBM q=0.1, BA m=2). Effect confirmed through n=200. Downstream task remains below 2% threshold.</p>
             <p>Effect sizes stable between 5 and 15 seeds. Variance, not effect size, was the bottleneck.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 5 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-04-14 &mdash; Day 5</span>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">DEPRIORITIZED</span>
+            <h3>Pre-Phase 3 &mdash; Persistence Bands Viability Check</h3>
+            <span class="tl-card-summary">CV &lt; 0.1, no scale separation</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Tested persistent homology (H0, H1) on 3 distance metrics (shortest-path, effective resistance, diffusion) for SBM(q=0.05), SBM(q=0.1), BA(m=2) at n=50.</p>
+            <p><strong>Key finding:</strong> Shortest-path persistence is completely degenerate (1 unique death time). Effective resistance and diffusion persistence have lifetime CV &lt; 0.1 &mdash; no meaningful scale separation for band boundaries. Eigenvalue gaps are more informative than persistence.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 3a &mdash; Per-Mode Noise Shaping</h3>
+            <span class="tl-card-summary">50&ndash;94% worse W1, stopped early</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Per-eigenmode shaping (n=50 weights, 120&times; contrast) vs band shaping (B=8, 11&times;) vs uniform. Stopped at 24/60 runs &mdash; result unambiguous.</p>
+            <p><strong>Key finding:</strong> Mode shaping achieves <strong>lowest training loss</strong> (0.381) but <strong>worst W1</strong> (1261, +74% worse). The 120&times; weight contrast creates catastrophic train/generate noise mismatch &mdash; the score network learns shaped noise but DDIM starts from uniform. Band shaping&rsquo;s variance normalization limits this mismatch.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 3b &mdash; Matched Generation Noise</h3>
+            <span class="tl-card-summary">Mismatched wins 20/20 seeds</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Tested shaping DDIM start noise to match shaped training noise. 3 conditions (uniform, band-mismatched, band-matched), 4 families, 5 seeds, 60 runs.</p>
+            <p><strong>Key finding:</strong> Band-mismatched (Phase 2g) wins every seed in all 4 families. DDIM&rsquo;s iterative correction compensates for the mismatch. Shaping x<sub>T</sub> introduces a distribution the model never saw during training, making things worse. The &ldquo;mismatch&rdquo; is a feature &mdash; future work should target score network capacity, not noise alignment.</p>
           </div>
         </div>
       </div>
