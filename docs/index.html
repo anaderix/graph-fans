@@ -376,11 +376,11 @@
     </div>
     <div class="roadmap-node">
       <div class="roadmap-dot pending">&bull;</div>
-      <div class="roadmap-label"><strong>Phase 4</strong>Hyperbolic<br>Proxy</div>
+      <div class="roadmap-label"><strong>Phase 4</strong>Info-Guided<br>Schedules</div>
     </div>
     <div class="roadmap-node">
       <div class="roadmap-dot pending">&bull;</div>
-      <div class="roadmap-label"><strong>Phase 5</strong>Regime B +<br>Point Clouds</div>
+      <div class="roadmap-label"><strong>Phase 5</strong>Spectral-Domain<br>Diffusion</div>
     </div>
   </div>
 </section>
@@ -406,18 +406,21 @@
   +---> Phase 1a (H3: Spectral Metrics)
   |       |
   |       v
-  +---> Phase 2 (H1-A + H2: Regime A Core)
+  +---> Phase 2 (H1-A: Regime A Core) .............. <span style="color:var(--green)">CONDITIONAL GO</span>
   |       |
-  |       v
-  |    Phase 3 (H4: Persistence-Informed Bands)
+  |       +---> Phase 3 (Spectral Refinement) ...... <span style="color:var(--red)">NO-GO</span>
+  |       |       Persistence, per-mode, matched noise all failed.
+  |       |       Band shaping (Phase 2g) remains best.
   |       |
-  |       v
-  |    Phase 4 (H5: Hyperbolic Proxy)
+  |       +---> Phase 4 (Info-Guided Schedules) .... <span style="color:var(--text-dim)">Planned</span>
+  |       |       4a: InfoNoise training  4b: InfoGrid DDIM
+  |       |       4c: Per-band schedules  4d: Spectral conditioning
+  |       |
+  |       +---> Phase 5 (Spectral-Domain Diffusion)  <span style="color:var(--text-dim)">Planned</span>
+  |               5a: Independent per-mode  5b: Autoregressive
+  |               5c: Cross-mode attention
   |
-  +---> Phase 1b (Synthetic Benchmarks)
-          |
-          v
-       Phase 5 (H1-B + H6: Regime B + Point Clouds)</div>
+  +---> Phase 1b (Synthetic Benchmarks)</div>
 </section>
 
 <!-- Go/No-Go gates -->
@@ -452,8 +455,8 @@
     <tr>
       <td style="color:var(--text-dim)">G4</td>
       <td>Phase 4</td>
-      <td>Curvature proxy achieves &ge;80% of full eigendecomposition fidelity</td>
-      <td><span class="badge badge-pending">Pending</span></td>
+      <td>Info-guided schedule or per-band dynamics improves W1 on &ge;1/2 families</td>
+      <td><span class="badge badge-pending">Planned</span></td>
     </tr>
   </table>
 </section>
@@ -722,50 +725,76 @@
   <!-- Phase 4 -->
   <div class="phase" id="phase4">
     <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
-      <span class="badge badge-pending">Pending</span>
-      <h2>Phase 4 &mdash; Hyperbolic Proxy (H5)</h2>
+      <span class="badge badge-pending">Planned</span>
+      <h2>Phase 4 &mdash; Information-Guided Spectral Diffusion</h2>
       <span class="chevron">&#9654;</span>
     </div>
     <div class="phase-body">
       <h3>Goal</h3>
-      <p>Validate hyperbolic embedding curvature as a cheap proxy for spectral band importance weights.</p>
-      <p><em>Unblocked by G2 conditional GO. Spectral shaping mechanism confirmed &mdash; proxy validation now meaningful.</em></p>
+      <p>Improve noise schedule allocation using information-theoretic and per-band temporal dynamics &mdash; a fundamentally different approach from Phase 3&rsquo;s noise amplitude/distribution experiments.</p>
 
-      <h3>Plan</h3>
+      <div class="insight">
+        <strong>How Phase 4 differs from Phase 3:</strong> Phase 3 tried to refine <em>what</em> noise looks like (per-mode weights, shaped generation start). Phase 4 changes <em>when</em> the model trains and <em>where</em> DDIM steps are allocated. InfoNoise concentrates training on the empirical entropy-rate peak. Per-band schedules change temporal dynamics so different spectral bands are at different corruption stages at each timestep &mdash; but crucially, x<sub>T</sub> remains isotropic (no train/generate mismatch).
+      </div>
+
+      <h3>Sub-phases</h3>
+      <table>
+        <tr><th>Phase</th><th>Approach</th><th>Effort</th><th>Risk</th></tr>
+        <tr><td><strong>4a</strong></td><td>InfoNoise adaptive timestep sampling (entropy-rate peak)</td><td>1 week</td><td>Medium</td></tr>
+        <tr><td><strong>4b</strong></td><td>InfoGrid DDIM (non-uniform reverse steps)</td><td>3&ndash;5 days</td><td>Low</td></tr>
+        <tr><td><strong>4c</strong></td><td>Per-band noise schedules (Esteves &amp; Makadia)</td><td>2&ndash;3 weeks</td><td>High</td></tr>
+        <tr><td><strong>4d</strong></td><td>Spectral conditioning of score network</td><td>1 week</td><td>Low</td></tr>
+      </table>
+
+      <h3>Key Insight: Gradient Misallocation</h3>
+      <p>The NS-D diagnostic (Phase 2f) showed 54% of gradient goes to mid-noise bins while the underfit low-noise regime (loss 0.72&ndash;1.10) gets only 14%. NS-A/NS-C couldn&rsquo;t fix this. InfoNoise reframes the problem: maybe the GCN doesn&rsquo;t <em>need</em> to learn at low noise &mdash; the &ldquo;decision window&rdquo; for community features is likely in the mid-noise range where the GCN is competent.</p>
+
+      <h3>Motivated by</h3>
       <ul>
-        <li>Poincar&eacute; ball embeddings, curvature-derived importance weights</li>
-        <li>Compare proxy vs full eigendecomposition on trees, hierarchical, and dense networks</li>
-        <li>Benchmark O(n log n) proxy vs O(n&sup3;) eigendecomposition</li>
-        <li>Identify crossover graph size where proxy becomes essential</li>
+        <li><strong>InfoNoise</strong> (Raya et al., arXiv:2602.18647) &mdash; information-guided noise allocation</li>
+        <li><strong>Spectrally-Guided Schedules</strong> (Esteves &amp; Makadia, arXiv:2603.19222) &mdash; per-instance noise schedules from spectral properties</li>
       </ul>
 
-      <h3>Success Criteria</h3>
-      <p>&ge;80% of full eigendecomposition fidelity on tree-like graphs; clear computational advantage at &gt;10K nodes.</p>
+      <h3>Gate</h3>
+      <p>W1 improvement &gt; 0 on &ge;1/2 families. Even if no W1 gain, the entropy-rate profile diagnostic for graph diffusion is a novel contribution.</p>
+
+      <p style="margin-top:1rem;"><a href="https://github.com/anaderix/graph-fans/blob/main/plans/phase4.md" style="color:var(--accent);text-decoration:none;">&#128196; Full plan: plans/phase4.md</a></p>
     </div>
   </div>
 
   <!-- Phase 5 -->
   <div class="phase" id="phase5">
     <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
-      <span class="badge badge-pending">Pending</span>
-      <h2>Phase 5 &mdash; Regime B + Point Clouds (H1-B + H6)</h2>
+      <span class="badge badge-pending">Planned</span>
+      <h2>Phase 5 &mdash; Frequency-Domain Diffusion</h2>
       <span class="chevron">&#9654;</span>
     </div>
     <div class="phase-body">
       <h3>Goal</h3>
-      <p>Extend Graph-FANS to topology generation (Regime B) and point cloud generation (H6).</p>
-      <p><em>Unblocked by G2 conditional GO. Depends on Phase 1b and ideally G3/G4 results.</em></p>
+      <p>Bypass the GCN bottleneck entirely by diffusing directly in the Laplacian eigenbasis &mdash; generating spectral coefficients c = U<sup>T</sup>x per eigenmode instead of node features x.</p>
 
-      <h3>Plan</h3>
-      <ul>
-        <li><strong>H1-B:</strong> Chebyshev polynomial band-pass filters, spectral density matching during generation</li>
-        <li><strong>H6:</strong> HNSW-induced graph scaffolds from noisy point clouds, fixed-initialization denoising strategy</li>
-        <li>Evaluate on community graphs, molecular graphs, ModelNet10</li>
-        <li>Characterize when fixed-initialization assumption breaks</li>
-      </ul>
+      <div class="insight">
+        <strong>How Phase 5 differs from all prior phases:</strong> Phases 2&ndash;4 diffuse in the <em>spatial domain</em> (node features) and rely on a GCN to implicitly learn spectral structure. The GCN&rsquo;s polynomial filter creates a capacity ceiling (loss 0.72&ndash;1.10 at low noise, confirmed in Phase 2f). Phase 5 pivots to the <em>spectral domain</em>: each eigenmode is a simple d-dimensional denoising problem solvable by an MLP &mdash; no graph convolution needed.
+      </div>
 
-      <h3>Success Criteria</h3>
-      <p>Regime B: better spectral fidelity than uniform-noise baselines. H6: higher micro-scale fidelity on point clouds.</p>
+      <h3>Sub-phases</h3>
+      <table>
+        <tr><th>Phase</th><th>Approach</th><th>Effort</th><th>Risk</th></tr>
+        <tr><td><strong>5a</strong></td><td>Independent per-mode diffusion (MLP per mode)</td><td>1 week</td><td>Medium</td></tr>
+        <tr><td><strong>5b</strong></td><td>Autoregressive spectral diffusion (low &rarr; high freq)</td><td>2 weeks</td><td>Medium</td></tr>
+        <tr><td><strong>5c</strong></td><td>Cross-mode attention diffusion (parallel + correlations)</td><td>2&ndash;3 weeks</td><td>High</td></tr>
+      </table>
+
+      <h3>Architecture</h3>
+      <p>Project features to eigenbasis, run per-mode forward diffusion with mode-specific schedules (from Phase 4 theory), denoise with a shared MLP conditioned on (&lambda;<sub>k</sub>, t, E<sub>k</sub>), then reconstruct via x = Uc.</p>
+
+      <h3>Key Risk</h3>
+      <p><strong>Cross-mode correlations.</strong> Community features have correlated low/mid-frequency content. Independent per-mode generation (5a) may produce spectrally correct but spatially incoherent features. Variants 5b and 5c address this with autoregressive and attention-based cross-mode coupling.</p>
+
+      <h3>Relationship to Phase 4</h3>
+      <p>Phase 5 is independent of Phase 4 results. If Phase 4 shows large spatial-domain improvements, Phase 5 becomes less urgent. If Phase 4 plateaus, Phase 5 is the natural pivot. InfoNoise and per-mode schedules from Phase 4 apply directly in the spectral domain.</p>
+
+      <p style="margin-top:1rem;"><a href="https://github.com/anaderix/graph-fans/blob/main/plans/phase5.md" style="color:var(--accent);text-decoration:none;">&#128196; Full plan: plans/phase5.md</a></p>
     </div>
   </div>
 </section>
