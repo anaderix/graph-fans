@@ -753,3 +753,49 @@ Results: `results/phase4b/info_grid_results.json`
 ### Implications for Phase 4c-4d
 
 The Phase 4a/4b results narrow the viable approaches. Information-theoretic noise schedule optimization assumes a model near the Bayes frontier — invalid for the 3L GCN. The remaining Phase 4 directions (per-band noise schedules, spectral conditioning) do not make this assumption and remain viable.
+
+## 2026-04-15 — Phase 5a: Independent Per-Mode Spectral Diffusion — NO-GO
+
+### Motivation
+
+Bypass the GCN's polynomial spectral response bottleneck by diffusing directly in the Laplacian eigenbasis. Each eigenmode's d=4 coefficient is denoised by a shared MLP conditioned on (λ_k, t, E_k) — no graph convolution needed. Per-mode schedules derive t_max(k) from spectral energy E_k.
+
+### Config
+
+Shared 3-layer MLP (128h), 50 modes × 4 features, mode-specific CosineScheduleSDE with t_max(k) = T·(E_k/E_max)^0.5. 500 epochs, DDIM 200 steps. 3-way comparison: uniform spatial (Phase 2 baseline), band spatial (Phase 2g), spectral 5a. 4 families × 5 seeds = 60 runs. NVIDIA L40S GPU.
+
+### Results
+
+| Family | Uniform W1 | Band W1 | Spectral W1 | Spec vs Band |
+|--------|-----------|---------|-------------|-------------|
+| SBM(q=0.05) | 714.5 | 627.9 | 379,890.8 | −60,400% |
+| SBM(q=0.1) | 1,036.0 | 963.7 | 373,893.6 | −38,700% |
+| BA(m=2) | 675.9 | 618.6 | 367,801.4 | −59,354% |
+| BA(m=5) | 1,380.1 | 1,308.6 | 389,724.6 | −29,682% |
+
+All spectral conditions significantly worse (p < 0.0001). Band vs uniform replicates Phase 2g.
+
+### Training Diagnostics
+
+| Metric | Spatial (GCN) | Spectral (MLP) |
+|--------|---------------|----------------|
+| Final loss | 0.33–0.44 | 0.957–0.986 |
+| Training time | 95–110s | 1.2s |
+| gen_neighbor_corr | 0.3–0.6 | 1.000 (degenerate) |
+
+### Key Findings
+
+1. **The MLP does not learn per-mode denoising.** Final loss 0.96–0.99 across all families and seeds (1.0 = predicting zero noise). The d=4 denoising task that should be "trivially solvable" is not learned in 500 epochs with the current setup.
+2. **Generated features collapse to constant.** gen_neighbor_correlation = 1.000 means all nodes receive identical feature vectors. This indicates all non-DC mode coefficients collapse to near-zero, leaving only the first eigenvector (which is constant for connected graphs).
+3. **Training time 80× faster (1.2s vs 95s)** confirms the MLP is computationally trivial — the failure is not capacity but training dynamics. Each mode sees only ~1,000 gradient updates (50,000 total / 50 modes), compared to 16,000 for the GCN on full-graph features.
+4. **The problem may be fundamentally underdetermined.** With 100 training samples × 50 modes × 4 features, the MLP sees 100 examples of each mode's 4-vector. Conditioning on (λ_k, t, E_k) doesn't help because these are constants per mode — the network needs to learn 50 different denoising functions from 100 samples each.
+
+### Gate decision
+
+**Phase 5a: NO-GO** — Independent per-mode spectral diffusion fails. The MLP does not learn, and generated features collapse to constant.
+
+### Implications
+
+The "GCN bottleneck" diagnosis from Phase 4a/4b may have been incomplete. The 3L GCN's graph structure provides implicit regularization (neighbor features are correlated, which constrains the denoising problem). Removing this structure (Phase 5a) makes denoising harder, not easier. Phase 5b (autoregressive) or 5c (cross-mode attention) could restore cross-mode structure, but the training dynamics issue must be addressed first — more epochs, larger dataset, or curriculum learning.
+
+Results: `results/phase5a/phase5a_results.json`

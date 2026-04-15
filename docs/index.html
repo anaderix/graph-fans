@@ -379,7 +379,7 @@
       <div class="roadmap-label"><strong>Phase 4</strong>Info-Guided<br>Schedules</div>
     </div>
     <div class="roadmap-node">
-      <div class="roadmap-dot pending">&bull;</div>
+      <div class="roadmap-dot nogo">G5</div>
       <div class="roadmap-label"><strong>Phase 5</strong>Spectral-Domain<br>Diffusion</div>
     </div>
   </div>
@@ -416,7 +416,7 @@
   |       |       4a: InfoNoise training  4b: InfoGrid DDIM
   |       |       4c: Per-band schedules  4d: Spectral conditioning
   |       |
-  |       +---> Phase 5 (Spectral-Domain Diffusion)  <span style="color:var(--text-dim)">Planned</span>
+  |       +---> Phase 5 (Spectral-Domain Diffusion)  <span style="color:var(--nogo)">NO-GO (5a)</span>
   |               5a: Independent per-mode  5b: Autoregressive
   |               5c: Cross-mode attention
   |
@@ -781,7 +781,7 @@
   <!-- Phase 5 -->
   <div class="phase" id="phase5">
     <div class="phase-header" onclick="this.parentElement.classList.toggle('open')">
-      <span class="badge badge-pending">Planned</span>
+      <span class="badge badge-nogo">NO-GO (5a)</span>
       <h2>Phase 5 &mdash; Frequency-Domain Diffusion</h2>
       <span class="chevron">&#9654;</span>
     </div>
@@ -804,11 +804,26 @@
       <h3>Architecture</h3>
       <p>Project features to eigenbasis, run per-mode forward diffusion with mode-specific schedules (from Phase 4 theory), denoise with a shared MLP conditioned on (&lambda;<sub>k</sub>, t, E<sub>k</sub>), then reconstruct via x = Uc.</p>
 
-      <h3>Key Risk</h3>
-      <p><strong>Cross-mode correlations.</strong> Community features have correlated low/mid-frequency content. Independent per-mode generation (5a) may produce spectrally correct but spatially incoherent features. Variants 5b and 5c address this with autoregressive and attention-based cross-mode coupling.</p>
+      <h3>Results: Phase 5a &mdash; Independent Per-Mode (NO-GO)</h3>
+      <table>
+        <tr><th>Family</th><th>Uniform W1</th><th>Band W1</th><th>Spectral W1</th></tr>
+        <tr><td>SBM(q=0.05)</td><td>714.5</td><td class="better">627.9</td><td class="worse">379,891</td></tr>
+        <tr><td>SBM(q=0.1)</td><td>1,036.0</td><td class="better">963.7</td><td class="worse">373,894</td></tr>
+        <tr><td>BA(m=2)</td><td>675.9</td><td class="better">618.6</td><td class="worse">367,801</td></tr>
+        <tr><td>BA(m=5)</td><td>1,380.1</td><td class="better">1,308.6</td><td class="worse">389,725</td></tr>
+      </table>
 
-      <h3>Relationship to Phase 4</h3>
-      <p>Phase 5 is independent of Phase 4 results. If Phase 4 shows large spatial-domain improvements, Phase 5 becomes less urgent. If Phase 4 plateaus, Phase 5 is the natural pivot. InfoNoise and per-mode schedules from Phase 4 apply directly in the spectral domain.</p>
+      <div class="insight">
+        <strong>Root cause:</strong> The shared MLP does not learn per-mode denoising (loss stays ~1.0). Generated features collapse to constant (gen_neighbor_corr = 1.000). Each mode sees only ~1,000 gradient updates vs 16,000 for the spatial GCN. The GCN&rsquo;s graph structure provides implicit regularization that makes denoising <em>easier</em>, not harder &mdash; removing it (Phase 5a) makes the problem underdetermined.
+      </div>
+
+      <h3>Sub-phase Status</h3>
+      <table>
+        <tr><th>Phase</th><th>Approach</th><th>Status</th></tr>
+        <tr><td><strong>5a</strong></td><td>Independent per-mode diffusion</td><td><span class="badge badge-nogo">NO-GO</span></td></tr>
+        <tr><td><strong>5b</strong></td><td>Autoregressive spectral diffusion</td><td><span class="badge badge-pending">Pending</span> &mdash; needs training dynamics fix first</td></tr>
+        <tr><td><strong>5c</strong></td><td>Cross-mode attention diffusion</td><td><span class="badge badge-pending">Pending</span> &mdash; needs training dynamics fix first</td></tr>
+      </table>
 
       <p style="margin-top:1rem;"><a href="https://github.com/anaderix/graph-fans/blob/main/plans/phase5.md" style="color:var(--accent);text-decoration:none;">&#128196; Full plan: plans/phase5.md</a></p>
     </div>
@@ -1193,6 +1208,21 @@
           <div class="tl-card-body">
             <p>Tested InfoGrid (non-uniform DDIM step spacing from entropy-rate profile) on uniform-trained models. 2 grid types &times; 3 step budgets &times; 2 training methods &times; 2 families &times; 5 seeds = 120 generation runs.</p>
             <p><strong>Key finding:</strong> InfoGrid is <strong>2,000&ndash;6,700% worse</strong> than uniform spacing across all 12 conditions (p &lt; 0.0001). Same root cause as 4a: entropy-rate profile concentrates steps at low &sigma; where model loss &asymp; 1.0, so those DDIM steps corrupt rather than refine. Uniform spacing is near-optimal for the cosine schedule with a capacity-limited GCN.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 5a &mdash; Independent Per-Mode Spectral Diffusion</h3>
+            <span class="tl-card-summary">MLP doesn&rsquo;t learn; features collapse to constant</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Bypassed the GCN entirely: diffuse d=4 spectral coefficients per eigenmode with a shared MLP conditioned on (&lambda;<sub>k</sub>, t, E<sub>k</sub>). 3-way comparison (uniform spatial, band spatial, spectral 5a), 4 families &times; 5 seeds = 60 runs.</p>
+            <p><strong>Key finding:</strong> The MLP <strong>does not learn</strong> (loss stays ~1.0, training takes only 1.2s vs 95s for GCN). Generated features collapse to constant vectors (gen_neighbor_corr = 1.000). The GCN&rsquo;s graph structure provides <em>implicit regularization</em> that makes denoising easier &mdash; removing it makes the problem underdetermined with only 100 training samples per mode.</p>
           </div>
         </div>
       </div>
