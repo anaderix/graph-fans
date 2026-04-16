@@ -1228,6 +1228,36 @@
       </div>
     </div>
 
+    <!-- Day 7 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-04-16 &mdash; Day 7</span>
+      </div>
+
+      <div class="tl-entry go">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-go">GO</span>
+            <h3>Phase 6a &mdash; Cora Scale Diagnostic (Real Data)</h3>
+            <span class="tl-card-summary">238/240 pass, first real-data validation</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>First validation on real data. BFS-sampled 20 connected subgraphs from Cora citation network at n={50,100,150,200}, PCA-reduced via TruncatedSVD to d={4,16,32}, Gaussian-augmented to 100 training samples. 240 training runs on L40S GPU.</p>
+            <table>
+              <tr><th>n</th><th>d=4</th><th>d=16</th><th>d=32</th></tr>
+              <tr><td>50</td><td class="better">20/20 (std 1.04)</td><td class="better">20/20 (std 1.14)</td><td>18/20 (std 1.91)</td></tr>
+              <tr><td>100</td><td class="better">20/20 (std 1.04)</td><td class="better">20/20 (std 1.14)</td><td class="better">20/20 (std 1.76)</td></tr>
+              <tr><td>150</td><td class="better">20/20 (std 1.02)</td><td class="better">20/20 (std 1.12)</td><td class="better">20/20 (std 1.61)</td></tr>
+              <tr><td>200</td><td class="better">20/20 (std 1.02)</td><td class="better">20/20 (std 1.12)</td><td class="better">20/20 (std 1.60)</td></tr>
+            </table>
+            <p><strong>Key finding:</strong> The GCN denoises PCA-reduced Cora features at <strong>all scales and dimensions</strong> (238/240 = 99.2% pass). Even n=200 works perfectly &mdash; unlike Phase 2f where synthetic n=200 failed. Gaussian augmentation creates a more learnable distribution than bimodal community features. Gate: n=100 d=16 passes 20/20 with energy ratio 9.5&times;. Unblocks Phase 6b (augmentation) and 6c (shaping validation on real data).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
