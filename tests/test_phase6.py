@@ -14,7 +14,11 @@ from graph_fans.phase6.subgraph_sampler import (
     sample_multiple_subgraphs,
 )
 from graph_fans.phase6.feature_reducer import fit_feature_reducer, reduce_features
-from graph_fans.phase6.augmentation import gaussian_augmentation
+from graph_fans.phase6.augmentation import (
+    gaussian_augmentation,
+    spectral_augmentation,
+    dropout_augmentation,
+)
 
 
 # ============================================================================
@@ -251,6 +255,102 @@ class TestGaussianAugmentation:
         assert aug.shape == (10, 30, 4)
         # Should still produce noise (fallback std=1.0)
         assert not np.allclose(aug[0], features)
+
+
+# ============================================================================
+# Spectral augmentation tests (Phase 6b)
+# ============================================================================
+
+
+class TestSpectralAugmentation:
+    @pytest.fixture
+    def eigenvectors(self):
+        """Eigenvectors from a small SBM graph."""
+        graph = nx.stochastic_block_model(
+            [15, 15], [[0.5, 0.05], [0.05, 0.5]], seed=42
+        )
+        for node in graph.nodes():
+            if "block" in graph.nodes[node]:
+                del graph.nodes[node]["block"]
+        from graph_fans.phase0.spectral_profiler import compute_laplacian_spectrum
+        _, evecs = compute_laplacian_spectrum(graph)
+        return evecs
+
+    def test_spectral_augmentation_shape(self, eigenvectors):
+        """Output shape [N, n_nodes, n_features]."""
+        n_nodes = eigenvectors.shape[0]
+        features = np.random.RandomState(42).randn(n_nodes, 4)
+        aug = spectral_augmentation(features, eigenvectors, n_samples=50, seed=0)
+        assert aug.shape == (50, n_nodes, 4)
+
+    def test_spectral_augmentation_preserves_spectral_profile(self, eigenvectors):
+        """Augmented energy profile is approximately the same as original."""
+        from graph_fans.phase0.spectral_profiler import partition_into_bands, compute_band_energy
+
+        n_nodes = eigenvectors.shape[0]
+        rng = np.random.RandomState(42)
+        features = rng.randn(n_nodes, 8)
+
+        evals = np.linspace(0, 2, n_nodes)
+        _, bands = partition_into_bands(evals, B=4)
+
+        orig_energy = compute_band_energy(features, eigenvectors, bands)
+        orig_profile = orig_energy / orig_energy.sum()
+
+        aug = spectral_augmentation(features, eigenvectors, n_samples=200, sigma=0.1, seed=0)
+        aug_profiles = []
+        for i in range(aug.shape[0]):
+            e = compute_band_energy(aug[i], eigenvectors, bands)
+            total = e.sum()
+            if total > 0:
+                aug_profiles.append(e / total)
+        mean_aug_profile = np.mean(aug_profiles, axis=0)
+
+        np.testing.assert_allclose(mean_aug_profile, orig_profile, atol=0.15)
+
+    def test_spectral_augmentation_reproducible(self, eigenvectors):
+        """Same seed produces identical results."""
+        n_nodes = eigenvectors.shape[0]
+        features = np.random.RandomState(42).randn(n_nodes, 4)
+        a1 = spectral_augmentation(features, eigenvectors, n_samples=10, seed=0)
+        a2 = spectral_augmentation(features, eigenvectors, n_samples=10, seed=0)
+        np.testing.assert_array_equal(a1, a2)
+
+
+# ============================================================================
+# Dropout augmentation tests (Phase 6b)
+# ============================================================================
+
+
+class TestDropoutAugmentation:
+    def test_dropout_augmentation_shape(self):
+        """Output shape [N, n_nodes, n_features]."""
+        features = np.random.RandomState(42).randn(30, 4)
+        aug = dropout_augmentation(features, n_samples=50, seed=0)
+        assert aug.shape == (50, 30, 4)
+
+    def test_dropout_augmentation_sparsity(self):
+        """Augmented has fewer nonzeros than original."""
+        rng = np.random.RandomState(42)
+        features = rng.randn(30, 8)
+        aug = dropout_augmentation(features, n_samples=100, drop_rate=0.3, seed=0)
+        orig_nonzero = np.count_nonzero(features)
+        for i in range(aug.shape[0]):
+            assert np.count_nonzero(aug[i]) <= orig_nonzero
+
+    def test_dropout_augmentation_reproducible(self):
+        """Same seed produces identical results."""
+        features = np.random.RandomState(42).randn(30, 4)
+        a1 = dropout_augmentation(features, n_samples=10, seed=0)
+        a2 = dropout_augmentation(features, n_samples=10, seed=0)
+        np.testing.assert_array_equal(a1, a2)
+
+    def test_dropout_augmentation_rate(self):
+        """Average fraction of zeros is approximately equal to drop_rate."""
+        features = np.ones((100, 100))
+        aug = dropout_augmentation(features, n_samples=200, drop_rate=0.3, seed=0)
+        zero_frac = (aug == 0).mean()
+        np.testing.assert_allclose(zero_frac, 0.3, atol=0.05)
 
 
 # ============================================================================
