@@ -799,3 +799,53 @@ All spectral conditions significantly worse (p < 0.0001). Band vs uniform replic
 The "GCN bottleneck" diagnosis from Phase 4a/4b may have been incomplete. The 3L GCN's graph structure provides implicit regularization (neighbor features are correlated, which constrains the denoising problem). Removing this structure (Phase 5a) makes denoising harder, not easier. Phase 5b (autoregressive) or 5c (cross-mode attention) could restore cross-mode structure, but the training dynamics issue must be addressed first — more epochs, larger dataset, or curriculum learning.
 
 Results: `results/phase5a/phase5a_results.json`
+
+## 2026-04-16 — Phase 6a: Scale Diagnostic on Cora Subgraphs — GO
+
+### Motivation
+
+All prior phases (2a-5a) validated spectral noise shaping on synthetic features (community mode) on synthetic graphs (SBM, BA). Phase 6 tests whether the effect transfers to real citation network data. Phase 6a is the prerequisite: can the 3L GCN denoise PCA-reduced Cora features at all?
+
+### Config
+
+20 BFS-sampled connected subgraphs from Cora (2708 nodes, 1433-dim sparse binary features) at 4 scales (n=50, 100, 150, 200) and 3 feature dimensions (d=4, 16, 32 via TruncatedSVD). N=100 Gaussian-augmented training samples per subgraph. 500 epochs, 3L GCN 128h, cosine SDE + EMA + LR annealing. 240 total runs on NVIDIA L40S GPU (~6.8 hours).
+
+### Results
+
+| n | d | Pass | Rate | std_ratio | W1 (mean +/- std) | Energy Ratio |
+|---|---|------|------|-----------|-------------------|--------------|
+| 50 | 4 | 20/20 | 100% | 1.04 | 28 +/- 6 | 36.9 |
+| 50 | 16 | 20/20 | 100% | 1.14 | 81 +/- 18 | 15.4 |
+| 50 | 32 | 18/20 | 90% | 1.91 | 909 +/- 780 | 12.7 |
+| 100 | 4 | 20/20 | 100% | 1.04 | 47 +/- 13 | 20.4 |
+| 100 | 16 | 20/20 | 100% | 1.14 | 154 +/- 57 | 9.5 |
+| 100 | 32 | 20/20 | 100% | 1.76 | 1443 +/- 1392 | 7.1 |
+| 150 | 4 | 20/20 | 100% | 1.02 | 59 +/- 10 | 17.2 |
+| 150 | 16 | 20/20 | 100% | 1.12 | 216 +/- 67 | 7.6 |
+| 150 | 32 | 20/20 | 100% | 1.61 | 1488 +/- 615 | 5.9 |
+| 200 | 4 | 20/20 | 100% | 1.02 | 78 +/- 15 | 14.8 |
+| 200 | 16 | 20/20 | 100% | 1.12 | 281 +/- 54 | 6.9 |
+| 200 | 32 | 20/20 | 100% | 1.60 | 1950 +/- 1308 | 5.0 |
+
+TruncatedSVD variance explained: d=4 5.8%, d=16 15.2%, d=32 23.1%.
+
+**Gate check (n=100, d=16):** 20/20 pass (100%, need >=75%), energy ratio 9.5x (need >=2x). **GO.**
+
+### Key Findings
+
+1. **The GCN denoises real Cora features at ALL tested scales and dimensions.** 238/240 conditions pass (99.2%). This is a dramatic improvement over Phase 2f where synthetic features at n=200 produced pure noise (std_ratio 3.5-11x). Gaussian augmentation creates a more learnable distribution than raw community features.
+
+2. **d=4 and d=16 work perfectly.** std_ratio 1.02-1.14 across all 4 scales, 160/160 pass. d=32 works but with degraded quality (std_ratio 1.60-1.91, 2 marginal failures at n=50).
+
+3. **n=200 works.** Unlike Phase 2f where the model collapsed at n=200 on synthetic data, all 60 runs at n=200 across d=4/16/32 pass with std_ratio 1.02-1.60. The augmented Cora distribution is fundamentally easier for the GCN than bimodal community features.
+
+4. **Cora subgraphs have genuine multi-scale spectral structure.** Energy ratios 5.0-36.9x across all conditions (all above the 2x threshold). BFS sampling preserves local community structure. This confirms spectral shaping has non-trivial signal to exploit.
+
+5. **W1 scales with d and n.** W1 increases ~3x per doubling of d (more modes to reconstruct) and ~1.5-2x per doubling of n (more complex spectral structure). d=32 has high W1 variance (50-100% of mean), making it unsuitable for shaping experiments.
+
+### Significance
+
+This is the first validation of the Graph-FANS pipeline on real (non-synthetic) data. The result unblocks Phase 6b (augmentation strategy comparison) and Phase 6c (shaping validation on Cora). Recommended primary operating point: n=100, d=16.
+
+Report: `results/phase6a/Report-Phase6a.md`
+Results: `results/phase6a/scale_diagnostic.json`, `results/phase6a/phase6a_run.log`
