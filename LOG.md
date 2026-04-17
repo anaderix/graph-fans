@@ -969,3 +969,58 @@ Paired t-test: t=-0.522, p=0.629. Not significant.
 
 Report: `results/phase6e/Report-Phase6e.md`
 Results: `results/phase6e/synthetic_spectral_aug.json`, `results/phase6e/phase6e_run.log`
+
+## 2026-04-17 — Phase 6f: Cross-Protocol 2x2x2 Evaluation — GO (Phase 6e OVERTURNED)
+
+### Motivation
+
+Phase 2g (+12.5% W1 improvement, p=0.0001, 5 seeds) and Phase 6e (-2%, p=0.629, 5 seeds) claimed opposite results on identical graph topology/features/config. Phase 6e switched BOTH the training protocol (100 independent samples -> 1 sample spectrally augmented to 100) AND the evaluation reference (50 independent -> 50 specaug). With 5 seeds and effect sizes comparable to training variance, neither prior phase had the statistical power to separate signal from noise. Phase 6f is a 2x2x2 design with 10 seeds that isolates which protocol change drove Phase 6e's null result.
+
+### Config
+
+SBM(q=0.05), n=50, d=4, community-boundary features (identical to 2g/6e). 10 seeds. 500 epochs. 3L GCN 128h. Cosine SDE + EMA + LR annealing. Spectral augmentation sigma=0.3. Per seed: 4 training runs (2 train protocols x 2 shaping methods) x 2 reference sets = 8 W1 cells. Total: 40 trainings, 80 W1 evaluations, ~75 min on NVIDIA L40S.
+
+### Results
+
+8-cell summary (10 seeds):
+
+| Cell | Training | Eval Ref | Shaping | W1 mean +/- std |
+|------|----------|----------|---------|-----------------|
+| A_uni  | indep   | indep   | uniform | 683.8 +/- 79.3 |
+| A_band | indep   | indep   | band    | **603.7 +/- 74.8** |
+| B_uni  | indep   | specaug | uniform | 708.7 +/- 124.9 |
+| B_band | indep   | specaug | band    | **631.6 +/- 94.7** |
+| C_uni  | specaug | indep   | uniform | 214.0 +/- 56.0 |
+| C_band | specaug | indep   | band    | **204.2 +/- 45.2** |
+| D_uni  | specaug | specaug | uniform | 295.9 +/- 152.0 |
+| D_band | specaug | specaug | band    | **277.1 +/- 157.3** |
+
+Key comparisons (paired t-test):
+
+| Comparison | Improvement | p-value | Band wins | Significant |
+|-----------|-------------|---------|-----------|-------------|
+| A_band vs A_uni (replicates Phase 2g) | **+11.7%** | **0.0001** | 10/10 | YES |
+| B_band vs B_uni (indep train, specaug ref) | **+10.9%** | **0.0001** | 9/10 | YES |
+| C_band vs C_uni (specaug train, indep ref) | +4.6% | 0.1646 | 6/10 | no |
+| D_band vs D_uni (replicates Phase 6e) | **+6.3%** | **0.0131** | 9/10 | YES |
+
+### Key Findings
+
+1. **Phase 2g replicates exactly** (+11.7% vs +12.5% originally, both p=0.0001). 10/10 seeds favor band. The Phase 2g result is robust.
+
+2. **Phase 6e is overturned.** The same (specaug/specaug) design Phase 6e ran with 5 seeds and got -2% now shows +6.3% with 10 seeds, 9/10 seeds favoring band, p=0.013. Phase 6e's NO-GO was a **false negative from insufficient statistical power**.
+
+3. **Training protocol is what modulates the effect; evaluation reference does not.** Comparing A (+11.7%) to B (+10.9%) isolates the reference-protocol change: essentially identical effect. Comparing A (+11.7%) to C (+4.6%) isolates the training-protocol change: effect shrinks ~2.5x. Training with spectral augmentation weakens but does not eliminate band shaping.
+
+4. **Phase 6c (Cora NO-GO) needs re-examination.** On synthetic features with spectral augmentation, band shaping still gives +6.3% (p=0.013). On Cora with spectral augmentation, 0% (p=0.748). The specaug-training explanation (H1) is not sufficient to explain the Cora failure — H2 (Cora features lack bimodal spectral structure) is plausible again.
+
+5. **Absolute W1 scales drop ~3x with specaug training** (~650 -> ~230). The concentrated augmented distribution is fundamentally easier to model; the shaping effect size shrinks proportionally but remains directionally positive.
+
+6. **n=5 is underpowered for this paradigm.** Both Phase 2g and Phase 6e used 5 seeds and reached opposite conclusions. Phase 6f with 10 seeds is decisive.
+
+### Gate decision
+
+**Phase 6f: GO** — band shaping shows a statistically significant W1 improvement across 3/4 protocol combinations, including the Phase 6e-equivalent cell D. Phase 2g's result replicates. Phase 6e's NO-GO is withdrawn.
+
+Report: `results/phase6f/Report-Phase6f.md`
+Results: `results/phase6f/crossprotocol_results.json`, `results/phase6f/phase6f_run.log`

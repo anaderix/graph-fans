@@ -1,0 +1,462 @@
+INFO: Phase 6f: SBM(q=0.05), n=50, d=4, n_seeds=10, n_epochs=500
+INFO: Per seed: 4 training runs x 2 refs = 8 W1 cells. Total runs: 40 trainings.
+INFO: 
+[seed=0] generating datasets...
+INFO: [seed=0] indep weights: [0.138 0.25  0.755 0.975 1.65  1.291 1.521 1.42 ]
+INFO: [seed=0] specaug weights: [0.256 0.301 0.441 1.206 1.635 1.613 1.414 1.134]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.038490
+INFO:   Epoch 100/500, loss=0.394008
+INFO:   Epoch 200/500, loss=0.383668
+INFO:   Epoch 300/500, loss=0.365634
+INFO:   Epoch 400/500, loss=0.476491
+INFO:   Epoch 500/500, loss=0.512554
+INFO:   Sanity check passed: gen_std=1.990, train_std=1.312, spectral_L2=0.284
+INFO: [seed=0] trained indep/uniform: loss=0.513, std_ratio=1.52
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.029739
+INFO:   Epoch 100/500, loss=0.385074
+INFO:   Epoch 200/500, loss=0.374916
+INFO:   Epoch 300/500, loss=0.379167
+INFO:   Epoch 400/500, loss=0.463908
+INFO:   Epoch 500/500, loss=0.527734
+INFO:   Sanity check passed: gen_std=1.979, train_std=1.312, spectral_L2=0.323
+INFO: [seed=0] trained indep/band: loss=0.528, std_ratio=1.51
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.977043
+INFO:   Epoch 100/500, loss=0.246692
+INFO:   Epoch 200/500, loss=0.200710
+INFO:   Epoch 300/500, loss=0.131658
+INFO:   Epoch 400/500, loss=0.194005
+INFO:   Epoch 500/500, loss=0.183632
+INFO:   Sanity check passed: gen_std=1.034, train_std=1.112, spectral_L2=0.362
+INFO: [seed=0] trained specaug/uniform: loss=0.184, std_ratio=0.93
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.979595
+INFO:   Epoch 100/500, loss=0.236430
+INFO:   Epoch 200/500, loss=0.197802
+INFO:   Epoch 300/500, loss=0.134995
+INFO:   Epoch 400/500, loss=0.187312
+INFO:   Epoch 500/500, loss=0.188562
+INFO:   Sanity check passed: gen_std=0.883, train_std=1.112, spectral_L2=0.244
+INFO: [seed=0] trained specaug/band: loss=0.189, std_ratio=0.79
+INFO: [seed=0] indep/uniform: W1(indep_ref)=626.2, W1(specaug_ref)=665.6
+INFO: [seed=0] indep/band: W1(indep_ref)=575.0, W1(specaug_ref)=613.8
+INFO: [seed=0] specaug/uniform: W1(indep_ref)=155.6, W1(specaug_ref)=172.2
+INFO: [seed=0] specaug/band: W1(indep_ref)=163.1, W1(specaug_ref)=171.7
+INFO: 
+[seed=1] generating datasets...
+INFO: [seed=1] indep weights: [0.181 0.282 0.721 1.02  1.604 1.254 1.509 1.427]
+INFO: [seed=1] specaug weights: [0.204 0.244 0.77  0.976 1.233 1.31  1.401 1.864]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.037599
+INFO:   Epoch 100/500, loss=0.483934
+INFO:   Epoch 200/500, loss=0.459793
+INFO:   Epoch 300/500, loss=0.616077
+INFO:   Epoch 400/500, loss=0.416154
+INFO:   Epoch 500/500, loss=0.426778
+INFO:   Sanity check passed: gen_std=2.178, train_std=1.284, spectral_L2=0.438
+INFO: [seed=1] trained indep/uniform: loss=0.427, std_ratio=1.70
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.055318
+INFO:   Epoch 100/500, loss=0.528083
+INFO:   Epoch 200/500, loss=0.454359
+INFO:   Epoch 300/500, loss=0.637484
+INFO:   Epoch 400/500, loss=0.421571
+INFO:   Epoch 500/500, loss=0.427727
+INFO:   Sanity check passed: gen_std=1.902, train_std=1.284, spectral_L2=0.384
+INFO: [seed=1] trained indep/band: loss=0.428, std_ratio=1.48
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.024445
+INFO:   Epoch 100/500, loss=0.280576
+INFO:   Epoch 200/500, loss=0.226022
+INFO:   Epoch 300/500, loss=0.238497
+INFO:   Epoch 400/500, loss=0.126878
+INFO:   Epoch 500/500, loss=0.140365
+INFO:   Sanity check passed: gen_std=1.094, train_std=1.194, spectral_L2=0.270
+INFO: [seed=1] trained specaug/uniform: loss=0.140, std_ratio=0.92
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.048842
+INFO:   Epoch 100/500, loss=0.314499
+INFO:   Epoch 200/500, loss=0.223776
+INFO:   Epoch 300/500, loss=0.256550
+INFO:   Epoch 400/500, loss=0.130015
+INFO:   Epoch 500/500, loss=0.146006
+INFO:   Sanity check passed: gen_std=1.087, train_std=1.194, spectral_L2=0.148
+INFO: [seed=1] trained specaug/band: loss=0.146, std_ratio=0.91
+INFO: [seed=1] indep/uniform: W1(indep_ref)=629.3, W1(specaug_ref)=765.9
+INFO: [seed=1] indep/band: W1(indep_ref)=548.7, W1(specaug_ref)=681.0
+INFO: [seed=1] specaug/uniform: W1(indep_ref)=169.4, W1(specaug_ref)=213.6
+INFO: [seed=1] specaug/band: W1(indep_ref)=135.5, W1(specaug_ref)=161.4
+INFO: 
+[seed=2] generating datasets...
+INFO: [seed=2] indep weights: [0.14  0.244 0.728 0.932 1.559 1.254 1.642 1.502]
+INFO: [seed=2] specaug weights: [2.099 0.208 0.569 1.062 1.031 0.74  1.387 0.903]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.085032
+INFO:   Epoch 100/500, loss=0.529843
+INFO:   Epoch 200/500, loss=0.450626
+INFO:   Epoch 300/500, loss=0.426912
+INFO:   Epoch 400/500, loss=0.193196
+INFO:   Epoch 500/500, loss=0.346026
+INFO:   Sanity check passed: gen_std=2.356, train_std=1.294, spectral_L2=0.470
+INFO: [seed=2] trained indep/uniform: loss=0.346, std_ratio=1.82
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.066468
+INFO:   Epoch 100/500, loss=0.554842
+INFO:   Epoch 200/500, loss=0.459000
+INFO:   Epoch 300/500, loss=0.423742
+INFO:   Epoch 400/500, loss=0.197210
+INFO:   Epoch 500/500, loss=0.344548
+INFO:   Sanity check passed: gen_std=2.166, train_std=1.294, spectral_L2=0.437
+INFO: [seed=2] trained indep/band: loss=0.345, std_ratio=1.67
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.991636
+INFO:   Epoch 100/500, loss=0.341356
+INFO:   Epoch 200/500, loss=0.256497
+INFO:   Epoch 300/500, loss=0.194758
+INFO:   Epoch 400/500, loss=0.090323
+INFO:   Epoch 500/500, loss=0.117206
+WARNING:   SANITY CHECK: Spectral L2 distance 0.722 > 0.5 — generated profile differs significantly
+INFO: [seed=2] trained specaug/uniform: loss=0.117, std_ratio=0.88
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.999194
+INFO:   Epoch 100/500, loss=0.371986
+INFO:   Epoch 200/500, loss=0.267753
+INFO:   Epoch 300/500, loss=0.199483
+INFO:   Epoch 400/500, loss=0.096984
+INFO:   Epoch 500/500, loss=0.124442
+WARNING:   SANITY CHECK: Spectral L2 distance 0.571 > 0.5 — generated profile differs significantly
+INFO: [seed=2] trained specaug/band: loss=0.124, std_ratio=0.88
+INFO: [seed=2] indep/uniform: W1(indep_ref)=657.2, W1(specaug_ref)=830.2
+INFO: [seed=2] indep/band: W1(indep_ref)=549.2, W1(specaug_ref)=721.9
+INFO: [seed=2] specaug/uniform: W1(indep_ref)=222.3, W1(specaug_ref)=149.1
+INFO: [seed=2] specaug/band: W1(indep_ref)=210.3, W1(specaug_ref)=114.9
+INFO: 
+[seed=3] generating datasets...
+INFO: [seed=3] indep weights: [0.177 0.262 0.723 0.998 1.616 1.24  1.528 1.456]
+INFO: [seed=3] specaug weights: [0.107 0.254 1.263 1.212 1.118 1.113 1.761 1.173]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.984101
+INFO:   Epoch 100/500, loss=0.453094
+INFO:   Epoch 200/500, loss=0.501464
+INFO:   Epoch 300/500, loss=0.333464
+INFO:   Epoch 400/500, loss=0.309302
+INFO:   Epoch 500/500, loss=0.405711
+INFO:   Sanity check passed: gen_std=2.353, train_std=1.328, spectral_L2=0.438
+INFO: [seed=3] trained indep/uniform: loss=0.406, std_ratio=1.77
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.048105
+INFO:   Epoch 100/500, loss=0.447760
+INFO:   Epoch 200/500, loss=0.528889
+INFO:   Epoch 300/500, loss=0.348430
+INFO:   Epoch 400/500, loss=0.302460
+INFO:   Epoch 500/500, loss=0.422239
+INFO:   Sanity check passed: gen_std=2.238, train_std=1.328, spectral_L2=0.452
+INFO: [seed=3] trained indep/band: loss=0.422, std_ratio=1.68
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.974074
+INFO:   Epoch 100/500, loss=0.281662
+INFO:   Epoch 200/500, loss=0.250474
+INFO:   Epoch 300/500, loss=0.129730
+INFO:   Epoch 400/500, loss=0.112344
+INFO:   Epoch 500/500, loss=0.130379
+INFO:   Sanity check passed: gen_std=1.301, train_std=1.384, spectral_L2=0.286
+INFO: [seed=3] trained specaug/uniform: loss=0.130, std_ratio=0.94
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.015965
+INFO:   Epoch 100/500, loss=0.287775
+INFO:   Epoch 200/500, loss=0.269957
+INFO:   Epoch 300/500, loss=0.144603
+INFO:   Epoch 400/500, loss=0.110876
+INFO:   Epoch 500/500, loss=0.139399
+INFO:   Sanity check passed: gen_std=1.344, train_std=1.384, spectral_L2=0.263
+INFO: [seed=3] trained specaug/band: loss=0.139, std_ratio=0.97
+INFO: [seed=3] indep/uniform: W1(indep_ref)=807.3, W1(specaug_ref)=760.5
+INFO: [seed=3] indep/band: W1(indep_ref)=710.0, W1(specaug_ref)=666.3
+INFO: [seed=3] specaug/uniform: W1(indep_ref)=289.0, W1(specaug_ref)=205.5
+INFO: [seed=3] specaug/band: W1(indep_ref)=263.4, W1(specaug_ref)=176.6
+INFO: 
+[seed=4] generating datasets...
+INFO: [seed=4] indep weights: [0.171 0.258 0.686 1.003 1.561 1.296 1.599 1.425]
+INFO: [seed=4] specaug weights: [0.427 0.217 0.732 0.845 1.684 1.564 1.222 1.31 ]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.039735
+INFO:   Epoch 100/500, loss=0.499425
+INFO:   Epoch 200/500, loss=0.430459
+INFO:   Epoch 300/500, loss=0.340666
+INFO:   Epoch 400/500, loss=0.439577
+INFO:   Epoch 500/500, loss=0.415449
+INFO:   Sanity check passed: gen_std=2.002, train_std=1.320, spectral_L2=0.459
+INFO: [seed=4] trained indep/uniform: loss=0.415, std_ratio=1.52
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.030557
+INFO:   Epoch 100/500, loss=0.511614
+INFO:   Epoch 200/500, loss=0.429397
+INFO:   Epoch 300/500, loss=0.346349
+INFO:   Epoch 400/500, loss=0.466747
+INFO:   Epoch 500/500, loss=0.413637
+INFO:   Sanity check passed: gen_std=1.802, train_std=1.320, spectral_L2=0.362
+INFO: [seed=4] trained indep/band: loss=0.414, std_ratio=1.37
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.946866
+INFO:   Epoch 100/500, loss=0.292305
+INFO:   Epoch 200/500, loss=0.191511
+INFO:   Epoch 300/500, loss=0.156568
+INFO:   Epoch 400/500, loss=0.186196
+INFO:   Epoch 500/500, loss=0.133585
+INFO:   Sanity check passed: gen_std=1.031, train_std=1.103, spectral_L2=0.451
+INFO: [seed=4] trained specaug/uniform: loss=0.134, std_ratio=0.93
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.968381
+INFO:   Epoch 100/500, loss=0.299401
+INFO:   Epoch 200/500, loss=0.188929
+INFO:   Epoch 300/500, loss=0.154327
+INFO:   Epoch 400/500, loss=0.196469
+INFO:   Epoch 500/500, loss=0.128795
+WARNING:   SANITY CHECK: Spectral L2 distance 0.655 > 0.5 — generated profile differs significantly
+INFO: [seed=4] trained specaug/band: loss=0.129, std_ratio=0.99
+INFO: [seed=4] indep/uniform: W1(indep_ref)=831.7, W1(specaug_ref)=670.0
+INFO: [seed=4] indep/band: W1(indep_ref)=756.8, W1(specaug_ref)=598.0
+INFO: [seed=4] specaug/uniform: W1(indep_ref)=161.1, W1(specaug_ref)=338.5
+INFO: [seed=4] specaug/band: W1(indep_ref)=181.2, W1(specaug_ref)=324.7
+INFO: 
+[seed=5] generating datasets...
+INFO: [seed=5] indep weights: [0.17  0.269 0.721 1.035 1.661 1.227 1.476 1.443]
+INFO: [seed=5] specaug weights: [0.094 0.196 0.545 1.048 1.254 1.028 2.073 1.762]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.000196
+INFO:   Epoch 100/500, loss=0.416470
+INFO:   Epoch 200/500, loss=0.409920
+INFO:   Epoch 300/500, loss=0.312401
+INFO:   Epoch 400/500, loss=0.433308
+INFO:   Epoch 500/500, loss=0.470667
+INFO:   Sanity check passed: gen_std=2.589, train_std=1.306, spectral_L2=0.393
+INFO: [seed=5] trained indep/uniform: loss=0.471, std_ratio=1.98
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.043089
+INFO:   Epoch 100/500, loss=0.439348
+INFO:   Epoch 200/500, loss=0.411611
+INFO:   Epoch 300/500, loss=0.330673
+INFO:   Epoch 400/500, loss=0.446034
+INFO:   Epoch 500/500, loss=0.472202
+INFO:   Sanity check passed: gen_std=2.394, train_std=1.306, spectral_L2=0.379
+INFO: [seed=5] trained indep/band: loss=0.472, std_ratio=1.83
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.972543
+INFO:   Epoch 100/500, loss=0.246777
+INFO:   Epoch 200/500, loss=0.177884
+INFO:   Epoch 300/500, loss=0.108243
+INFO:   Epoch 400/500, loss=0.102228
+INFO:   Epoch 500/500, loss=0.149258
+INFO:   Sanity check passed: gen_std=1.312, train_std=1.336, spectral_L2=0.365
+INFO: [seed=5] trained specaug/uniform: loss=0.149, std_ratio=0.98
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.997770
+INFO:   Epoch 100/500, loss=0.266434
+INFO:   Epoch 200/500, loss=0.187901
+INFO:   Epoch 300/500, loss=0.117504
+INFO:   Epoch 400/500, loss=0.113476
+INFO:   Epoch 500/500, loss=0.159955
+INFO:   Sanity check passed: gen_std=1.291, train_std=1.336, spectral_L2=0.310
+INFO: [seed=5] trained specaug/band: loss=0.160, std_ratio=0.97
+INFO: [seed=5] indep/uniform: W1(indep_ref)=593.9, W1(specaug_ref)=632.9
+INFO: [seed=5] indep/band: W1(indep_ref)=511.1, W1(specaug_ref)=553.8
+INFO: [seed=5] specaug/uniform: W1(indep_ref)=314.1, W1(specaug_ref)=305.4
+INFO: [seed=5] specaug/band: W1(indep_ref)=268.5, W1(specaug_ref)=263.0
+INFO: 
+[seed=6] generating datasets...
+INFO: [seed=6] indep weights: [0.209 0.264 0.715 1.038 1.645 1.231 1.452 1.447]
+INFO: [seed=6] specaug weights: [0.148 0.158 0.436 0.872 1.904 1.111 1.172 2.197]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.962585
+INFO:   Epoch 100/500, loss=0.379481
+INFO:   Epoch 200/500, loss=0.382032
+INFO:   Epoch 300/500, loss=0.419139
+INFO:   Epoch 400/500, loss=0.446883
+INFO:   Epoch 500/500, loss=0.409419
+WARNING:   SANITY CHECK: Spectral L2 distance 0.516 > 0.5 — generated profile differs significantly
+INFO: [seed=6] trained indep/uniform: loss=0.409, std_ratio=1.97
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.999562
+INFO:   Epoch 100/500, loss=0.393246
+INFO:   Epoch 200/500, loss=0.396918
+INFO:   Epoch 300/500, loss=0.423913
+INFO:   Epoch 400/500, loss=0.479777
+INFO:   Epoch 500/500, loss=0.438745
+WARNING:   SANITY CHECK: Spectral L2 distance 0.519 > 0.5 — generated profile differs significantly
+INFO: [seed=6] trained indep/band: loss=0.439, std_ratio=1.91
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.923656
+INFO:   Epoch 100/500, loss=0.226820
+INFO:   Epoch 200/500, loss=0.127083
+INFO:   Epoch 300/500, loss=0.139012
+INFO:   Epoch 400/500, loss=0.164229
+INFO:   Epoch 500/500, loss=0.142182
+INFO:   Sanity check passed: gen_std=1.159, train_std=1.239, spectral_L2=0.408
+INFO: [seed=6] trained specaug/uniform: loss=0.142, std_ratio=0.94
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.941068
+INFO:   Epoch 100/500, loss=0.233463
+INFO:   Epoch 200/500, loss=0.143687
+INFO:   Epoch 300/500, loss=0.138859
+INFO:   Epoch 400/500, loss=0.180841
+INFO:   Epoch 500/500, loss=0.160930
+INFO:   Sanity check passed: gen_std=1.056, train_std=1.239, spectral_L2=0.369
+INFO: [seed=6] trained specaug/band: loss=0.161, std_ratio=0.85
+INFO: [seed=6] indep/uniform: W1(indep_ref)=659.4, W1(specaug_ref)=386.2
+INFO: [seed=6] indep/band: W1(indep_ref)=648.3, W1(specaug_ref)=392.1
+INFO: [seed=6] specaug/uniform: W1(indep_ref)=179.5, W1(specaug_ref)=699.5
+INFO: [seed=6] specaug/band: W1(indep_ref)=172.1, W1(specaug_ref)=689.7
+INFO: 
+[seed=7] generating datasets...
+INFO: [seed=7] indep weights: [0.184 0.259 0.699 1.063 1.632 1.224 1.578 1.361]
+INFO: [seed=7] specaug weights: [0.168 0.504 0.8   1.335 1.068 1.85  1.377 0.898]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.060091
+INFO:   Epoch 100/500, loss=0.517668
+INFO:   Epoch 200/500, loss=0.407430
+INFO:   Epoch 300/500, loss=0.396477
+INFO:   Epoch 400/500, loss=0.491098
+INFO:   Epoch 500/500, loss=0.418515
+INFO:   Sanity check passed: gen_std=2.067, train_std=1.283, spectral_L2=0.428
+INFO: [seed=7] trained indep/uniform: loss=0.419, std_ratio=1.61
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.004788
+INFO:   Epoch 100/500, loss=0.606696
+INFO:   Epoch 200/500, loss=0.413399
+INFO:   Epoch 300/500, loss=0.418484
+INFO:   Epoch 400/500, loss=0.511490
+INFO:   Epoch 500/500, loss=0.453538
+INFO:   Sanity check passed: gen_std=1.948, train_std=1.283, spectral_L2=0.360
+INFO: [seed=7] trained indep/band: loss=0.454, std_ratio=1.52
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.961579
+INFO:   Epoch 100/500, loss=0.391694
+INFO:   Epoch 200/500, loss=0.202768
+INFO:   Epoch 300/500, loss=0.180137
+INFO:   Epoch 400/500, loss=0.210251
+INFO:   Epoch 500/500, loss=0.151316
+INFO:   Sanity check passed: gen_std=1.279, train_std=1.334, spectral_L2=0.315
+INFO: [seed=7] trained specaug/uniform: loss=0.151, std_ratio=0.96
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.955145
+INFO:   Epoch 100/500, loss=0.422724
+INFO:   Epoch 200/500, loss=0.207484
+INFO:   Epoch 300/500, loss=0.188986
+INFO:   Epoch 400/500, loss=0.224542
+INFO:   Epoch 500/500, loss=0.165601
+INFO:   Sanity check passed: gen_std=1.285, train_std=1.334, spectral_L2=0.282
+INFO: [seed=7] trained specaug/band: loss=0.166, std_ratio=0.96
+INFO: [seed=7] indep/uniform: W1(indep_ref)=649.6, W1(specaug_ref)=793.3
+INFO: [seed=7] indep/band: W1(indep_ref)=555.7, W1(specaug_ref)=699.4
+INFO: [seed=7] specaug/uniform: W1(indep_ref)=280.8, W1(specaug_ref)=388.4
+INFO: [seed=7] specaug/band: W1(indep_ref)=269.6, W1(specaug_ref)=382.7
+INFO: 
+[seed=8] generating datasets...
+INFO: [seed=8] indep weights: [0.16  0.252 0.743 0.937 1.742 1.265 1.471 1.432]
+INFO: [seed=8] specaug weights: [0.958 0.114 0.466 0.653 1.806 1.237 1.195 1.57 ]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.053455
+INFO:   Epoch 100/500, loss=0.499324
+INFO:   Epoch 200/500, loss=0.336682
+INFO:   Epoch 300/500, loss=0.402677
+INFO:   Epoch 400/500, loss=0.386741
+INFO:   Epoch 500/500, loss=0.431320
+INFO:   Sanity check passed: gen_std=2.321, train_std=1.327, spectral_L2=0.452
+INFO: [seed=8] trained indep/uniform: loss=0.431, std_ratio=1.75
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.058902
+INFO:   Epoch 100/500, loss=0.517222
+INFO:   Epoch 200/500, loss=0.337872
+INFO:   Epoch 300/500, loss=0.412541
+INFO:   Epoch 400/500, loss=0.407948
+INFO:   Epoch 500/500, loss=0.440912
+INFO:   Sanity check passed: gen_std=2.165, train_std=1.327, spectral_L2=0.417
+INFO: [seed=8] trained indep/band: loss=0.441, std_ratio=1.63
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.984819
+INFO:   Epoch 100/500, loss=0.257948
+INFO:   Epoch 200/500, loss=0.136076
+INFO:   Epoch 300/500, loss=0.211472
+INFO:   Epoch 400/500, loss=0.161034
+INFO:   Epoch 500/500, loss=0.143938
+WARNING:   SANITY CHECK: Spectral L2 distance 0.760 > 0.5 — generated profile differs significantly
+INFO: [seed=8] trained specaug/uniform: loss=0.144, std_ratio=1.06
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.992128
+INFO:   Epoch 100/500, loss=0.269934
+INFO:   Epoch 200/500, loss=0.139300
+INFO:   Epoch 300/500, loss=0.217413
+INFO:   Epoch 400/500, loss=0.173811
+INFO:   Epoch 500/500, loss=0.148720
+WARNING:   SANITY CHECK: Spectral L2 distance 0.869 > 0.5 — generated profile differs significantly
+INFO: [seed=8] trained specaug/band: loss=0.149, std_ratio=1.11
+INFO: [seed=8] indep/uniform: W1(indep_ref)=757.8, W1(specaug_ref)=817.2
+INFO: [seed=8] indep/band: W1(indep_ref)=614.9, W1(specaug_ref)=681.3
+INFO: [seed=8] specaug/uniform: W1(indep_ref)=185.8, W1(specaug_ref)=232.7
+INFO: [seed=8] specaug/band: W1(indep_ref)=194.3, W1(specaug_ref)=230.2
+INFO: 
+[seed=9] generating datasets...
+INFO: [seed=9] indep weights: [0.166 0.274 0.718 1.018 1.617 1.253 1.549 1.406]
+INFO: [seed=9] specaug weights: [0.124 0.135 0.435 0.548 1.689 1.285 1.856 1.929]
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.984623
+INFO:   Epoch 100/500, loss=0.389072
+INFO:   Epoch 200/500, loss=0.409334
+INFO:   Epoch 300/500, loss=0.392642
+INFO:   Epoch 400/500, loss=0.509039
+INFO:   Epoch 500/500, loss=0.452647
+INFO:   Sanity check passed: gen_std=2.062, train_std=1.287, spectral_L2=0.354
+INFO: [seed=9] trained indep/uniform: loss=0.453, std_ratio=1.60
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.004729
+INFO:   Epoch 100/500, loss=0.411073
+INFO:   Epoch 200/500, loss=0.433821
+INFO:   Epoch 300/500, loss=0.387909
+INFO:   Epoch 400/500, loss=0.558516
+INFO:   Epoch 500/500, loss=0.472859
+INFO:   Sanity check passed: gen_std=2.013, train_std=1.287, spectral_L2=0.351
+INFO: [seed=9] trained indep/band: loss=0.473, std_ratio=1.56
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.942933
+INFO:   Epoch 100/500, loss=0.191279
+INFO:   Epoch 200/500, loss=0.153829
+INFO:   Epoch 300/500, loss=0.144723
+INFO:   Epoch 400/500, loss=0.211450
+INFO:   Epoch 500/500, loss=0.177036
+INFO:   Sanity check passed: gen_std=0.969, train_std=1.106, spectral_L2=0.343
+INFO: [seed=9] trained specaug/uniform: loss=0.177, std_ratio=0.88
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.976716
+INFO:   Epoch 100/500, loss=0.204178
+INFO:   Epoch 200/500, loss=0.166126
+INFO:   Epoch 300/500, loss=0.142486
+INFO:   Epoch 400/500, loss=0.213717
+INFO:   Epoch 500/500, loss=0.183466
+INFO:   Sanity check passed: gen_std=1.031, train_std=1.106, spectral_L2=0.462
+INFO: [seed=9] trained specaug/band: loss=0.183, std_ratio=0.93
+INFO: [seed=9] indep/uniform: W1(indep_ref)=625.2, W1(specaug_ref)=765.2
+INFO: [seed=9] indep/band: W1(indep_ref)=567.2, W1(specaug_ref)=708.2
+INFO: [seed=9] specaug/uniform: W1(indep_ref)=182.5, W1(specaug_ref)=253.7
+INFO: [seed=9] specaug/band: W1(indep_ref)=184.1, W1(specaug_ref)=256.2
+INFO: 
+INFO: ================================================================================
+INFO: Phase 6f SUMMARY
+INFO: ================================================================================
+INFO:   A_uni     W1 =   683.8 +/-  79.3
+INFO:   A_band    W1 =   603.7 +/-  74.8
+INFO:   B_uni     W1 =   708.7 +/- 124.9
+INFO:   B_band    W1 =   631.6 +/-  94.7
+INFO:   C_uni     W1 =   214.0 +/-  56.0
+INFO:   C_band    W1 =   204.2 +/-  45.2
+INFO:   D_uni     W1 =   295.9 +/- 152.0
+INFO:   D_band    W1 =   277.1 +/- 157.3
+INFO: 
+INFO: Key comparisons (band vs uniform, paired t-test):
+INFO:   A_band_vs_A_uni         uniform=683.8  band=603.7  improv=+11.7%  p=0.0001  SIG
+INFO:   B_band_vs_B_uni         uniform=708.7  band=631.6  improv=+10.9%  p=0.0001  SIG
+INFO:   C_band_vs_C_uni         uniform=214.0  band=204.2  improv=+4.6%  p=0.1646     
+INFO:   D_band_vs_D_uni         uniform=295.9  band=277.1  improv=+6.3%  p=0.0131  SIG
+INFO: 
+Saved to results/phase6f/crossprotocol_results.json

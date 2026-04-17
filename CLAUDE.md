@@ -54,8 +54,9 @@ uv run python -m graph_fans.phase2 --epochs 50 --seeds 1 --n-nodes 30  # quick l
 - **Phase 3b (matched gen noise): NO-GO** — Matching generation start to shaped training noise worsens W1. DDIM compensates for the mismatch; band-mismatched (Phase 2g) remains best.
 - **Phase 6a (Cora scale diagnostic): GO** — GCN denoises PCA-reduced Cora features at n=50-200 with std_ratio 1.02-1.91. Unblocks Phase 6b (augmentation) and 6c (shaping validation).
 - **Phase 6b (augmentation comparison): GO** — Spectral augmentation wins (W1=83.4, 46% better than gaussian). 120/120 pass. Band vs uniform noise shows no advantage. Best augmentation for Phase 6c: spectral.
-- **Phase 6c (core shaping validation): NO-GO** — Band-shaped noise indistinguishable from uniform on 21 Cora subgraphs (p=0.748, mean delta=+3.05). Closes noise shaping line of investigation.
-- **Phase 6e (augmentation diagnostic): NO-GO — H1 CONFIRMED** — Replicating Phase 2g exactly (SBM q=0.05, n=50, d=4) but with spectral augmentation instead of independent samples eliminates the band shaping effect (p=0.629, -2% vs Phase 2g's +12.5% p=0.0001). The two techniques are non-combinable: spectral augmentation absorbs what band shaping provides.
+- **Phase 6c (core shaping validation): NO-GO** — Band-shaped noise indistinguishable from uniform on 21 Cora subgraphs (p=0.748, mean delta=+3.05). Closes noise shaping line of investigation on Cora features specifically.
+- **Phase 6e (augmentation diagnostic): OVERTURNED by 6f** — Phase 6e's NO-GO (-2%, p=0.629) was a false negative from n=5 underpowering; see 6f below.
+- **Phase 6f (cross-protocol 2x2x2, 10 seeds): GO** — Phase 2g replicates cleanly (+11.7%, p=0.0001, 10/10 seeds). Phase 6e's specaug/specaug design rerun with 10 seeds shows +6.3%, p=0.013. Band shaping helps across all 4 train/ref protocol combos; training-data protocol modulates effect size (indep: +11.7%, specaug: +5-6%), evaluation-ref protocol has no effect. The Cora failure (6c) is NOT fully explained by specaug training alone, leaving H2 (Cora features lack bimodal spectral structure) as the plausible explanation.
 
 ## Running experiments
 
