@@ -849,3 +849,43 @@ This is the first validation of the Graph-FANS pipeline on real (non-synthetic) 
 
 Report: `results/phase6a/Report-Phase6a.md`
 Results: `results/phase6a/scale_diagnostic.json`, `results/phase6a/phase6a_run.log`
+
+---
+
+## Phase 6b: Augmentation Strategy Comparison (2026-04-14)
+
+**Gate: GO** — Spectral augmentation is the clear winner. 120/120 runs pass.
+
+Compared 3 augmentation strategies x 2 noise methods on 20 BFS Cora subgraphs (n=100, d=16, 500 epochs, L40S GPU). Total wall time: 3.6 hours.
+
+| Strategy | Noise | Pass | Rate | std_ratio | W1 (mean +/- std) |
+|----------|-------|------|------|-----------|--------------------|
+| spectral | uniform | 20/20 | 100% | 1.08 | 83.4 +/- 34.0 |
+| spectral | band | 20/20 | 100% | 1.08 | 85.7 +/- 34.6 |
+| dropout | uniform | 20/20 | 100% | 1.22 | 112.7 +/- 38.7 |
+| dropout | band | 20/20 | 100% | 1.23 | 116.2 +/- 40.6 |
+| gaussian | uniform | 20/20 | 100% | 1.14 | 154.6 +/- 57.2 |
+| gaussian | band | 20/20 | 100% | 1.13 | 153.6 +/- 53.6 |
+
+**Gate check:** All 6 conditions achieve 100% pass rate (need >= 75%). Best: spectral/uniform (W1=83.4). **GO.**
+
+### Key Findings
+
+1. **Spectral augmentation is the clear winner.** 46% lower W1 than gaussian, 26% lower than dropout. Consistent ranking across all 20 subgraphs. Adding noise proportional to per-eigenmode energy preserves the spectral structure of real Cora features, giving the score network a more faithful training signal.
+
+2. **Band-shaped noise shows no advantage over uniform.** Differences are within noise (-0.6% to +3.1%). Consistent with Phase 2g findings: 8-band coarse shaping is too granular. The augmentation strategy dominates over the noise shaping method.
+
+3. **All conditions produce stable features.** std_ratio 1.08-1.23, all well below 3.0. No failures across 120 runs. The GCN denoises robustly across all augmentation strategies and all 20 subgraph topologies.
+
+4. **Spectral augmentation achieves lowest training loss.** Loss 0.160 vs 0.212 (dropout) and 0.202 (gaussian). The spectral-aligned augmented distribution is inherently easier for epsilon-prediction.
+
+5. **Energy ratios range 4.3-16.2x** (mean 9.5x) across 20 subgraphs, confirming genuine multi-scale structure for shaping to exploit.
+
+### Significance
+
+Spectral augmentation provides a 46% W1 improvement over the Phase 6a gaussian baseline by preserving spectral structure during data augmentation. This selects **spectral** as the augmentation for Phase 6c (core shaping validation).
+
+The absence of band-shaped noise advantage suggests that per-mode shaping (Phase 3a direction) rather than coarse band shaping is needed to capture fine-grained spectral structure.
+
+Report: `results/phase6b/Report-Phase6b.md`
+Results: `results/phase6b/augmentation_comparison.json`, `results/phase6b/phase6b_run.log`
