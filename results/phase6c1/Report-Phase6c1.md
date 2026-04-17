@@ -22,10 +22,12 @@ Outcome: **NO-GO + NO-GO**.
 
 ## Results Table
 
-| Experiment | n | Uniform W1 | Band W1 | Delta % | p (band < uni) | Gate |
-|------------|---|-----------:|--------:|--------:|--------------:|------|
-| Part A (H2: synthetic community features on Cora topology) | 10 | 1101.4 +/- 369.4 | 1197.4 +/- 428.9 | **-8.7%** | 0.898 | **NO-GO** |
-| Part B (power-boosted 6c: real features + specaug, 30 subgraphs) | 30 | 67.1 +/- 24.8 | 76.8 +/- 25.5 | **-14.4%** | 0.998 | **NO-GO** |
+| Experiment | n | Uniform W1 | Band W1 | Delta % | p (uni<band, 1-sided) | p (2-sided) | Gate |
+|------------|---|-----------:|--------:|--------:|----------------------:|-----------:|------|
+| Part A (H2: synthetic community features on Cora topology) | 10 | 1101.4 +/- 369.4 | 1197.4 +/- 428.9 | **-8.7%** | 0.102 | 0.204 | **NO-GO (trend)** |
+| Part B (power-boosted 6c: real features + specaug, 30 subgraphs) | 30 | 67.1 +/- 24.8 | 76.8 +/- 25.5 | **-14.4%** | **0.002** | **0.004** | **NEGATIVE SIGNIFICANT** |
+
+**Note on p-values:** An earlier version of this report reported one-sided p-values for the "band-better" direction (0.898 and 0.998). Those near-1 values are misleading — they mean "we're very confident band is NOT better than uniform," because the effect goes the opposite way. The p-values above are reported in the correct direction ("uniform is better"). Part B is **statistically significant negative**: band shaping reliably *worsens* W1 on real Cora features by 14.4%, t=+3.20, two-sided p=0.004. Part A has a directionally negative effect but is underpowered at n=10 subgraphs with very high per-subgraph variance (deltas range -211 to +496).
 
 ## Part A (H2)
 

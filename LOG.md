@@ -1039,12 +1039,12 @@ Cora BFS subgraphs at n=100. Part A: 10 subgraphs, synthetic community-boundary 
 
 ### Results
 
-| Experiment | n_subgraphs | Uniform W1 | Band W1 | Improvement | p (band<uni) | Band wins | Gate |
-|-----------|-------------|-----------:|--------:|------------:|-------------:|----------:|------|
-| Part A (H2, synthetic community features) | 10 | 1101.4 +/- 369.4 | 1197.4 +/- 428.9 | **-8.7%** | 0.898 | 3/10 | **NO-GO** |
-| Part B (powered 6c, real features + specaug) | 30 | 67.1 +/- 24.8 | 76.8 +/- 25.5 | **-14.4%** | 0.998 | 10/30 | **NO-GO** |
+| Experiment | n_subgraphs | Uniform W1 | Band W1 | Delta | p (uni<band, 1-sided) | p (2-sided) | Band wins | Gate |
+|-----------|-------------|-----------:|--------:|------:|---------------------:|-----------:|----------:|------|
+| Part A (H2, synthetic community features) | 10 | 1101.4 +/- 369.4 | 1197.4 +/- 428.9 | **-8.7%** | 0.102 | 0.204 | 3/10 | **NO-GO** (trend) |
+| Part B (powered 6c, real features + specaug) | 30 | 67.1 +/- 24.8 | 76.8 +/- 25.5 | **-14.4%** | **0.002** | **0.004** | 10/30 | **NEGATIVE SIGNIFICANT** |
 
-Part B is strongly significant in the wrong direction (t=+3.20 favouring uniform). The 30-subgraph sample is not just null — it is a confirmed negative effect.
+**Note on p-values:** The agent's original report used one-sided p-values for the "band better" alternative, which come out near 1 because the effect goes the opposite way (0.898 for Part A, 0.998 for Part B). Reported above in the correct direction: **Part B is statistically significant negative** — band shaping makes W1 reliably *worse* on real Cora features (t=+3.20, two-sided p=0.004). Part A is directionally negative but underpowered (two-sided p=0.204, high per-subgraph variance -211 to +496).
 
 ### Key findings
 
