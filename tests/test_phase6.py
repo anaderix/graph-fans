@@ -555,3 +555,138 @@ class TestPhase6fCrossProtocol:
         assert comp["n_seeds"] == 3
         assert comp["mean_delta_uni_minus_band"] == pytest.approx(15.0, abs=0.01)
         assert comp["improvement_pct"] == pytest.approx(100 * 15.0 / 110.0, abs=0.01)
+
+
+# ============================================================================
+# Phase 6c-1: H2 (community on Cora topology) + power-boosted 6c smoke tests
+# ============================================================================
+
+
+class TestPhase6c1:
+    def _load_module(self):
+        import importlib.util
+        from pathlib import Path
+
+        script_path = (
+            Path(__file__).parent.parent / "scripts" / "test_phase6c1_h2_plus_power.py"
+        )
+        assert script_path.exists(), f"Script not found: {script_path}"
+        spec = importlib.util.spec_from_file_location(
+            "phase6c1_script", script_path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_phase6c1_script_imports(self):
+        """Smoke test: the Phase 6c-1 script imports without errors and exposes API."""
+        module = self._load_module()
+        assert hasattr(module, "run_subgraph_part_a")
+        assert hasattr(module, "run_subgraph_part_b")
+        assert hasattr(module, "summarize")
+        assert hasattr(module, "interpret")
+        assert hasattr(module, "main")
+
+    def test_phase6c1_h2_pipeline_smoke(self, large_graph):
+        """Part A pipeline smoke: synthetic community features on a small subgraph.
+
+        Runs a miniature Part A (H2) flow with n_epochs=2 and n_nodes reduced.
+        Verifies we get uniform and band W1 outputs.
+        """
+        module = self._load_module()
+        # Shrink scale
+        module.N_NODES = 30
+        module.N_TRAIN = 6
+        module.N_REF = 4
+        module.N_GEN = 4
+        module.B = 4
+        module.N_DIMS_H2 = 2
+
+        from graph_fans.phase6.subgraph_sampler import sample_bfs_subgraph
+
+        sample = sample_bfs_subgraph(large_graph, n_nodes=module.N_NODES, seed=0)
+
+        result = module.run_subgraph_part_a(
+            sample=sample,
+            n_epochs=2,
+            device="cpu",
+            subgraph_idx=0,
+        )
+
+        assert "uniform" in result and "band" in result
+        assert "w1_total" in result["uniform"]
+        assert "w1_total" in result["band"]
+        assert np.isfinite(result["uniform"]["w1_total"])
+        assert np.isfinite(result["band"]["w1_total"])
+        assert result["uniform"]["w1_total"] >= 0
+        assert result["band"]["w1_total"] >= 0
+        assert "delta_w1" in result
+
+    def test_phase6c1_power_pipeline_smoke(self, large_graph):
+        """Part B pipeline smoke: spectral augmentation on synthetic dense features.
+
+        Creates a fake 'full features' array + TruncatedSVD reducer, then runs
+        a miniature Part B flow with n_epochs=2. Verifies uniform and band
+        outputs are produced.
+        """
+        module = self._load_module()
+        # Shrink scale
+        module.N_NODES = 30
+        module.N_TRAIN = 6
+        module.N_REF = 4
+        module.N_GEN = 4
+        module.B = 4
+        module.N_DIMS_POWER = 4
+
+        from graph_fans.phase6.feature_reducer import fit_feature_reducer
+        from graph_fans.phase6.subgraph_sampler import sample_bfs_subgraph
+
+        sample = sample_bfs_subgraph(large_graph, n_nodes=module.N_NODES, seed=0)
+
+        rng = np.random.RandomState(42)
+        # Fake "full Cora" features for the reducer to fit on.
+        # Must cover the original-node index range used by the sample.
+        n_full = large_graph.number_of_nodes()
+        full_features = rng.randn(n_full, 32).astype(np.float64)
+
+        reducer = fit_feature_reducer(
+            full_features, n_components=module.N_DIMS_POWER, method="truncated_svd", seed=0,
+        )
+
+        result = module.run_subgraph_part_b(
+            sample=sample,
+            full_features=full_features,
+            reducer=reducer,
+            n_epochs=2,
+            device="cpu",
+            subgraph_idx=0,
+        )
+
+        assert "uniform" in result and "band" in result
+        assert "w1_total" in result["uniform"]
+        assert "w1_total" in result["band"]
+        assert np.isfinite(result["uniform"]["w1_total"])
+        assert np.isfinite(result["band"]["w1_total"])
+        assert result["uniform"]["w1_total"] >= 0
+        assert result["band"]["w1_total"] >= 0
+        assert "delta_w1" in result
+
+    def test_phase6c1_summarize_and_interpret(self):
+        """summarize() computes paired stats; interpret() returns a string per outcome."""
+        module = self._load_module()
+        per = [
+            {"uniform": {"w1_total": 100.0}, "band": {"w1_total": 90.0}},
+            {"uniform": {"w1_total": 110.0}, "band": {"w1_total": 95.0}},
+            {"uniform": {"w1_total": 120.0}, "band": {"w1_total": 100.0}},
+        ]
+        summ = module.summarize(per, "test")
+        assert summ["n_subgraphs"] == 3
+        assert summ["mean_delta"] == pytest.approx(-15.0, abs=0.01)
+        assert summ["improvement_pct"] > 0
+        assert summ["n_band_better"] == 3
+
+        # Both gate outcomes should give non-empty strings
+        for pa in (True, False):
+            for pb in (True, False):
+                s = module.interpret(pa, pb)
+                assert isinstance(s, str) and len(s) > 10

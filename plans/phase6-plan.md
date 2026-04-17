@@ -150,6 +150,54 @@ A replicates Phase 2g (expected +12.5%), D replicates Phase 6e (expected ~-2%). 
 
 ---
 
+### Phase 6c-1: H2 + Power-Boosted 6c (0.5 day, added after Phase 6f GO)
+
+**Objective:** Phase 6f overturned Phase 6e's NO-GO by going from 5 → 10 seeds. Phase 6c used ~21 Cora subgraphs with spectral augmentation and reported NO-GO (p=0.748). Two questions remain:
+
+- **H2:** Does shaping fail on Cora because its REAL PCA-reduced features lack bimodal spectral structure? To isolate this, test shaping on SYNTHETIC community-boundary features overlaid on Cora GRAPH TOPOLOGY (not real Cora features). If shaping works here, the Cora failure is feature-specific.
+- **Power:** Was Phase 6c underpowered like Phase 6e? Re-run Phase 6c exactly, but with 30 subgraphs (15 more than Phase 6c's 21) to match Phase 6f's power profile.
+
+Phase 6c-1 runs both experiments in a single script.
+
+**Method A (H2 — community features on Cora topology):**
+
+1. Load Cora, BFS-sample 10 subgraphs at n=100 (same scale as Phase 6c).
+2. For each subgraph, generate SYNTHETIC community-boundary features on its topology via `generate_community_boundary_features(graph, n_features=4, seed=...)`.
+3. Use the Phase 2g independent-sample protocol: 100 training samples (seeds `s*10000..s*10000+99`), 50 reference samples (seeds `s*10000+100000..s*10000+100049`).
+4. Compute band importance weights from the first 50 training samples only (no leakage into ref).
+5. Train uniform vs band-shaped (Phase 2g config: 500 epochs, 3L GCN 128h, cosine+EMA). Paired t-test across 10 subgraphs.
+
+**Method B (power-boosted 6c — real Cora features):**
+
+1. Load Cora, BFS-sample 30 subgraphs at n=100 (Phase 6c used ~21).
+2. PCA-reduce features to d=16 via TruncatedSVD (fit on full Cora).
+3. Apply spectral augmentation (best from Phase 6b): 100 training samples, 50 reference samples per subgraph, each from a separate seed.
+4. Train uniform vs band-shaped per subgraph. Evaluate spectral W1 against un-augmented real features. Paired t-test across 30 subgraphs.
+
+**Config:** n=100, d=4 (Part A) / d=16 (Part B), 500 epochs, 3L GCN 128h, cosine+EMA. Same seeds across shaping methods per subgraph.
+
+**Gate for Part A (H2):** Band W1 < Uniform W1 with p < 0.05 (one-sided paired t-test).
+
+**Gate for Part B (powered 6c):** Band W1 < Uniform W1 with p < 0.05 (one-sided paired t-test).
+
+**2x2 outcome interpretation:**
+
+| H2 result | Power-6c result | Paper framing |
+|-----------|----------------|---------------|
+| GO | GO | Framing A works broadly; shaping is real across synthetic AND real features, Phase 6c was underpowered. |
+| GO | NO-GO | Cora's real features are the problem — shaping works on the right (bimodal-spectrum) features. Paper frames Cora failure as a feature-property issue, not a method failure. |
+| NO-GO | GO | Graph topology matters more than features — Cora's topology alone kills shaping for synthetic features, yet real Cora still shows the effect. (Unlikely/contradictory.) |
+| NO-GO | NO-GO | Phase 2g effect is narrow (specific to synthetic SBM topology). Framing B (spectral augmentation as the main contribution) should be primary. |
+
+**Files to create:** `scripts/test_phase6c1_h2_plus_power.py`, `results/phase6c1/Report-Phase6c1.md`.
+**Tests added to:** `tests/test_phase6.py` (smoke tests for both pipelines).
+
+**Depends on:** Nothing (uses existing Phase 6a/6b/6f infrastructure).
+
+**Effort:** ~2-3h GPU (10×2 + 30×2 = 80 training runs × ~100s on L40S).
+
+---
+
 ### Phase 6d: Feature Imputation (3 days)
 
 **Objective:** Demonstrate practical value — mask 20% of node features, generate them, measure reconstruction quality.
