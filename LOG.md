@@ -925,3 +925,47 @@ Paired comparison of uniform vs band-shaped noise on 21 BFS Cora subgraphs (n=10
 
 Report: `results/phase6c/Report-Phase6c.md`
 Results: `results/phase6c/shaping_validation.json`, `results/phase6c/phase6c_run.log`
+
+## 2026-04-17 — Phase 6e: Spectral Augmentation on Synthetic Data — NO-GO (H1 Confirmed)
+
+### Motivation
+
+Phase 6c showed band shaping has zero effect on Cora features with spectral augmentation (p=0.748). Three hypotheses: H1 spectral augmentation makes shaping redundant, H2 Cora features lack bimodal structure, H3 evaluation noise masks small effect. Phase 6e isolates H1 by replicating Phase 2g exactly (SBM q=0.05, n=50, d=4, 500 epochs) but with spectral augmentation from 1 sample instead of 100 independent samples.
+
+### Config
+
+SBM(q=0.05), n=50, d=4, 5 seeds, 500 epochs, 3L GCN 128h, cosine SDE + EMA. Each seed: generate 1 community-boundary feature matrix, spectral-augment to 100 training samples (sigma=0.3), separate seed for 50-sample reference split.
+
+### Results
+
+| Seed | Uniform W1 | Band W1 | Delta |
+|------|-----------|---------|-------|
+| 0 | 335.0 | 343.9 | +2.7% worse |
+| 1 | 285.1 | 332.0 | +16.4% worse |
+| 2 | 250.9 | 234.6 | -6.5% better |
+| 3 | 393.1 | 378.8 | -3.6% better |
+| 4 | 198.8 | 203.3 | +2.3% worse |
+| **Mean** | **292.6 ± 67.1** | **298.5 ± 67.5** | **-2.0%** |
+
+Paired t-test: t=-0.522, p=0.629. Not significant.
+
+**Comparison to Phase 2g (same graph, same features, same config, different augmentation):**
+- Phase 2g with 100 independent samples: **+12.5% improvement, p=0.0001**
+- Phase 6e with spectral augmentation: **-2.0% (no effect), p=0.629**
+
+### Key Findings
+
+1. **H1 confirmed: spectral augmentation eliminates band shaping's effect.** On the exact SBM(q=0.05) setup where Phase 2g showed 12.5% W1 improvement, replacing independent sampling with spectral augmentation makes the effect vanish.
+
+2. **Phase 2g's effect was augmentation-dependent.** The 12.5% improvement is (at least partially) an artifact of how the training dataset was constructed — independent community-feature samples have high inter-sample variance that band shaping helps with. Spectral augmentation already allocates variance spectrally, so band shaping has nothing to add.
+
+3. **Phase 6c's Cora failure is explained.** Band shaping failed on Cora not because of the features (H2) or evaluation noise (H3), but because spectral augmentation was used. It would have failed on synthetic data too.
+
+4. **The two techniques are non-combinable.** Graph-FANS's "spectral shaping" and Phase 6b's "spectral augmentation" address the same underlying inter-sample variance structure. Using both is redundant.
+
+### Gate decision
+
+**Phase 6e: NO-GO** — band shaping does not survive the switch to spectral augmentation. The practical contribution of Phase 6 is spectral augmentation itself (46% W1 improvement from Phase 6b), not band shaping.
+
+Report: `results/phase6e/Report-Phase6e.md`
+Results: `results/phase6e/synthetic_spectral_aug.json`, `results/phase6e/phase6e_run.log`

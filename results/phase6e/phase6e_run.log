@@ -1,0 +1,105 @@
+INFO: Phase 6e: SBM(q=0.05), n=50, d=4, sigma=0.3
+INFO: Testing band shaping with spectral-augmented synthetic features
+INFO: Comparison baseline: Phase 2g = 12.5% W1 improvement (independent samples)
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.974713
+INFO:   Epoch 100/500, loss=0.282580
+INFO:   Epoch 200/500, loss=0.214626
+INFO:   Epoch 300/500, loss=0.146617
+INFO:   Epoch 400/500, loss=0.202085
+INFO:   Epoch 500/500, loss=0.190210
+INFO:   Sanity check passed: gen_std=1.276, train_std=1.415, spectral_L2=0.087
+INFO:   seed=0/uniform: loss=0.190, std_ratio=0.90, W1=335.0
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.951989
+INFO:   Epoch 100/500, loss=0.269538
+INFO:   Epoch 200/500, loss=0.207297
+INFO:   Epoch 300/500, loss=0.165309
+INFO:   Epoch 400/500, loss=0.200672
+INFO:   Epoch 500/500, loss=0.205773
+INFO:   Sanity check passed: gen_std=1.433, train_std=1.415, spectral_L2=0.191
+INFO:   seed=0/spectral: loss=0.206, std_ratio=1.01, W1=343.9
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.005257
+INFO:   Epoch 100/500, loss=0.302841
+INFO:   Epoch 200/500, loss=0.234083
+INFO:   Epoch 300/500, loss=0.229736
+INFO:   Epoch 400/500, loss=0.142235
+INFO:   Epoch 500/500, loss=0.139935
+INFO:   Sanity check passed: gen_std=1.389, train_std=1.463, spectral_L2=0.248
+INFO:   seed=1/uniform: loss=0.140, std_ratio=0.95, W1=285.1
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.021163
+INFO:   Epoch 100/500, loss=0.330407
+INFO:   Epoch 200/500, loss=0.235959
+INFO:   Epoch 300/500, loss=0.251712
+INFO:   Epoch 400/500, loss=0.144054
+INFO:   Epoch 500/500, loss=0.141423
+INFO:   Sanity check passed: gen_std=1.456, train_std=1.463, spectral_L2=0.388
+INFO:   seed=1/spectral: loss=0.141, std_ratio=1.00, W1=332.0
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.026406
+INFO:   Epoch 100/500, loss=0.300590
+INFO:   Epoch 200/500, loss=0.229629
+INFO:   Epoch 300/500, loss=0.161974
+INFO:   Epoch 400/500, loss=0.074799
+INFO:   Epoch 500/500, loss=0.098024
+WARNING:   SANITY CHECK: Spectral L2 distance 0.503 > 0.5 — generated profile differs significantly
+INFO:   seed=2/uniform: loss=0.098, std_ratio=0.97, W1=250.9
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.008260
+INFO:   Epoch 100/500, loss=0.325156
+INFO:   Epoch 200/500, loss=0.235110
+INFO:   Epoch 300/500, loss=0.162321
+INFO:   Epoch 400/500, loss=0.078963
+INFO:   Epoch 500/500, loss=0.103409
+INFO:   Sanity check passed: gen_std=1.088, train_std=1.124, spectral_L2=0.475
+INFO:   seed=2/spectral: loss=0.103, std_ratio=0.97, W1=234.6
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.966265
+INFO:   Epoch 100/500, loss=0.241317
+INFO:   Epoch 200/500, loss=0.217380
+INFO:   Epoch 300/500, loss=0.108185
+INFO:   Epoch 400/500, loss=0.090414
+INFO:   Epoch 500/500, loss=0.111696
+INFO:   Sanity check passed: gen_std=1.053, train_std=1.221, spectral_L2=0.304
+INFO:   seed=3/uniform: loss=0.112, std_ratio=0.86, W1=393.1
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=1.008828
+INFO:   Epoch 100/500, loss=0.230559
+INFO:   Epoch 200/500, loss=0.228577
+INFO:   Epoch 300/500, loss=0.118754
+INFO:   Epoch 400/500, loss=0.089317
+INFO:   Epoch 500/500, loss=0.119801
+INFO:   Sanity check passed: gen_std=1.274, train_std=1.221, spectral_L2=0.290
+INFO:   seed=3/spectral: loss=0.120, std_ratio=1.04, W1=378.8
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.948784
+INFO:   Epoch 100/500, loss=0.339241
+INFO:   Epoch 200/500, loss=0.222166
+INFO:   Epoch 300/500, loss=0.163060
+INFO:   Epoch 400/500, loss=0.199129
+INFO:   Epoch 500/500, loss=0.150569
+INFO:   Sanity check passed: gen_std=0.920, train_std=1.129, spectral_L2=0.190
+INFO:   seed=4/uniform: loss=0.151, std_ratio=0.81, W1=198.8
+INFO:   Dataset: 100 samples, 50 nodes, 4 features
+INFO:   Epoch 1/500, loss=0.956550
+INFO:   Epoch 100/500, loss=0.340778
+INFO:   Epoch 200/500, loss=0.215122
+INFO:   Epoch 300/500, loss=0.169691
+INFO:   Epoch 400/500, loss=0.213294
+INFO:   Epoch 500/500, loss=0.156811
+INFO:   Sanity check passed: gen_std=0.842, train_std=1.129, spectral_L2=0.245
+INFO:   seed=4/spectral: loss=0.157, std_ratio=0.75, W1=203.3
+INFO: 
+INFO: ================================================================================
+INFO: Phase 6e SUMMARY
+INFO: ================================================================================
+INFO:   Uniform W1:  292.6 +/- 67.1
+INFO:   Spectral W1: 298.5 +/- 67.5
+INFO:   Improvement: -5.9 (-2.0%)
+INFO:   t=-0.522, p=0.6290
+INFO:   Significant (alpha=0.05): False
+INFO: 
+INFO:   GATE: NO-GO — H1 CONFIRMED (spectral augmentation eliminates shaping effect)
+INFO: Saved to results/phase6e/synthetic_spectral_aug.json
