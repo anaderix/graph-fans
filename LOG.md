@@ -1024,3 +1024,42 @@ Key comparisons (paired t-test):
 
 Report: `results/phase6f/Report-Phase6f.md`
 Results: `results/phase6f/crossprotocol_results.json`, `results/phase6f/phase6f_run.log`
+
+## 2026-04-18 — Phase 6c-1: H2 + Power-Boosted 6c — NO-GO + NO-GO (Phase 6c CONFIRMED)
+
+### Motivation
+
+Phase 6f overturned Phase 6e's NO-GO by going from 5 to 10 seeds (-2% -> +6.3%, p=0.013). This raised doubt about Phase 6c: with ~21 Cora subgraphs and p=0.748, was it also underpowered? And does the Cora failure stem from real feature structure (H2) rather than topology? Phase 6c-1 answers both questions:
+- Part A (H2): synthetic community-boundary features on Cora BFS subgraph topology, independent-sample protocol. Tests if Cora's topology supports shaping at all.
+- Part B (power-boosted 6c): real Cora features, PCA d=16, spectral augmentation, 30 subgraphs (vs Phase 6c's ~21).
+
+### Config
+
+Cora BFS subgraphs at n=100. Part A: 10 subgraphs, synthetic community-boundary features d=4, independent train (100 samples) + independent ref (50 samples). Part B: 30 subgraphs, real features -> TruncatedSVD d=16 (15.2% variance), spectral augmentation sigma=0.3 for both training (100 samples) and reference (50 samples). Both parts: 500 epochs, 3L GCN 128h, cosine+EMA, importance weights from first 50 training samples only. Total 80 trainings, ~149 min on NVIDIA L40S.
+
+### Results
+
+| Experiment | n_subgraphs | Uniform W1 | Band W1 | Improvement | p (band<uni) | Band wins | Gate |
+|-----------|-------------|-----------:|--------:|------------:|-------------:|----------:|------|
+| Part A (H2, synthetic community features) | 10 | 1101.4 +/- 369.4 | 1197.4 +/- 428.9 | **-8.7%** | 0.898 | 3/10 | **NO-GO** |
+| Part B (powered 6c, real features + specaug) | 30 | 67.1 +/- 24.8 | 76.8 +/- 25.5 | **-14.4%** | 0.998 | 10/30 | **NO-GO** |
+
+Part B is strongly significant in the wrong direction (t=+3.20 favouring uniform). The 30-subgraph sample is not just null — it is a confirmed negative effect.
+
+### Key findings
+
+1. **Phase 6c is not rescued by power.** Going from 21 to 30 subgraphs strengthens rather than overturns the NO-GO (p=0.748 -> p=0.998 for the band-better alternative; mean delta +3 -> +9.65). Phase 6c's negative conclusion is robust.
+
+2. **Topology matters — Cora subgraphs break band shaping even with ideal features.** Part A put Phase 2g's exact feature generator and protocol on Cora BFS subgraph topology. Shaping fails (-8.7%, p=0.898). The effect that Phase 2g demonstrated on SBM(q=0.05) does not survive the switch to Cora topology.
+
+3. **Phase 2g's effect is narrow.** Phase 6f established shaping works on SBM(q=0.05) across 4 protocol combinations with n=10 seeds. Phase 6c-1 establishes it does NOT work on Cora, for either feature type. Shaping is contingent on clean block/community topology, not on feature properties alone.
+
+4. **Energy ratio is not a sufficient predictor.** Cora subgraphs in both Parts A and B have non-trivial energy ratios (5-38x), comparable to or larger than SBM(q=0.05) (~7x). Energy concentration in low vs high bands alone does not predict shaping success — the alignment between the band partition and the feature-generating process matters.
+
+5. **Phase 6b (spectral augmentation) remains the practical contribution.** Phase 6b showed +46% W1 improvement for spectral vs gaussian augmentation on Cora. That result is unaffected and is what makes Graph-FANS useful on real citation networks.
+
+### Gate decision
+
+**Phase 6c-1: NO-GO + NO-GO.** Phase 2g's effect is narrow. Band shaping does not transfer to real citation networks (neither topology nor features of Cora support it). Paper framing B (spectral augmentation as the practical contribution) should be primary; Framing A (shaping works) is scope-bounded to synthetic block/community graphs.
+
+Results: `results/phase6c1/h2_plus_power.json`, `results/phase6c1/phase6c1_run.log`
