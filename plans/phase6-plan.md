@@ -103,6 +103,53 @@ Phase 6e isolates H1. If band shaping still helps on synthetic features with spe
 
 ---
 
+### Phase 6f: Cross-Protocol 2x2x2 Evaluation (0.5 day, added after 6e NO-GO)
+
+**Objective:** Phase 2g showed +12.5% W1 improvement from band shaping with 100 independent training samples and a 50-independent reference. Phase 6e replicated the setup but swapped BOTH the training dataset *and* the evaluation reference to spectral-augmented-from-1-sample, and the effect disappeared (-2%, p=0.629). Phase 6f disambiguates: does the training-data protocol, the evaluation-reference protocol, or both kill the shaping effect?
+
+Four training/reference combinations, each measured with uniform and band shaping (8 cells total):
+
+| Condition | Training | Evaluation Ref | Shaping |
+|-----------|----------|----------------|---------|
+| A_uni | 100 independent | 50 independent | uniform |
+| A_band | 100 independent | 50 independent | band |
+| B_uni | 100 independent | 50 spectral-augmented | uniform |
+| B_band | 100 independent | 50 spectral-augmented | band |
+| C_uni | 100 spectral-augmented | 50 independent | uniform |
+| C_band | 100 spectral-augmented | 50 independent | band |
+| D_uni | 100 spectral-augmented | 50 spectral-augmented | uniform |
+| D_band | 100 spectral-augmented | 50 spectral-augmented | band |
+
+A replicates Phase 2g (expected +12.5%), D replicates Phase 6e (expected ~-2%). B and C separate the two protocol changes.
+
+**Method:**
+1. SBM(q=0.05), n=50, d=4, community-boundary features (identical to Phase 2g / 6e)
+2. For each of 10 seeds: generate independent train (100, seeds `s*10000..s*10000+99`), independent ref (50, seeds `s*10000+100000..s*10000+100049`), 1 spectral-augmentation seed for training (`spectral_augmentation` from single sample generated at seed `s*10000+200000`), 1 different spectral-augmentation seed for reference (seed `s*10000+300000`)
+3. Compute band importance weights separately per training set (mean band energy profile from first 50 samples, no leakage from ref)
+4. Train 4 models per seed: (indep_train, uniform), (indep_train, band), (specaug_train, uniform), (specaug_train, band)
+5. Generate 50 samples from each model, evaluate spectral W1 against BOTH reference sets. 4 models x 2 refs = 8 W1 numbers per seed
+
+**Key comparisons:**
+- A_band vs A_uni: replicates Phase 2g — expected +12.5%
+- B_band vs B_uni: indep training + specaug ref — isolates the evaluation-protocol change
+- C_band vs C_uni: specaug training + indep ref — isolates the training-protocol change
+- D_band vs D_uni: replicates Phase 6e — expected ~flat
+
+**Gate criteria / interpretation:**
+- If A_band << A_uni **AND** B_band ≈ B_uni: **evaluation-protocol artifact** — the shaping effect is real on matching references but disappears when evaluated against spectral-augmented references
+- If A_band << A_uni **AND** C_band ≈ C_uni: **training-data artifact** — independent-sample training is required for band shaping to help
+- If A_band ≈ A_uni: **Phase 2g does not replicate** — a more serious problem; the original +12.5% may have been a fluke of the 5-seed sample
+- If all four comparisons flat: **no shaping effect anywhere** — Phase 2g was the fluke
+
+**Files to create:** `scripts/test_phase6f_crossprotocol.py`, `results/phase6f/Report-Phase6f.md`
+**Tests added to:** `tests/test_phase6.py`
+
+**Depends on:** Nothing (uses existing synthetic generators, spectral augmentation, and Trainer).
+
+**Effort:** ~2.5-3h GPU (10 seeds × 4 training runs = 40 models at 500 epochs; each evaluated against 2 references).
+
+---
+
 ### Phase 6d: Feature Imputation (3 days)
 
 **Objective:** Demonstrate practical value — mask 20% of node features, generate them, measure reconstruction quality.

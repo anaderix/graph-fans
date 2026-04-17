@@ -412,3 +412,146 @@ class TestFullPipeline:
         # Step 6: Generate a sample (smoke)
         gen = trainer.generate(n_samples=2)
         assert gen.shape == (2, 50, 4)
+
+
+# ============================================================================
+# Phase 6f: cross-protocol 2x2x2 shaping tests
+# ============================================================================
+
+
+class TestPhase6fCrossProtocol:
+    def test_phase6f_script_imports(self):
+        """Smoke test: the Phase 6f script imports without errors."""
+        import importlib.util
+        from pathlib import Path
+
+        script_path = (
+            Path(__file__).parent.parent / "scripts" / "test_phase6f_crossprotocol.py"
+        )
+        assert script_path.exists(), f"Script not found: {script_path}"
+
+        spec = importlib.util.spec_from_file_location(
+            "phase6f_script", script_path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # Required API
+        assert hasattr(module, "run_seed")
+        assert hasattr(module, "generate_independent_set")
+        assert hasattr(module, "generate_specaug_set")
+        assert hasattr(module, "compute_comparison")
+        assert hasattr(module, "main")
+
+    def test_crossprotocol_evaluation(self):
+        """Verify each model is evaluated against BOTH reference sets.
+
+        Runs a miniature seed (n_epochs=3, tiny model) and checks that the
+        returned cells dict contains all 8 (A_uni, A_band, B_uni, B_band,
+        C_uni, C_band, D_uni, D_band) keys with valid W1 numbers, and that
+        the W1 values against indep-ref vs specaug-ref differ (meaning both
+        refs were actually used).
+        """
+        import importlib.util
+        from pathlib import Path
+
+        script_path = (
+            Path(__file__).parent.parent / "scripts" / "test_phase6f_crossprotocol.py"
+        )
+        spec = importlib.util.spec_from_file_location(
+            "phase6f_script_eval", script_path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # Shrink to make this test fast
+        module.N_NODES = 20
+        module.N_FEATURES = 2
+        module.N_TRAIN = 8
+        module.N_REF = 6
+        module.N_GEN = 5
+        module.B = 4
+
+        from graph_fans.phase0.spectral_profiler import (
+            compute_laplacian_spectrum,
+            partition_into_bands,
+        )
+        from graph_fans.utils.graph_generators import generate_sbm
+
+        gd = generate_sbm(
+            n_nodes=module.N_NODES, p_inter=0.05, seed=0, feature_mode="community",
+        )
+        graph = gd.graph
+        evals, evecs = compute_laplacian_spectrum(graph)
+        _, bands = partition_into_bands(evals, B=module.B)
+
+        # Override TrainConfig-dependent kwargs inside run_seed by monkey-patching
+        # via running with a very small n_epochs. Use CPU.
+        entry = module.run_seed(
+            graph, evecs, bands, seed=0, n_epochs=2, device="cpu",
+        )
+
+        assert "seed" in entry
+        assert "cells" in entry
+        expected_cells = {
+            "A_uni", "A_band", "B_uni", "B_band",
+            "C_uni", "C_band", "D_uni", "D_band",
+        }
+        assert set(entry["cells"].keys()) == expected_cells
+
+        for name, cell in entry["cells"].items():
+            assert "w1_total" in cell
+            assert np.isfinite(cell["w1_total"])
+            assert cell["w1_total"] >= 0
+
+        # A_* and B_* share the same trained model (indep training) — their
+        # W1 values should differ only via the reference protocol.
+        a_uni = entry["cells"]["A_uni"]
+        b_uni = entry["cells"]["B_uni"]
+        assert a_uni["train_protocol"] == "indep"
+        assert b_uni["train_protocol"] == "indep"
+        assert a_uni["ref_protocol"] == "indep"
+        assert b_uni["ref_protocol"] == "specaug"
+        # Both references were used: W1 values should almost never coincide
+        # by chance across 4 different (model, ref) pairings.
+        w1s_indep_ref = [entry["cells"][k]["w1_total"] for k in ["A_uni", "A_band", "C_uni", "C_band"]]
+        w1s_specaug_ref = [entry["cells"][k]["w1_total"] for k in ["B_uni", "B_band", "D_uni", "D_band"]]
+        assert any(
+            abs(w1s_indep_ref[i] - w1s_specaug_ref[i]) > 1e-6
+            for i in range(len(w1s_indep_ref))
+        ), "W1 values identical across refs — evaluation may not be using both refs"
+
+    def test_compute_comparison_signature(self):
+        """compute_comparison returns the expected summary fields."""
+        import importlib.util
+        from pathlib import Path
+
+        script_path = (
+            Path(__file__).parent.parent / "scripts" / "test_phase6f_crossprotocol.py"
+        )
+        spec = importlib.util.spec_from_file_location(
+            "phase6f_script_cmp", script_path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        # Two synthetic seeds with known W1 values
+        per_seed = [
+            {"cells": {"A_uni": {"w1_total": 100.0}, "A_band": {"w1_total": 90.0}}},
+            {"cells": {"A_uni": {"w1_total": 110.0}, "A_band": {"w1_total": 95.0}}},
+            {"cells": {"A_uni": {"w1_total": 120.0}, "A_band": {"w1_total": 100.0}}},
+        ]
+        comp = module.compute_comparison(per_seed, "A_uni", "A_band")
+        for key in [
+            "uniform_w1_mean", "band_w1_mean", "mean_delta_uni_minus_band",
+            "improvement_pct", "t_stat", "p_val", "significant",
+            "band_better_count", "n_seeds",
+        ]:
+            assert key in comp
+
+        # With the seeded values (100,110,120) vs (90,95,100), band wins all
+        # three pairs; delta mean should be +15; improvement ~13.6%.
+        assert comp["band_better_count"] == 3
+        assert comp["n_seeds"] == 3
+        assert comp["mean_delta_uni_minus_band"] == pytest.approx(15.0, abs=0.01)
+        assert comp["improvement_pct"] == pytest.approx(100 * 15.0 / 110.0, abs=0.01)
