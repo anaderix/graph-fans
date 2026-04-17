@@ -72,6 +72,37 @@ Each augmentation × {uniform, band-shaped} noise. Evaluate W1 against un-augmen
 
 ---
 
+### Phase 6e: Spectral Augmentation on Synthetic Data — Diagnostic (0.5 day, added after 6c NO-GO)
+
+**Objective:** Phase 6c showed band shaping has zero effect on Cora features with spectral augmentation (p=0.748, 10/21 coin flip). Does this failure transfer to *synthetic* community features when we switch from independent-sample generation (Phase 2g) to spectral augmentation from a single seed?
+
+Three hypotheses for why 6c failed:
+- **H1:** Spectral augmentation makes band shaping redundant (the augmentation already respects the spectral profile).
+- **H2:** Cora's PCA-reduced features lack the extreme bimodal spectral structure that community-boundary features have by construction.
+- **H3:** N_ref=1 evaluation noise masks a small shaping effect.
+
+Phase 6e isolates H1. If band shaping still helps on synthetic features with spectral augmentation, H1 is wrong and 6c failure is Cora-specific (points to H2). If shaping disappears, spectral augmentation was silently confounding the Phase 2g result.
+
+**Method:**
+1. SBM(q=0.05) at n=50, d=4 community-boundary features (match Phase 2g exactly)
+2. For each of 5 seeds: generate ONE community feature matrix, spectral-augment to 100 training samples
+3. Train uniform vs band-shaped (Phase 2g config: 500 epochs, 3L GCN 128h, cosine+EMA)
+4. Generate 50 samples, evaluate spectral W1 against held-out reference split (also spectral-augmented from a separate seed)
+5. Paired t-test across 5 seeds
+6. Compare against Phase 2g baseline (independent samples): 12.5% W1 improvement, p=0.0001
+
+**Gate:**
+- Band W1 < uniform W1 with p < 0.05 → H1 rejected, 6c failure is feature-specific → run Experiment B next (community features on Cora topology)
+- No significant difference → H1 confirmed, spectral augmentation eliminates shaping effect → Phase 2g's 12% was partially confounded by augmentation method
+
+**Files to create:** `scripts/test_phase6e_synthetic_spectral_aug.py`
+
+**Depends on:** Nothing (uses existing infrastructure from 6a/6b + synthetic generators from Phase 2).
+
+**Effort:** ~15-30 min GPU (5 seeds × 2 methods = 10 runs at 500 epochs).
+
+---
+
 ### Phase 6d: Feature Imputation (3 days)
 
 **Objective:** Demonstrate practical value — mask 20% of node features, generate them, measure reconstruction quality.
@@ -103,4 +134,4 @@ Each augmentation × {uniform, band-shaped} noise. Evaluate W1 against un-augmen
 1. `uv run pytest tests/test_phase6.py -v` after each sub-phase
 2. Phase 6a: sanity check plots (std_ratio distribution, spectral profiles of PCA-reduced Cora)
 3. Phase 6c: summary table matching Phase 2g format (family, uniform W1, spectral W1, improvement%, p-value)
-4. Each sub-phase writes results to `results/phase6{a,b,c,d}/`
+4. Each sub-phase writes results to `results/phase6{a,b,c,d,e}/`
