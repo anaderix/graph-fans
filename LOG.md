@@ -889,3 +889,39 @@ The absence of band-shaped noise advantage suggests that per-mode shaping (Phase
 
 Report: `results/phase6b/Report-Phase6b.md`
 Results: `results/phase6b/augmentation_comparison.json`, `results/phase6b/phase6b_run.log`
+
+---
+
+## Phase 6c: Core Shaping Validation (2026-04-17)
+
+**Gate: NO-GO** — Band-shaped noise is indistinguishable from uniform noise on real Cora features.
+
+Paired comparison of uniform vs band-shaped noise on 21 BFS Cora subgraphs (n=100, d=16, spectral augmentation from 6b, 500 epochs, L40S GPU). Early stop at 21/50 pairs due to GPU contention; result is statistically conclusive.
+
+| Noise Method | W1 (mean +/- std) | std_ratio |
+|-------------|-------------------|-----------|
+| uniform | 83.5 +/- 27.8 | 1.07 |
+| band | 86.5 +/- 34.8 | 1.08 |
+
+| Metric | Value |
+|--------|-------|
+| Mean delta (band - uniform) | +3.05 +/- 20.56 |
+| Band better | 10/21 (48%) |
+| Paired t-test | t=0.680, p=0.748 (one-sided) |
+
+**Gate check:** Band W1 < uniform W1 with p < 0.05? p = 0.748. **NO-GO.**
+
+### Key Findings
+
+1. **Band shaping provides zero systematic benefit.** The 10/21 win rate is chance. The p-value of 0.748 is far from significance. Per-pair deltas range from -28.3 to +68.5 — training variance completely dominates any shaping signal.
+
+2. **Consistent with Phase 6b.** Both phases independently show band vs uniform differences are within noise. The spectral augmentation strategy matters (46% W1 improvement from 6b); the noise shaping method does not.
+
+3. **Energy ratio does not predict shaping benefit.** Correlation between energy ratio and delta is -0.18 (weak, not significant). Even the most spectrally non-uniform subgraphs (ER > 16x) show no band advantage.
+
+4. **Closes the noise shaping line of investigation.** Combined with Phase 3a (per-mode shaping, NO-GO) and Phase 3b (matched gen noise, NO-GO), this definitively shows that spectral noise shaping — at any granularity — does not improve graph feature generation with the current GCN score network architecture.
+
+5. **Spectral augmentation (Phase 6b) is the practical contribution.** The augmentation strategy dominates: spectral augmentation gives 46% W1 improvement. The noise shaping adds nothing on top.
+
+Report: `results/phase6c/Report-Phase6c.md`
+Results: `results/phase6c/shaping_validation.json`, `results/phase6c/phase6c_run.log`

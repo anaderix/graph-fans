@@ -1,0 +1,451 @@
+INFO: Loading Cora citation network...
+INFO:   Cora: 2708 nodes, 5278 edges, features shape (2708, 1433)
+INFO: Fitting TruncatedSVD to d=16...
+INFO:   d=16: 15.2% variance explained
+INFO: Sampling 50 BFS subgraphs at n=100...
+INFO: 
+Subgraph 1/50 (n=100, energy_ratio=7.7)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.846808
+INFO:   Epoch 100/500, loss=0.196665
+INFO:   Epoch 200/500, loss=0.173850
+INFO:   Epoch 300/500, loss=0.126600
+INFO:   Epoch 400/500, loss=0.172778
+INFO:   Epoch 500/500, loss=0.184872
+INFO:   Sanity check passed: gen_std=0.499, train_std=0.462, spectral_L2=0.022
+INFO:     uniform: loss=0.1849, std_ratio=1.08, W1=101.6
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.824903
+INFO:   Epoch 100/500, loss=0.191048
+INFO:   Epoch 200/500, loss=0.169543
+INFO:   Epoch 300/500, loss=0.129945
+INFO:   Epoch 400/500, loss=0.171620
+INFO:   Epoch 500/500, loss=0.186518
+INFO:   Sanity check passed: gen_std=0.499, train_std=0.462, spectral_L2=0.029
+INFO:     band: loss=0.1865, std_ratio=1.08, W1=100.0
+INFO:     delta_W1=-1.6 (band better) (219.3s)
+INFO: 
+Subgraph 2/50 (n=100, energy_ratio=6.3)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.901214
+INFO:   Epoch 100/500, loss=0.276856
+INFO:   Epoch 200/500, loss=0.232717
+INFO:   Epoch 300/500, loss=0.270394
+INFO:   Epoch 400/500, loss=0.147960
+INFO:   Epoch 500/500, loss=0.147587
+INFO:   Sanity check passed: gen_std=0.487, train_std=0.499, spectral_L2=0.052
+INFO:     uniform: loss=0.1476, std_ratio=0.98, W1=79.8
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.903162
+INFO:   Epoch 100/500, loss=0.280804
+INFO:   Epoch 200/500, loss=0.232815
+INFO:   Epoch 300/500, loss=0.273908
+INFO:   Epoch 400/500, loss=0.147488
+INFO:   Epoch 500/500, loss=0.145888
+INFO:   Sanity check passed: gen_std=0.520, train_std=0.499, spectral_L2=0.061
+INFO:     band: loss=0.1459, std_ratio=1.04, W1=96.8
+INFO:     delta_W1=+17.0 (uniform better) (214.5s)
+INFO: 
+Subgraph 3/50 (n=100, energy_ratio=8.7)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.855383
+INFO:   Epoch 100/500, loss=0.292167
+INFO:   Epoch 200/500, loss=0.201958
+INFO:   Epoch 300/500, loss=0.146410
+INFO:   Epoch 400/500, loss=0.058823
+INFO:   Epoch 500/500, loss=0.099050
+INFO:   Sanity check passed: gen_std=0.491, train_std=0.482, spectral_L2=0.046
+INFO:     uniform: loss=0.0990, std_ratio=1.02, W1=58.4
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.871535
+INFO:   Epoch 100/500, loss=0.290923
+INFO:   Epoch 200/500, loss=0.200006
+INFO:   Epoch 300/500, loss=0.145145
+INFO:   Epoch 400/500, loss=0.059711
+INFO:   Epoch 500/500, loss=0.098444
+INFO:   Sanity check passed: gen_std=0.480, train_std=0.482, spectral_L2=0.039
+INFO:     band: loss=0.0984, std_ratio=1.00, W1=54.8
+INFO:     delta_W1=-3.6 (band better) (217.8s)
+INFO: 
+Subgraph 4/50 (n=100, energy_ratio=7.2)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.769380
+INFO:   Epoch 100/500, loss=0.211582
+INFO:   Epoch 200/500, loss=0.223641
+INFO:   Epoch 300/500, loss=0.119082
+INFO:   Epoch 400/500, loss=0.097289
+INFO:   Epoch 500/500, loss=0.140333
+INFO:   Sanity check passed: gen_std=0.587, train_std=0.505, spectral_L2=0.054
+INFO:     uniform: loss=0.1403, std_ratio=1.16, W1=129.4
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.774513
+INFO:   Epoch 100/500, loss=0.215475
+INFO:   Epoch 200/500, loss=0.230061
+INFO:   Epoch 300/500, loss=0.118650
+INFO:   Epoch 400/500, loss=0.098036
+INFO:   Epoch 500/500, loss=0.142484
+INFO:   Sanity check passed: gen_std=0.568, train_std=0.505, spectral_L2=0.029
+INFO:     band: loss=0.1425, std_ratio=1.13, W1=116.7
+INFO:     delta_W1=-12.7 (band better) (216.8s)
+INFO: 
+Subgraph 5/50 (n=100, energy_ratio=7.4)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.841042
+INFO:   Epoch 100/500, loss=0.263975
+INFO:   Epoch 200/500, loss=0.168684
+INFO:   Epoch 300/500, loss=0.136710
+INFO:   Epoch 400/500, loss=0.170792
+INFO:   Epoch 500/500, loss=0.128491
+INFO:   Sanity check passed: gen_std=0.523, train_std=0.493, spectral_L2=0.030
+INFO:     uniform: loss=0.1285, std_ratio=1.06, W1=65.2
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.839377
+INFO:   Epoch 100/500, loss=0.264648
+INFO:   Epoch 200/500, loss=0.166304
+INFO:   Epoch 300/500, loss=0.137127
+INFO:   Epoch 400/500, loss=0.172765
+INFO:   Epoch 500/500, loss=0.130342
+INFO:   Sanity check passed: gen_std=0.521, train_std=0.493, spectral_L2=0.031
+INFO:     band: loss=0.1303, std_ratio=1.06, W1=62.5
+INFO:     delta_W1=-2.7 (band better) (219.4s)
+INFO: 
+Subgraph 6/50 (n=100, energy_ratio=7.4)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.875380
+INFO:   Epoch 100/500, loss=0.231973
+INFO:   Epoch 200/500, loss=0.189109
+INFO:   Epoch 300/500, loss=0.105659
+INFO:   Epoch 400/500, loss=0.135625
+INFO:   Epoch 500/500, loss=0.158840
+INFO:   Sanity check passed: gen_std=0.504, train_std=0.493, spectral_L2=0.024
+INFO:     uniform: loss=0.1588, std_ratio=1.02, W1=62.2
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.884852
+INFO:   Epoch 100/500, loss=0.231796
+INFO:   Epoch 200/500, loss=0.194481
+INFO:   Epoch 300/500, loss=0.105237
+INFO:   Epoch 400/500, loss=0.134836
+INFO:   Epoch 500/500, loss=0.161113
+INFO:   Sanity check passed: gen_std=0.496, train_std=0.493, spectral_L2=0.027
+INFO:     band: loss=0.1611, std_ratio=1.01, W1=64.9
+INFO:     delta_W1=+2.7 (uniform better) (229.6s)
+INFO: 
+Subgraph 7/50 (n=100, energy_ratio=10.3)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.750956
+INFO:   Epoch 100/500, loss=0.218972
+INFO:   Epoch 200/500, loss=0.142586
+INFO:   Epoch 300/500, loss=0.152333
+INFO:   Epoch 400/500, loss=0.176185
+INFO:   Epoch 500/500, loss=0.155098
+INFO:   Sanity check passed: gen_std=0.535, train_std=0.494, spectral_L2=0.081
+INFO:     uniform: loss=0.1551, std_ratio=1.08, W1=99.5
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.766054
+INFO:   Epoch 100/500, loss=0.217198
+INFO:   Epoch 200/500, loss=0.145094
+INFO:   Epoch 300/500, loss=0.153398
+INFO:   Epoch 400/500, loss=0.178255
+INFO:   Epoch 500/500, loss=0.157571
+INFO:   Sanity check passed: gen_std=0.519, train_std=0.494, spectral_L2=0.022
+INFO:     band: loss=0.1576, std_ratio=1.05, W1=78.4
+INFO:     delta_W1=-21.1 (band better) (225.1s)
+INFO: 
+Subgraph 8/50 (n=100, energy_ratio=10.6)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.892033
+INFO:   Epoch 100/500, loss=0.288088
+INFO:   Epoch 200/500, loss=0.153456
+INFO:   Epoch 300/500, loss=0.136882
+INFO:   Epoch 400/500, loss=0.190454
+INFO:   Epoch 500/500, loss=0.143451
+INFO:   Sanity check passed: gen_std=0.501, train_std=0.490, spectral_L2=0.027
+INFO:     uniform: loss=0.1435, std_ratio=1.02, W1=45.2
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.874163
+INFO:   Epoch 100/500, loss=0.288257
+INFO:   Epoch 200/500, loss=0.150749
+INFO:   Epoch 300/500, loss=0.133709
+INFO:   Epoch 400/500, loss=0.190569
+INFO:   Epoch 500/500, loss=0.142610
+INFO:   Sanity check passed: gen_std=0.502, train_std=0.490, spectral_L2=0.027
+INFO:     band: loss=0.1426, std_ratio=1.02, W1=43.5
+INFO:     delta_W1=-1.7 (band better) (384.8s)
+INFO: 
+Subgraph 9/50 (n=100, energy_ratio=12.1)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.841706
+INFO:   Epoch 100/500, loss=0.240125
+INFO:   Epoch 200/500, loss=0.120126
+INFO:   Epoch 300/500, loss=0.197801
+INFO:   Epoch 400/500, loss=0.156745
+INFO:   Epoch 500/500, loss=0.171421
+INFO:   Sanity check passed: gen_std=0.558, train_std=0.487, spectral_L2=0.048
+INFO:     uniform: loss=0.1714, std_ratio=1.15, W1=136.9
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.818047
+INFO:   Epoch 100/500, loss=0.238214
+INFO:   Epoch 200/500, loss=0.118332
+INFO:   Epoch 300/500, loss=0.192936
+INFO:   Epoch 400/500, loss=0.156093
+INFO:   Epoch 500/500, loss=0.165897
+INFO:   Sanity check passed: gen_std=0.551, train_std=0.487, spectral_L2=0.050
+INFO:     band: loss=0.1659, std_ratio=1.13, W1=118.9
+INFO:     delta_W1=-18.0 (band better) (215.9s)
+INFO: 
+Subgraph 10/50 (n=100, energy_ratio=6.4)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.803719
+INFO:   Epoch 100/500, loss=0.183039
+INFO:   Epoch 200/500, loss=0.168976
+INFO:   Epoch 300/500, loss=0.129386
+INFO:   Epoch 400/500, loss=0.210590
+INFO:   Epoch 500/500, loss=0.169292
+INFO:   Sanity check passed: gen_std=0.494, train_std=0.486, spectral_L2=0.033
+INFO:     uniform: loss=0.1693, std_ratio=1.02, W1=58.4
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.818821
+INFO:   Epoch 100/500, loss=0.181944
+INFO:   Epoch 200/500, loss=0.169857
+INFO:   Epoch 300/500, loss=0.129540
+INFO:   Epoch 400/500, loss=0.210392
+INFO:   Epoch 500/500, loss=0.166838
+INFO:   Sanity check passed: gen_std=0.505, train_std=0.486, spectral_L2=0.031
+INFO:     band: loss=0.1668, std_ratio=1.04, W1=62.6
+INFO:     delta_W1=+4.2 (uniform better) (245.4s)
+INFO: 
+Subgraph 11/50 (n=100, energy_ratio=6.3)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.799064
+INFO:   Epoch 100/500, loss=0.338532
+INFO:   Epoch 200/500, loss=0.160622
+INFO:   Epoch 300/500, loss=0.118204
+INFO:   Epoch 400/500, loss=0.135432
+INFO:   Epoch 500/500, loss=0.160736
+INFO:   Sanity check passed: gen_std=0.532, train_std=0.525, spectral_L2=0.054
+INFO:     uniform: loss=0.1607, std_ratio=1.01, W1=71.6
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.831144
+INFO:   Epoch 100/500, loss=0.334775
+INFO:   Epoch 200/500, loss=0.161020
+INFO:   Epoch 300/500, loss=0.117328
+INFO:   Epoch 400/500, loss=0.138869
+INFO:   Epoch 500/500, loss=0.160804
+INFO:   Sanity check passed: gen_std=0.527, train_std=0.525, spectral_L2=0.031
+INFO:     band: loss=0.1608, std_ratio=1.00, W1=59.1
+INFO:     delta_W1=-12.5 (band better) (270.6s)
+INFO: 
+Subgraph 12/50 (n=100, energy_ratio=10.2)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.869603
+INFO:   Epoch 100/500, loss=0.204377
+INFO:   Epoch 200/500, loss=0.290913
+INFO:   Epoch 300/500, loss=0.159689
+INFO:   Epoch 400/500, loss=0.123064
+INFO:   Epoch 500/500, loss=0.169321
+INFO:   Sanity check passed: gen_std=0.494, train_std=0.439, spectral_L2=0.033
+INFO:     uniform: loss=0.1693, std_ratio=1.12, W1=93.5
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.859802
+INFO:   Epoch 100/500, loss=0.198969
+INFO:   Epoch 200/500, loss=0.284792
+INFO:   Epoch 300/500, loss=0.161636
+INFO:   Epoch 400/500, loss=0.123060
+INFO:   Epoch 500/500, loss=0.166613
+INFO:   Sanity check passed: gen_std=0.486, train_std=0.439, spectral_L2=0.032
+INFO:     band: loss=0.1666, std_ratio=1.11, W1=78.8
+INFO:     delta_W1=-14.6 (band better) (731.3s)
+INFO: 
+Subgraph 13/50 (n=100, energy_ratio=9.0)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.834067
+INFO:   Epoch 100/500, loss=0.221314
+INFO:   Epoch 200/500, loss=0.248278
+INFO:   Epoch 300/500, loss=0.221359
+INFO:   Epoch 400/500, loss=0.165245
+INFO:   Epoch 500/500, loss=0.162579
+INFO:   Sanity check passed: gen_std=0.507, train_std=0.451, spectral_L2=0.029
+INFO:     uniform: loss=0.1626, std_ratio=1.12, W1=111.7
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.804460
+INFO:   Epoch 100/500, loss=0.217428
+INFO:   Epoch 200/500, loss=0.243150
+INFO:   Epoch 300/500, loss=0.221552
+INFO:   Epoch 400/500, loss=0.167166
+INFO:   Epoch 500/500, loss=0.163590
+INFO:   Sanity check passed: gen_std=0.515, train_std=0.451, spectral_L2=0.046
+INFO:     band: loss=0.1636, std_ratio=1.14, W1=131.1
+INFO:     delta_W1=+19.5 (uniform better) (923.4s)
+INFO: 
+Subgraph 14/50 (n=100, energy_ratio=10.6)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.842806
+INFO:   Epoch 100/500, loss=0.201914
+INFO:   Epoch 200/500, loss=0.194205
+INFO:   Epoch 300/500, loss=0.199662
+INFO:   Epoch 400/500, loss=0.129570
+INFO:   Epoch 500/500, loss=0.165832
+INFO:   Sanity check passed: gen_std=0.446, train_std=0.433, spectral_L2=0.024
+INFO:     uniform: loss=0.1658, std_ratio=1.03, W1=45.2
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.840887
+INFO:   Epoch 100/500, loss=0.199322
+INFO:   Epoch 200/500, loss=0.196872
+INFO:   Epoch 300/500, loss=0.197852
+INFO:   Epoch 400/500, loss=0.129540
+INFO:   Epoch 500/500, loss=0.165406
+INFO:   Sanity check passed: gen_std=0.460, train_std=0.433, spectral_L2=0.030
+INFO:     band: loss=0.1654, std_ratio=1.06, W1=51.3
+INFO:     delta_W1=+6.1 (uniform better) (501.9s)
+INFO: 
+Subgraph 15/50 (n=100, energy_ratio=16.0)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.739040
+INFO:   Epoch 100/500, loss=0.280107
+INFO:   Epoch 200/500, loss=0.143820
+INFO:   Epoch 300/500, loss=0.130653
+INFO:   Epoch 400/500, loss=0.116932
+INFO:   Epoch 500/500, loss=0.173696
+INFO:   Sanity check passed: gen_std=0.518, train_std=0.481, spectral_L2=0.029
+INFO:     uniform: loss=0.1737, std_ratio=1.08, W1=69.6
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.733451
+INFO:   Epoch 100/500, loss=0.280354
+INFO:   Epoch 200/500, loss=0.145728
+INFO:   Epoch 300/500, loss=0.131945
+INFO:   Epoch 400/500, loss=0.117303
+INFO:   Epoch 500/500, loss=0.173267
+INFO:   Sanity check passed: gen_std=0.535, train_std=0.481, spectral_L2=0.037
+INFO:     band: loss=0.1733, std_ratio=1.11, W1=92.2
+INFO:     delta_W1=+22.7 (uniform better) (981.2s)
+INFO: 
+Subgraph 16/50 (n=100, energy_ratio=11.2)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.872495
+INFO:   Epoch 100/500, loss=0.177512
+INFO:   Epoch 200/500, loss=0.245802
+INFO:   Epoch 300/500, loss=0.134473
+INFO:   Epoch 400/500, loss=0.154825
+INFO:   Epoch 500/500, loss=0.194331
+INFO:   Sanity check passed: gen_std=0.497, train_std=0.465, spectral_L2=0.043
+INFO:     uniform: loss=0.1943, std_ratio=1.07, W1=58.0
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.857696
+INFO:   Epoch 100/500, loss=0.182592
+INFO:   Epoch 200/500, loss=0.248742
+INFO:   Epoch 300/500, loss=0.137234
+INFO:   Epoch 400/500, loss=0.156418
+INFO:   Epoch 500/500, loss=0.196326
+INFO:   Sanity check passed: gen_std=0.508, train_std=0.465, spectral_L2=0.062
+INFO:     band: loss=0.1963, std_ratio=1.09, W1=77.1
+INFO:     delta_W1=+19.1 (uniform better) (315.4s)
+INFO: 
+Subgraph 17/50 (n=100, energy_ratio=16.2)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.811820
+INFO:   Epoch 100/500, loss=0.213902
+INFO:   Epoch 200/500, loss=0.171491
+INFO:   Epoch 300/500, loss=0.239260
+INFO:   Epoch 400/500, loss=0.192831
+INFO:   Epoch 500/500, loss=0.168250
+INFO:   Sanity check passed: gen_std=0.523, train_std=0.494, spectral_L2=0.041
+INFO:     uniform: loss=0.1683, std_ratio=1.06, W1=70.4
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.829416
+INFO:   Epoch 100/500, loss=0.212702
+INFO:   Epoch 200/500, loss=0.173296
+INFO:   Epoch 300/500, loss=0.242242
+INFO:   Epoch 400/500, loss=0.191928
+INFO:   Epoch 500/500, loss=0.168676
+INFO:   Sanity check passed: gen_std=0.529, train_std=0.494, spectral_L2=0.039
+INFO:     band: loss=0.1687, std_ratio=1.07, W1=84.1
+INFO:     delta_W1=+13.7 (uniform better) (218.2s)
+INFO: 
+Subgraph 18/50 (n=100, energy_ratio=12.1)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.845414
+INFO:   Epoch 100/500, loss=0.286053
+INFO:   Epoch 200/500, loss=0.225438
+INFO:   Epoch 300/500, loss=0.189617
+INFO:   Epoch 400/500, loss=0.170172
+INFO:   Epoch 500/500, loss=0.184915
+INFO:   Sanity check passed: gen_std=0.534, train_std=0.479, spectral_L2=0.049
+INFO:     uniform: loss=0.1849, std_ratio=1.11, W1=102.4
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.848895
+INFO:   Epoch 100/500, loss=0.282584
+INFO:   Epoch 200/500, loss=0.225147
+INFO:   Epoch 300/500, loss=0.190346
+INFO:   Epoch 400/500, loss=0.168551
+INFO:   Epoch 500/500, loss=0.183083
+INFO:   Sanity check passed: gen_std=0.519, train_std=0.479, spectral_L2=0.043
+INFO:     band: loss=0.1831, std_ratio=1.08, W1=74.1
+INFO:     delta_W1=-28.3 (band better) (957.9s)
+INFO: 
+Subgraph 19/50 (n=100, energy_ratio=4.3)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.846804
+INFO:   Epoch 100/500, loss=0.180911
+INFO:   Epoch 200/500, loss=0.167376
+INFO:   Epoch 300/500, loss=0.185413
+INFO:   Epoch 400/500, loss=0.155719
+INFO:   Epoch 500/500, loss=0.176438
+INFO:   Sanity check passed: gen_std=0.526, train_std=0.464, spectral_L2=0.042
+INFO:     uniform: loss=0.1764, std_ratio=1.13, W1=130.2
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.834092
+INFO:   Epoch 100/500, loss=0.181043
+INFO:   Epoch 200/500, loss=0.169036
+INFO:   Epoch 300/500, loss=0.183296
+INFO:   Epoch 400/500, loss=0.155982
+INFO:   Epoch 500/500, loss=0.176037
+INFO:   Sanity check passed: gen_std=0.582, train_std=0.464, spectral_L2=0.059
+INFO:     band: loss=0.1760, std_ratio=1.25, W1=198.6
+INFO:     delta_W1=+68.5 (uniform better) (977.3s)
+INFO: 
+Subgraph 20/50 (n=100, energy_ratio=9.7)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.799690
+INFO:   Epoch 100/500, loss=0.208531
+INFO:   Epoch 200/500, loss=0.201542
+INFO:   Epoch 300/500, loss=0.152776
+INFO:   Epoch 400/500, loss=0.115431
+INFO:   Epoch 500/500, loss=0.150165
+INFO:   Sanity check passed: gen_std=0.513, train_std=0.479, spectral_L2=0.041
+INFO:     uniform: loss=0.1502, std_ratio=1.07, W1=68.6
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.795575
+INFO:   Epoch 100/500, loss=0.208234
+INFO:   Epoch 200/500, loss=0.204948
+INFO:   Epoch 300/500, loss=0.153069
+INFO:   Epoch 400/500, loss=0.118203
+INFO:   Epoch 500/500, loss=0.153431
+INFO:   Sanity check passed: gen_std=0.518, train_std=0.479, spectral_L2=0.053
+INFO:     band: loss=0.1534, std_ratio=1.08, W1=69.1
+INFO:     delta_W1=+0.5 (uniform better) (974.6s)
+INFO: 
+Subgraph 21/50 (n=100, energy_ratio=10.7)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.795305
+INFO:   Epoch 100/500, loss=0.164148
+INFO:   Epoch 200/500, loss=0.139259
+INFO:   Epoch 300/500, loss=0.171338
+INFO:   Epoch 400/500, loss=0.180366
+INFO:   Epoch 500/500, loss=0.148091
+INFO:   Sanity check passed: gen_std=0.543, train_std=0.492, spectral_L2=0.017
+INFO:     uniform: loss=0.1481, std_ratio=1.10, W1=95.5
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.755943
+INFO:   Epoch 100/500, loss=0.168198
+INFO:   Epoch 200/500, loss=0.141507
+INFO:   Epoch 300/500, loss=0.174193
+INFO:   Epoch 400/500, loss=0.180271
+INFO:   Epoch 500/500, loss=0.146717
+INFO:   Sanity check passed: gen_std=0.547, train_std=0.492, spectral_L2=0.018
+INFO:     band: loss=0.1467, std_ratio=1.11, W1=102.5
+INFO:     delta_W1=+6.9 (uniform better) (602.1s)
+INFO: 
+Subgraph 22/50 (n=100, energy_ratio=13.7)
+INFO:   Dataset: 100 samples, 100 nodes, 16 features
+INFO:   Epoch 1/500, loss=0.829648
+INFO:   Epoch 100/500, loss=0.162851
