@@ -1258,6 +1258,143 @@
       </div>
     </div>
 
+    <!-- Day 8 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-04-17 &mdash; Day 8</span>
+      </div>
+
+      <div class="tl-entry go">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-go">GO</span>
+            <h3>Phase 6b &mdash; Augmentation Strategy Comparison</h3>
+            <span class="tl-card-summary">Spectral augmentation wins: 46% lower W1 than gaussian, 120/120 pass</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Compared 3 augmentation strategies (gaussian / spectral / dropout) &times; 2 noise methods (uniform / band) on 20 BFS Cora subgraphs (n=100, d=16, 500 epochs, L40S). Total 120 runs, 3.6 h wall time.</p>
+            <table>
+              <tr><th>Strategy</th><th>Noise</th><th>Pass</th><th>W1 mean &plusmn; std</th></tr>
+              <tr><td><strong>spectral</strong></td><td>uniform</td><td class="better">20/20</td><td class="better">83.4 &plusmn; 34.0</td></tr>
+              <tr><td>spectral</td><td>band</td><td class="better">20/20</td><td class="better">85.7 &plusmn; 34.6</td></tr>
+              <tr><td>dropout</td><td>uniform</td><td class="better">20/20</td><td>112.7 &plusmn; 38.7</td></tr>
+              <tr><td>dropout</td><td>band</td><td class="better">20/20</td><td>116.2 &plusmn; 40.6</td></tr>
+              <tr><td>gaussian</td><td>uniform</td><td class="better">20/20</td><td class="worse">154.6 &plusmn; 57.2</td></tr>
+              <tr><td>gaussian</td><td>band</td><td class="better">20/20</td><td class="worse">153.6 &plusmn; 53.6</td></tr>
+            </table>
+            <p><strong>Key finding:</strong> Spectral augmentation beats gaussian by <strong>46% in W1</strong> and dropout by 26%. Consistent ranking across all 20 subgraphs. Adding noise proportional to per-eigenmode energy preserves the spectral structure of real Cora features. <strong>Band-shaped noise shows no advantage over uniform</strong> (&minus;0.6% to +3.1%) &mdash; the augmentation strategy dominates over the shaping method. This is the practical contribution of Phase 6 for real citation networks.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 6c &mdash; Core Shaping Validation on Cora</h3>
+            <span class="tl-card-summary">Band vs uniform: p=0.748, 10/21 wins &mdash; zero effect</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Paired comparison of uniform vs band-shaped noise on 21 Cora BFS subgraphs (n=100, d=16, spectral augmentation from 6b, 500 epochs).</p>
+            <table>
+              <tr><th>Noise</th><th>W1 mean &plusmn; std</th><th>std_ratio</th></tr>
+              <tr><td>uniform</td><td>83.5 &plusmn; 27.8</td><td>1.07</td></tr>
+              <tr><td>band</td><td>86.5 &plusmn; 34.8</td><td>1.08</td></tr>
+            </table>
+            <p><strong>Key finding:</strong> Band shaping provides <strong>zero systematic benefit</strong> on real Cora features. Mean delta +3.05 &plusmn; 20.56, band wins 10/21 (chance), paired t-test p=0.748. Training variance completely dominates any shaping signal. Combined with Phase 3a (per-mode NO-GO) and Phase 3b (matched-gen NO-GO), this closes the <strong>noise-shaping line of investigation</strong> on real citation networks. The practical contribution is spectral augmentation (Phase 6b), not shaping.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 6e &mdash; H1: Does Spectral Aug Eliminate Shaping?</h3>
+            <span class="tl-card-summary">SBM+specaug+specaug: -2%, p=0.629 (later OVERTURNED by 6f)</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Replicated Phase 2g exactly (SBM q=0.05, n=50, d=4, 500 epochs) but with <em>spectral augmentation from 1 sample</em> instead of 100 independent samples. 5 seeds. Tests if spectral augmentation makes band shaping redundant (H1).</p>
+            <p><strong>Result:</strong> Uniform 292.6 &plusmn; 67.1 vs band 298.5 &plusmn; 67.5, mean &minus;2.0%, paired t p=0.629. Vs Phase 2g (+12.5%, p=0.0001) on the same graph/features/config, the shift to specaug training+ref killed the effect. Initial conclusion: spectral augmentation makes band shaping redundant. <strong>Overturned 1 day later by Phase 6f</strong> with 10 seeds.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry go">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-go">GO (overturns 6e)</span>
+            <h3>Phase 6f &mdash; Cross-Protocol 2&times;2&times;2 Evaluation</h3>
+            <span class="tl-card-summary">10 seeds, Phase 6e overturned: D_band vs D_uni +6.3%, p=0.013</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>2&times;2&times;2 design with 10 seeds: (training protocol: indep vs specaug) &times; (reference protocol: indep vs specaug) &times; (shaping: uniform vs band) on SBM(q=0.05), n=50, d=4. 40 trainings, 80 W1 cells, ~75 min on L40S.</p>
+            <table>
+              <tr><th>Comparison</th><th>&Delta;%</th><th>p-value</th><th>Band wins</th></tr>
+              <tr><td>A_band vs A_uni (replicates 2g)</td><td class="better">+11.7%</td><td class="better">0.0001</td><td>10/10</td></tr>
+              <tr><td>B_band vs B_uni (indep train, specaug ref)</td><td class="better">+10.9%</td><td class="better">0.0001</td><td>9/10</td></tr>
+              <tr><td>C_band vs C_uni (specaug train, indep ref)</td><td>+4.6%</td><td>0.1646</td><td>6/10</td></tr>
+              <tr><td>D_band vs D_uni (replicates 6e)</td><td class="better">+6.3%</td><td class="better">0.0131</td><td>9/10</td></tr>
+            </table>
+            <p><strong>Key finding:</strong> Phase 2g replicates exactly (+11.7%, 10/10 seeds). <strong>Phase 6e is overturned</strong> &mdash; the same (specaug/specaug) cell now shows +6.3% with 10 seeds (9/10 favor band, p=0.013). Phase 6e's NO-GO was a false negative from n=5 underpowering. <strong>Training protocol modulates effect size, evaluation reference doesn&rsquo;t</strong>: A (+11.7%) vs B (+10.9%) isolates ref-protocol change &rarr; essentially identical; A vs C (+4.6%) isolates training-protocol change &rarr; ~2.5&times; smaller. Absolute W1 drops ~3&times; under specaug training; shaping effect shrinks proportionally but stays directionally positive.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO</span>
+            <h3>Phase 7-pre &mdash; Continuous-Feature Sanity Check</h3>
+            <span class="tl-card-summary">Elliptic 1/3, PPI 0/3 pass &mdash; DDIM overshoots on continuous features</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Sanity gate before Phase 7a multi-dataset validation: does the Cora-tuned pipeline (BFS n=100, TruncatedSVD d=16, 3L GCN 128h, cosine+EMA, gaussian augmentation, 500 epochs) denoise real continuous features? Gate: std_ratio &lt; 3.0 on &ge; 2/3 sanity subgraphs per dataset.</p>
+            <table>
+              <tr><th>Dataset</th><th>n (largest CC)</th><th>SVD var d=16</th><th>Train pass</th><th>std_ratio</th></tr>
+              <tr><td>Elliptic Bitcoin</td><td>7,880</td><td class="better">59.3%</td><td class="worse">1/3</td><td class="worse">2.7 / 10.6 / 4.3</td></tr>
+              <tr><td>Stanford PPI (concat)</td><td>3,480</td><td>39.8%</td><td class="worse">0/3</td><td class="worse">17.8 / 66.7 / 215.1</td></tr>
+            </table>
+            <p><strong>Key finding:</strong> SVD at d=16 is <strong>healthy</strong> (59.3% / 39.8% variance explained, far better than Cora&rsquo;s 15.2%) &mdash; reduction is not the blocker. The failure is in the generative pipeline: <strong>DDIM samples overshoot training std by 10&times;&ndash;215&times;</strong>. 4/10 Elliptic subgraphs have energy_ratio &gt; 300 (vs Cora&rsquo;s 3&ndash;17). A per-subgraph rescale mitigation makes it worse, confirming this is reverse-SDE tail calibration rather than feature-scale. <strong>Phase 7a and 7b halted</strong>; pipeline repair (noise schedule / Tweedie step / narrower augmentation sigma) required before re-attempting multi-dataset validation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 9 -->
+    <div class="tl-day">
+      <div class="tl-day-label">
+        <div class="tl-day-dot"></div>
+        <span class="tl-day-text">2026-04-18 &mdash; Day 9</span>
+      </div>
+
+      <div class="tl-entry nogo">
+        <div class="tl-card" onclick="this.classList.toggle('open')">
+          <div class="tl-card-header">
+            <span class="badge badge-nogo">NO-GO &times; 2</span>
+            <h3>Phase 6c-1 &mdash; H2 + Power-Boosted 6c</h3>
+            <span class="tl-card-summary">Part A synth features: -8.7% p=0.204 &middot; Part B powered: -14.4% p=0.004 (significant negative)</span>
+            <span class="chevron">&#9654;</span>
+          </div>
+          <div class="tl-card-body">
+            <p>Two-pronged re-examination of Phase 6c&rsquo;s Cora NO-GO after Phase 6f showed 6e was underpowered. Part A (H2): synthetic community-boundary features (d=4) on Cora BFS subgraph topology, 10 subgraphs, independent-sample protocol &mdash; tests if Cora&rsquo;s topology alone breaks shaping. Part B: real Cora features + TruncatedSVD d=16 + spectral augmentation, 30 subgraphs (vs 6c&rsquo;s 21). 80 trainings, ~149 min on L40S.</p>
+            <table>
+              <tr><th>Experiment</th><th>n</th><th>Uni W1</th><th>Band W1</th><th>&Delta;%</th><th>p (2-sided)</th><th>Band wins</th></tr>
+              <tr><td>Part A (synth features, Cora topology)</td><td>10</td><td>1101.4</td><td>1197.4</td><td class="worse">&minus;8.7%</td><td>0.204</td><td>3/10</td></tr>
+              <tr><td>Part B (real features + specaug, powered)</td><td>30</td><td>67.1</td><td>76.8</td><td class="worse">&minus;14.4%</td><td class="worse">0.004</td><td>10/30</td></tr>
+            </table>
+            <p><strong>Key finding:</strong> Phase 6c is <strong>not rescued by power</strong> &mdash; more subgraphs make the negative stronger (Part B: t=+3.20, two-sided p=0.004 &mdash; band shaping makes W1 <em>reliably worse</em> on real Cora features). <strong>Topology matters:</strong> even Phase 2g&rsquo;s ideal synthetic features fail on Cora subgraph topology (Part A trend &minus;8.7%). Phase 2g&rsquo;s effect is narrow &mdash; scope-bounded to synthetic block/community graphs (SBM, BA). Paper framing B (spectral augmentation as practical contribution) is primary; Framing A (shaping) is a synthetic case study. Energy ratio is <strong>not</strong> a sufficient predictor &mdash; Cora subgraphs have ER 5&ndash;38&times; yet shaping fails; alignment between band partition and feature-generating process matters more than ER magnitude.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
