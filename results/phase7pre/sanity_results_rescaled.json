@@ -1,0 +1,287 @@
+{
+  "experiment": "phase7pre_sanity",
+  "config": {
+    "datasets": [
+      "elliptic",
+      "ppi"
+    ],
+    "n_subgraphs": 10,
+    "n_train_subgraphs": 3,
+    "n_epochs": 500,
+    "n_nodes": 100,
+    "n_dims": 16,
+    "device": "cuda",
+    "quick": false,
+    "per_subgraph_rescale": true
+  },
+  "datasets": {
+    "elliptic": {
+      "dataset": "elliptic",
+      "loaded": true,
+      "n_nodes_full": 7880,
+      "n_edges_full": 9164,
+      "n_features_full": 165,
+      "svd_variance_explained_d16": 0.5931820501235842,
+      "n_subgraphs": 10,
+      "n_train_subgraphs": 3,
+      "per_subgraph": [
+        {
+          "subgraph_idx": 0,
+          "n_nodes": 100,
+          "energy_ratio": 17.5689147315847,
+          "feat_std": 3.0878444339690883,
+          "feat_min": -32.1517524950032,
+          "feat_max": 49.124634162102424
+        },
+        {
+          "subgraph_idx": 1,
+          "n_nodes": 100,
+          "energy_ratio": 724.2785136800682,
+          "feat_std": 6.041294859597892,
+          "feat_min": -44.66123069313221,
+          "feat_max": 150.73097924372493
+        },
+        {
+          "subgraph_idx": 2,
+          "n_nodes": 100,
+          "energy_ratio": 39.69169882166952,
+          "feat_std": 2.0283187442316004,
+          "feat_min": -10.49388934910177,
+          "feat_max": 19.853082584016963
+        },
+        {
+          "subgraph_idx": 3,
+          "n_nodes": 100,
+          "energy_ratio": 7.927606315008528,
+          "feat_std": 3.7631822005739117,
+          "feat_min": -32.1517524950032,
+          "feat_max": 49.124634162102424
+        },
+        {
+          "subgraph_idx": 4,
+          "n_nodes": 100,
+          "energy_ratio": 35.91947889165779,
+          "feat_std": 1.972363472803681,
+          "feat_min": -10.49388934910177,
+          "feat_max": 12.874701205577017
+        },
+        {
+          "subgraph_idx": 5,
+          "n_nodes": 100,
+          "energy_ratio": 351.82988061921225,
+          "feat_std": 6.030928638569604,
+          "feat_min": -44.66123069313221,
+          "feat_max": 150.73097924372493
+        },
+        {
+          "subgraph_idx": 6,
+          "n_nodes": 100,
+          "energy_ratio": 9.097156376312768,
+          "feat_std": 3.2125592937089387,
+          "feat_min": -32.1517524950032,
+          "feat_max": 49.124634162102424
+        },
+        {
+          "subgraph_idx": 7,
+          "n_nodes": 100,
+          "energy_ratio": 303.85691896613304,
+          "feat_std": 6.005915410936329,
+          "feat_min": -44.66123069313221,
+          "feat_max": 150.73097924372493
+        },
+        {
+          "subgraph_idx": 8,
+          "n_nodes": 100,
+          "energy_ratio": 445.8164905460183,
+          "feat_std": 4.059212484945181,
+          "feat_min": -32.1517524950032,
+          "feat_max": 49.124634162102424
+        },
+        {
+          "subgraph_idx": 9,
+          "n_nodes": 100,
+          "energy_ratio": 21.79873922551542,
+          "feat_std": 2.8177026896709685,
+          "feat_min": -32.1517524950032,
+          "feat_max": 49.124634162102424
+        }
+      ],
+      "train_results": [
+        {
+          "final_loss": 0.3666973648359999,
+          "std_ratio": 9.464594480107369,
+          "spectral_l2": 0.12902558044015722,
+          "w1_total": 141858.28662288314,
+          "training_var": 1.1196657752724914,
+          "w1_vs_train_var_ratio": 126696.99275949788,
+          "subgraph_idx": 0,
+          "energy_ratio": 17.5689147315847,
+          "elapsed_s": 67.95766425132751,
+          "passed": false
+        },
+        {
+          "final_loss": 0.30734522244893014,
+          "std_ratio": 5.356190993607979,
+          "spectral_l2": 0.26276661284588815,
+          "w1_total": 62441.089572473735,
+          "training_var": 1.4750868415709364,
+          "w1_vs_train_var_ratio": 42330.449850622324,
+          "subgraph_idx": 1,
+          "energy_ratio": 724.2785136800682,
+          "elapsed_s": 67.55028033256531,
+          "passed": false
+        },
+        {
+          "final_loss": 0.22069338205619715,
+          "std_ratio": 13.974529899078838,
+          "spectral_l2": 0.14982680661138337,
+          "w1_total": 468854.87389175914,
+          "training_var": 1.129027857377524,
+          "w1_vs_train_var_ratio": 415273.078363529,
+          "subgraph_idx": 2,
+          "energy_ratio": 39.69169882166952,
+          "elapsed_s": 67.93441581726074,
+          "passed": false
+        }
+      ],
+      "n_pass": 0,
+      "pass_rate": 0.0,
+      "gate_pass": false
+    },
+    "ppi": {
+      "dataset": "ppi",
+      "loaded": true,
+      "n_nodes_full": 3480,
+      "n_edges_full": 53377,
+      "n_features_full": 50,
+      "svd_variance_explained_d16": 0.3975694812807835,
+      "n_subgraphs": 10,
+      "n_train_subgraphs": 3,
+      "per_subgraph": [
+        {
+          "subgraph_idx": 0,
+          "n_nodes": 100,
+          "energy_ratio": 22.966878211358804,
+          "feat_std": 1.3279991964477358,
+          "feat_min": -6.7084718571302915,
+          "feat_max": 10.894997475565594
+        },
+        {
+          "subgraph_idx": 1,
+          "n_nodes": 100,
+          "energy_ratio": 34.60566250447311,
+          "feat_std": 1.0950258370630706,
+          "feat_min": -5.677470246450783,
+          "feat_max": 8.875927274704873
+        },
+        {
+          "subgraph_idx": 2,
+          "n_nodes": 100,
+          "energy_ratio": 54.14273614348211,
+          "feat_std": 1.1796657400403736,
+          "feat_min": -5.779990678842449,
+          "feat_max": 10.894997475565594
+        },
+        {
+          "subgraph_idx": 3,
+          "n_nodes": 100,
+          "energy_ratio": 13.52608727793712,
+          "feat_std": 1.196468047294849,
+          "feat_min": -7.051454879638199,
+          "feat_max": 10.894997475565594
+        },
+        {
+          "subgraph_idx": 4,
+          "n_nodes": 100,
+          "energy_ratio": 12.196562788514186,
+          "feat_std": 1.1770136520231236,
+          "feat_min": -5.779990678842449,
+          "feat_max": 10.894997475565594
+        },
+        {
+          "subgraph_idx": 5,
+          "n_nodes": 100,
+          "energy_ratio": 49.81141820081664,
+          "feat_std": 1.058828358094415,
+          "feat_min": -5.70554865533248,
+          "feat_max": 10.27614959606225
+        },
+        {
+          "subgraph_idx": 6,
+          "n_nodes": 100,
+          "energy_ratio": 23.748080322989104,
+          "feat_std": 1.045871398340643,
+          "feat_min": -5.392535663956526,
+          "feat_max": 10.894997475565594
+        },
+        {
+          "subgraph_idx": 7,
+          "n_nodes": 100,
+          "energy_ratio": 31.194896685310653,
+          "feat_std": 1.2240439654869746,
+          "feat_min": -5.788947305446818,
+          "feat_max": 10.846144954784606
+        },
+        {
+          "subgraph_idx": 8,
+          "n_nodes": 100,
+          "energy_ratio": 40.730790160199795,
+          "feat_std": 1.1230033280230716,
+          "feat_min": -5.199361738437295,
+          "feat_max": 11.227706346526459
+        },
+        {
+          "subgraph_idx": 9,
+          "n_nodes": 100,
+          "energy_ratio": 22.891377148618048,
+          "feat_std": 1.072579763090758,
+          "feat_min": -5.677470246450783,
+          "feat_max": 8.972078695705564
+        }
+      ],
+      "train_results": [
+        {
+          "final_loss": 0.360301669978071,
+          "std_ratio": 47.76251355026876,
+          "spectral_l2": 0.14181846659995076,
+          "w1_total": 4581957.592942454,
+          "training_var": 1.105278539244176,
+          "w1_vs_train_var_ratio": 4145522.9883243674,
+          "subgraph_idx": 0,
+          "energy_ratio": 22.966878211358804,
+          "elapsed_s": 68.41320300102234,
+          "passed": false
+        },
+        {
+          "final_loss": 0.2795055384049192,
+          "std_ratio": 121.10190512584657,
+          "spectral_l2": 0.10958969762985792,
+          "w1_total": 32896870.08380357,
+          "training_var": 1.0907816022189432,
+          "w1_vs_train_var_ratio": 30158988.762601357,
+          "subgraph_idx": 1,
+          "energy_ratio": 34.60566250447311,
+          "elapsed_s": 68.84163403511047,
+          "passed": false
+        },
+        {
+          "final_loss": 0.2342360500479117,
+          "std_ratio": 343.68057430198377,
+          "spectral_l2": 0.06055677420370935,
+          "w1_total": 207032075.34782764,
+          "training_var": 1.0815301746097208,
+          "w1_vs_train_var_ratio": 191425149.48539966,
+          "subgraph_idx": 2,
+          "energy_ratio": 54.14273614348211,
+          "elapsed_s": 70.05668306350708,
+          "passed": false
+        }
+      ],
+      "n_pass": 0,
+      "pass_rate": 0.0,
+      "gate_pass": false
+    }
+  },
+  "total_elapsed_s": 416.84669828414917,
+  "overall_gate_pass": false
+}

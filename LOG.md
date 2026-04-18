@@ -1063,3 +1063,39 @@ Cora BFS subgraphs at n=100. Part A: 10 subgraphs, synthetic community-boundary 
 **Phase 6c-1: NO-GO + NO-GO.** Phase 2g's effect is narrow. Band shaping does not transfer to real citation networks (neither topology nor features of Cora support it). Paper framing B (spectral augmentation as the practical contribution) should be primary; Framing A (shaping works) is scope-bounded to synthetic block/community graphs.
 
 Results: `results/phase6c1/h2_plus_power.json`, `results/phase6c1/phase6c1_run.log`
+
+## 2026-04-17 — Phase 7-pre: Continuous-Feature Sanity Check — NO-GO
+
+### Motivation
+
+Before scaling Phase 6b's spectral-augmentation win on Cora to a multi-dataset paper (Elliptic Bitcoin fraud, Stanford PPI protein function), verify the Phase 6 pipeline (BFS subgraphs + TruncatedSVD d=16 + 3L GCN diffusion) denoises stably on continuous real features. Gate: GCN denoises on ≥ 2/3 sanity subgraphs per dataset (std_ratio < 3.0).
+
+### Setup
+
+Loaders for Elliptic (via `EllipticBitcoinDataset`, 7880-node largest CC of 203k, 165 features, 2147 labeled) and PPI (via PyG `PPI`, concatenated train split 3480-node largest CC, 50 features, 121 multi-label). 10 BFS subgraphs per dataset at n=100; train baseline (gaussian aug sigma 0.01-0.5, 3L GCN 128h, 500 epochs, cosine+EMA, uniform noise) on 3 representative subgraphs per dataset. NVIDIA A100 40GB MIG, ~1 min/run.
+
+### Results
+
+**v1 (default pipeline):**
+
+| Dataset  | n_CC  | SVD var d=16 | train pass | std_ratios          | Gate |
+|----------|-------|--------------|------------|---------------------|------|
+| Elliptic | 7,880 | **59.3%**    | 1/3        | 2.74 / 10.6 / 4.3   | FAIL |
+| PPI      | 3,480 | 39.8%        | 0/3        | 17.8 / 66.7 / 215.1 | FAIL |
+
+**v2 (per-subgraph rescale to unit column variance before augmentation):**
+
+| Dataset  | train pass | std_ratios          | Gate |
+|----------|------------|---------------------|------|
+| Elliptic | 0/3        | 9.5 / 5.4 / ~       | FAIL |
+| PPI      | 0/3        | 121 / 343 / …       | FAIL |
+
+### Interpretation
+
+SVD variance explained is much better than Cora's 15.2% (as the plan predicted), so the reduction is preserving signal. The failure mode is that the GCN diffusion generates samples whose std is 10×-200× the training std — DDIM samples overshoot. Four of ten Elliptic subgraphs have energy_ratio > 300 (vs Cora's 3-17). Rescaling shifts the training data to near-unit variance but doesn't fix the reverse-SDE tail behavior; it makes the overshoot more visible, not less.
+
+### Gate decision
+
+**NO-GO.** Phase 7a and 7b are not executed. The Cora-tuned pipeline does not handle continuous real features at n=100 subgraphs without repair. Recommended next steps before reattempting: diagnose DDIM overshoot (noise schedule, `beta_min/beta_max`, timestep grid, Tweedie step), try non-reduced features, try larger d, or narrow the augmentation sigma range per-subgraph. Alternatively, pivot the paper to the spectral-augmentation result already in hand (Phase 6b, Cora) plus theoretical analysis, rather than multi-dataset empirical validation.
+
+Results: `results/phase7pre/sanity_results.json`, `results/phase7pre/sanity_results_rescaled.json`. Code: `graph_fans/phase7/real_dataset_loader.py`, `scripts/test_phase7pre_sanity.py`, `tests/test_phase7.py` (10/10 pass).
