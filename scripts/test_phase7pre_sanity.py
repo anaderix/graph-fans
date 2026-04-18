@@ -45,7 +45,14 @@ N_GEN = 50
 B = 8
 
 
-def _run_baseline(sample, sub_features, evals, evecs, bands, n_epochs, device, seed):
+def _run_baseline(sample, sub_features, evals, evecs, bands, n_epochs, device, seed,
+                  per_subgraph_rescale: bool = False):
+    # Optionally rescale each subgraph's reduced features to unit per-column variance
+    # so the diffusion model sees features at a stable scale regardless of dataset.
+    if per_subgraph_rescale:
+        col_std = sub_features.std(axis=0, keepdims=True)
+        col_std[col_std < 1e-8] = 1.0
+        sub_features = sub_features / col_std
     train_data = gaussian_augmentation(sub_features, n_samples=N_AUG, seed=seed)
     ref_data = sub_features[np.newaxis, ...]
 
@@ -85,6 +92,7 @@ def _process_dataset(
     n_epochs: int,
     n_train_subgraphs: int,
     device: str,
+    per_subgraph_rescale: bool = False,
 ) -> dict:
     logger.info("\n%s", "=" * 70)
     logger.info("Loading %s...", dataset_name)
@@ -154,7 +162,10 @@ def _process_dataset(
         # Train on first n_train_subgraphs subgraphs
         if i < n_train_subgraphs:
             t0 = time.time()
-            res = _run_baseline(sample, sub_features, evals, evecs, bands, n_epochs, device, seed=i)
+            res = _run_baseline(
+                sample, sub_features, evals, evecs, bands, n_epochs, device,
+                seed=i, per_subgraph_rescale=per_subgraph_rescale,
+            )
             res["subgraph_idx"] = i
             res["energy_ratio"] = energy_ratio
             res["elapsed_s"] = time.time() - t0
@@ -205,6 +216,8 @@ def main() -> None:
     parser.add_argument("--output", type=str, default="results/phase7pre/sanity_results.json")
     parser.add_argument("--quick", action="store_true",
                         help="Quick mode: 3 subgraphs, 50 epochs, 2 training")
+    parser.add_argument("--per-subgraph-rescale", action="store_true",
+                        help="Rescale each subgraph's reduced features to unit per-column variance")
     args = parser.parse_args()
 
     if args.quick:
@@ -228,6 +241,7 @@ def main() -> None:
             "n_dims": N_DIMS,
             "device": args.device,
             "quick": args.quick,
+            "per_subgraph_rescale": args.per_subgraph_rescale,
         },
         "datasets": {},
     }
@@ -239,6 +253,7 @@ def main() -> None:
             n_epochs=args.n_epochs,
             n_train_subgraphs=args.n_train_subgraphs,
             device=args.device,
+            per_subgraph_rescale=args.per_subgraph_rescale,
         )
         # Save incrementally
         with open(output_path, "w") as f:
